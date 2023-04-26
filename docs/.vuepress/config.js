@@ -100,7 +100,7 @@ module.exports = {
               collapsable: false,
               sidebarDepth: 0,
               children: [
-                  '/deploy-asa-button/create-asa-button',
+                  '/NubesGen/deploy-asa-button/create-asa-button',
               ],
           },
       ]
