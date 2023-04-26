@@ -61,7 +61,7 @@ module.exports = {
               sidebarDepth: 0,
           },
           {
-              title: '🚀 Collaboration',
+              title: '📝 Collaboration',
               collapsable: true,
               sidebarDepth: 0,
           },
@@ -71,32 +71,32 @@ module.exports = {
               sidebarDepth: 0,
           },
           {
-              title: '🚀 Azure Enterprise',
+              title: '🐳 Azure Enterprise',
               collapsable: true,
               sidebarDepth: 0,
           },
           {
-              title: '🚀 Patterns & Best Practices',
+              title: '🐸 Patterns & Best Practices',
               collapsable: true,
               sidebarDepth: 0,
           },
           {
-              title: '🚀 Extending Azure',
+              title: '🎦 Extending Azure',
               collapsable: true,
               sidebarDepth: 0,
           },
           {
-              title: '🚀 Account & Building',
+              title: '🍁 Account & Building',
               collapsable: true,
               sidebarDepth: 0,
           },
           {
-              title: '🚀 Troubleshooting & Support',
+              title: '✒️ Troubleshooting & Support',
               collapsable: true,
               sidebarDepth: 0,
           },
           {
-              title: '🚀 Integrating with Salesforce',
+              title: '🕔 Integrating with Salesforce',
               collapsable: true,
               sidebarDepth: 0,
           },
