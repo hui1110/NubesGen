@@ -1,6 +1,6 @@
-# Nubesgen Documentation
+# Azure Spring Apps Button Documentation
 
-Welcome to the Nubesgen documentation. Here you'll find everything you need to learn and **deploy applications and services on Azure in minutes**.
+Welcome to the Azure Spring Apps Button Documentation. Here you'll find everything you need to learn and **deploy applications and services on Azure in minutes**.
 
 
 <!--
@@ -12,7 +12,7 @@ Welcome to the Nubesgen documentation. Here you'll find everything you need to l
 
 ## Version compatibility
 
-This documentation only reflects the latest version of Nubesgen.
+This documentation only reflects the latest version of Azure.
 
 
 ## Open Source
