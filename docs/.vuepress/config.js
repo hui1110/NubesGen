@@ -4,6 +4,7 @@ module.exports = {
     themeConfig: {
         logo: '/assets/nubesgen-logo.svg',
         repo: 'hui1110/nubesgen',
+        base: "/NubesGen/",
         docsDir: 'docs',
         docsBranch: 'main',
         editLinks: true,
