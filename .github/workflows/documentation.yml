@@ -30,5 +30,4 @@ jobs:
         if: github.ref == 'refs/heads/main'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/.vuepress/dist
-          cname: docs.nubesgen.com      
+          publish_dir: ./docs/.vuepress/dist    
