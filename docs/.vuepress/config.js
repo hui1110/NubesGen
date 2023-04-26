@@ -19,85 +19,11 @@ module.exports = {
         ],
       displayAllHeaders: true,
       sidebar: [
-          // {
-          //   title: '🔎 What is NubesGen?',
-          //   path: '/what-is-nubesgen/overview/',
-          //   collapsable: false,
-          //   sidebarDepth: 0,
-          //   children: [
-          //     {
-          //       title: 'Overview',
-          //       path: '/what-is-nubesgen/overview',
-          //     },
-          //     '/what-is-nubesgen/features',
-          //     '/what-is-nubesgen/philosophy',
-          //     '/what-is-nubesgen/roadmap',
-          //     '/what-is-nubesgen/telemetry',
-          //     '/what-is-nubesgen/contact',
-          //   ],
-          // },
           {
-            title: '🚀 Get Started',
+            title: '🚀 Azure Architecture',
             collapsable: true,
             sidebarDepth: 0,
-            children: [
-              '/getting-started/terraform',
-              '/getting-started/bicep',
-              '/getting-started/gitops',
-              '/getting-started/cli',
-            ],
           },
-          // {
-          //   title: '⌨️ Runtimes support',
-          //   collapsable: false,
-          //   sidebarDepth: 0,
-          //   children: [
-          //     '/runtimes/docker',
-          //     '/runtimes/dot-net',
-          //     '/runtimes/java',
-          //     '/runtimes/spring-boot',
-          //     '/runtimes/quarkus',
-          //     '/runtimes/micronaut',
-          //     '/runtimes/nodejs',
-          //     '/runtimes/python',
-          //   ],
-          // },
-          // {
-          //   title: '🪅 GitOps',
-          //   collapsable: false,
-          //   sidebarDepth: 0,
-          //   children: [
-          //     '/gitops/gitops-overview',
-          //     '/gitops/gitops-quick-start',
-          //   ],
-          // },
-          // {
-          //   title: '👐 Contributing',
-          //   path: '/contributing/contributing',
-          //   collapsable: true,
-          //   sidebarDepth: 0,
-          //   children: [
-          //     '/contributing/contributing',
-          //     '/contributing/bug-report',
-          //     '/contributing/feature-request',
-          //     '/contributing/documentation',
-          //   ],
-          // },
-          // {
-          //   title: '📚 Reference',
-          //   collapsable: true,
-          //   sidebarDepth: 0,
-          //   children: [
-          //     '/reference/frequently-asked-questions',
-          //     '/reference/troubleshooting',
-          //     '/reference/rest-api',
-          //     '/reference/what-is-being-generated',
-          //   ],
-          // },
-          // {
-          //   title: '✨ Community content',
-          //   path: '/community-content'
-          // }
           {
               title: '🪅 Azure Spring Apps Button',
               collapsable: false,
@@ -105,6 +31,74 @@ module.exports = {
               children: [
                   '/deploy-asa-button/create-asa-button',
               ],
+          },
+          {
+              title: '🚀 Command Line',
+              collapsable: true,
+              sidebarDepth: 0,
+          },
+          {
+              title: '🚀 Deployment',
+              collapsable: true,
+              sidebarDepth: 0,
+          },
+          {
+              title: '🚀 Continuous Delivery',
+              collapsable: true,
+              sidebarDepth: 0,
+          },
+          {
+              title: '🚀 Database & Data Management',
+              collapsable: true,
+              sidebarDepth: 0,
+          },{
+              title: '🚀 Monitoring & Mertrics',
+              collapsable: true,
+              sidebarDepth: 0,
+          },{
+              title: '🚀 Add-ons',
+              collapsable: true,
+              sidebarDepth: 0,
+          },
+          {
+              title: '🚀 Collaboration',
+              collapsable: true,
+              sidebarDepth: 0,
+          },
+          {
+              title: '🚀 Security',
+              collapsable: true,
+              sidebarDepth: 0,
+          },
+          {
+              title: '🚀 Azure Enterprise',
+              collapsable: true,
+              sidebarDepth: 0,
+          },
+          {
+              title: '🚀 Patterns & Best Practices',
+              collapsable: true,
+              sidebarDepth: 0,
+          },
+          {
+              title: '🚀 Extending Azure',
+              collapsable: true,
+              sidebarDepth: 0,
+          },
+          {
+              title: '🚀 Account & Building',
+              collapsable: true,
+              sidebarDepth: 0,
+          },
+          {
+              title: '🚀 Troubleshooting & Support',
+              collapsable: true,
+              sidebarDepth: 0,
+          },
+          {
+              title: '🚀 Integrating with Salesforce',
+              collapsable: true,
+              sidebarDepth: 0,
           },
       ]
     },
