@@ -15,8 +15,7 @@ module.exports = {
          { text: "Getting Started", link: "/"},
          { text: "Document", link: "/"},
          { text: "Changelog", link: "/"},
-         { text: "more", link: "/"},
-         { text: "Home", link: '/' },
+         { text: "more", link: "/"}
         ],
       displayAllHeaders: true,
       sidebar: [
