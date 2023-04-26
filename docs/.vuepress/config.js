@@ -1,5 +1,6 @@
 module.exports = {
     title: "Azure Spring Apps Button Documentation",
+    base: "/NubesGen/",
     description: "From code to deployment in minutes",
     themeConfig: {
         logo: '/assets/Microsoft_Azure.svg',
