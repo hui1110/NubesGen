@@ -3,7 +3,7 @@ module.exports = {
     description: "From code to deployment in minutes",
     themeConfig: {
         logo: '/assets/nubesgen-logo.svg',
-        repo: 'microsoft/nubesgen',
+        repo: 'hui1110/nubesgen',
         docsDir: 'docs',
         docsBranch: 'main',
         editLinks: true,
