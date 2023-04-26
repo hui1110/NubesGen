@@ -21,4 +21,3 @@ Nubesgen and its documentation are both completely Open Source. You can **suppor
 
 <a class="github-button" href="https://github.com/microsoft/nubesgen" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star microsoft/nubesgen on GitHub">Star</a>
 <a class="github-button" href="https://github.com/microsoft/nubesgen/subscription" data-icon="octicon-eye" data-size="large" data-show-count="true" aria-label="Watch microsoft/nubesgen on GitHub">Watch</a>
-
