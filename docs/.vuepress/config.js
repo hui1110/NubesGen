@@ -2,7 +2,7 @@ module.exports = {
     title: "NubesGen Documentation",
     description: "From code to deployment in minutes",
     themeConfig: {
-        logo: 'assets/nubesgen-logo.svg',
+        logo: '/assets/nubesgen-logo.svg',
         repo: 'microsoft/nubesgen',
         docsDir: 'docs',
         docsBranch: 'main',
@@ -18,19 +18,19 @@ module.exports = {
       sidebar: [
           {
             title: '🔎 What is NubesGen?',
-            path: 'NubesGen/what-is-nubesgen/overview/',
+            path: '/what-is-nubesgen/overview/',
             collapsable: false,
             sidebarDepth: 0,
             children: [
               {
                 title: 'Overview',
-                path: 'NubesGen/what-is-nubesgen/overview',
+                path: '/what-is-nubesgen/overview',
               },
-              'NubesGen/what-is-nubesgen/features',
-              'NubesGen/what-is-nubesgen/philosophy',
-              'NubesGen/what-is-nubesgen/roadmap',
-              'NubesGen/what-is-nubesgen/telemetry',
-              'NubesGen/what-is-nubesgen/contact',
+              '/what-is-nubesgen/features',
+              '/what-is-nubesgen/philosophy',
+              '/what-is-nubesgen/roadmap',
+              '/what-is-nubesgen/telemetry',
+              '/what-is-nubesgen/contact',
             ],
           },
           {
@@ -38,10 +38,10 @@ module.exports = {
             collapsable: false,
             sidebarDepth: 0,
             children: [
-              'NubesGen/getting-started/terraform',
-              'NubesGen/getting-started/bicep',
-              'NubesGen/getting-started/gitops',
-              'NubesGen/getting-started/cli',
+              '/getting-started/terraform',
+              '/getting-started/bicep',
+              '/getting-started/gitops',
+              '/getting-started/cli',
             ],
           },
           {
@@ -49,14 +49,14 @@ module.exports = {
             collapsable: false,
             sidebarDepth: 0,
             children: [
-              'NubesGen/runtimes/docker',
-              'NubesGen/runtimes/dot-net',
-              'NubesGen/runtimes/java',
-              'NubesGen/runtimes/spring-boot',
-              'NubesGen/runtimes/quarkus',
-              'NubesGen/runtimes/micronaut',
-              'NubesGen/runtimes/nodejs',
-              'NubesGen/runtimes/python',
+              '/runtimes/docker',
+              '/runtimes/dot-net',
+              '/runtimes/java',
+              '/runtimes/spring-boot',
+              '/runtimes/quarkus',
+              '/runtimes/micronaut',
+              '/runtimes/nodejs',
+              '/runtimes/python',
             ],
           },
           {
@@ -64,20 +64,20 @@ module.exports = {
             collapsable: false,
             sidebarDepth: 0,
             children: [
-              'NubesGen/gitops/gitops-overview',
-              'NubesGen/gitops/gitops-quick-start',
+              '/gitops/gitops-overview',
+              '/gitops/gitops-quick-start',
             ],
           },
           {
             title: '👐 Contributing',
-            path: 'NubesGen/contributing/contributing',
+            path: '/contributing/contributing',
             collapsable: true,
             sidebarDepth: 0,
             children: [
-              'NubesGen/contributing/contributing',
-              'NubesGen/contributing/bug-report',
-              'NubesGen/contributing/feature-request',
-              'NubesGen/contributing/documentation',
+              '/contributing/contributing',
+              '/contributing/bug-report',
+              '/contributing/feature-request',
+              '/contributing/documentation',
             ],
           },
           {
@@ -85,15 +85,15 @@ module.exports = {
             collapsable: true,
             sidebarDepth: 0,
             children: [
-              'NubesGen/reference/frequently-asked-questions',
-              'NubesGen/reference/troubleshooting',
-              'NubesGen/reference/rest-api',
-              'NubesGen/reference/what-is-being-generated',
+              '/reference/frequently-asked-questions',
+              '/reference/troubleshooting',
+              '/reference/rest-api',
+              '/reference/what-is-being-generated',
             ],
           },
           {
             title: '✨ Community content',
-            path: 'NubesGen/community-content'
+            path: '/community-content'
           }
       ]
     },
