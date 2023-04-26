@@ -11,8 +11,12 @@ module.exports = {
         sidebarDepth: 1,
         smoothScroll: true,
         nav: [
+         { text: "🚀 Getting Started", link: "/getting-started/"},
+         { text: "✨ Document", link: "/"},
+         { text: "⌨️ Changelog", link: "/"},
+         { text: "👐 more", link: "/"},
          { text: "Home", link: '/' },
-         { text: "Back to NubesGen.com", link: 'https://nubesgen.com' }
+         { text: "Back to NubesGen.com", link: 'https://azure.com' }
         ],
       displayAllHeaders: true,
       sidebar: [
@@ -33,17 +37,17 @@ module.exports = {
           //     '/what-is-nubesgen/contact',
           //   ],
           // },
-          // {
-          //   title: '🚀 Getting started',
-          //   collapsable: false,
-          //   sidebarDepth: 0,
-          //   children: [
-          //     '/getting-started/terraform',
-          //     '/getting-started/bicep',
-          //     '/getting-started/gitops',
-          //     '/getting-started/cli',
-          //   ],
-          // },
+          {
+            title: '🚀 Get Started',
+            collapsable: true,
+            sidebarDepth: 0,
+            children: [
+              '/getting-started/terraform',
+              '/getting-started/bicep',
+              '/getting-started/gitops',
+              '/getting-started/cli',
+            ],
+          },
           // {
           //   title: '⌨️ Runtimes support',
           //   collapsable: false,
