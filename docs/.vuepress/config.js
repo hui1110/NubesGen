@@ -12,12 +12,11 @@ module.exports = {
         sidebarDepth: 1,
         smoothScroll: true,
         nav: [
-         { text: "🚀 Getting Started", link: "/getting-started/"},
-         { text: "✨ Document", link: "/"},
-         { text: "⌨️ Changelog", link: "/"},
-         { text: "👐 more", link: "/"},
+         { text: "Getting Started", link: "/"},
+         { text: "Document", link: "/"},
+         { text: "Changelog", link: "/"},
+         { text: "more", link: "/"},
          { text: "Home", link: '/' },
-         { text: "Back to NubesGen.com", link: 'https://azure.com' }
         ],
       displayAllHeaders: true,
       sidebar: [
