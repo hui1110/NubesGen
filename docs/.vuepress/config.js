@@ -20,12 +20,12 @@ module.exports = {
       displayAllHeaders: true,
       sidebar: [
           {
-            title: '🚀 Azure Architecture',
+            title: '📖 Azure Architecture',
             collapsable: true,
             sidebarDepth: 0,
           },
           {
-              title: '🪅 Azure Spring Apps Button',
+              title: '⌨️ Azure Spring Apps Button',
               collapsable: false,
               sidebarDepth: 0,
               children: [
@@ -33,30 +33,30 @@ module.exports = {
               ],
           },
           {
-              title: '🚀 Command Line',
+              title: '👐 Command Line',
               collapsable: true,
               sidebarDepth: 0,
           },
           {
-              title: '🚀 Deployment',
+              title: '🪅 Deployment',
               collapsable: true,
               sidebarDepth: 0,
           },
           {
-              title: '🚀 Continuous Delivery',
+              title: '📚 Continuous Delivery',
               collapsable: true,
               sidebarDepth: 0,
           },
           {
-              title: '🚀 Database & Data Management',
+              title: '✨ Database & Data Management',
               collapsable: true,
               sidebarDepth: 0,
           },{
-              title: '🚀 Monitoring & Mertrics',
+              title: '🐛 Monitoring & Mertrics',
               collapsable: true,
               sidebarDepth: 0,
           },{
-              title: '🚀 Add-ons',
+              title: '💡 Add-ons',
               collapsable: true,
               sidebarDepth: 0,
           },
