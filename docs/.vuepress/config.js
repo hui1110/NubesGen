@@ -1,8 +1,8 @@
 module.exports = {
-    title: "NubesGen Documentation",
+    title: "Azure Spring Apps Button Documentation",
     description: "From code to deployment in minutes",
     themeConfig: {
-        logo: '/assets/nubesgen-logo.svg',
+        logo: '/assets/Microsoft_Azure.svg',
         repo: 'hui1110/nubesgen',
         docsDir: 'docs',
         docsBranch: 'main',
@@ -16,58 +16,85 @@ module.exports = {
         ],
       displayAllHeaders: true,
       sidebar: [
-          {
-            title: '🔎 What is NubesGen?',
-            path: '/what-is-nubesgen/overview/',
-            collapsable: false,
-            sidebarDepth: 0,
-            children: [
-              {
-                title: 'Overview',
-                path: '/what-is-nubesgen/overview',
-              },
-              '/what-is-nubesgen/features',
-              '/what-is-nubesgen/philosophy',
-              '/what-is-nubesgen/roadmap',
-              '/what-is-nubesgen/telemetry',
-              '/what-is-nubesgen/contact',
-            ],
-          },
-          {
-            title: '🚀 Getting started',
-            collapsable: false,
-            sidebarDepth: 0,
-            children: [
-              '/getting-started/terraform',
-              '/getting-started/bicep',
-              '/getting-started/gitops',
-              '/getting-started/cli',
-            ],
-          },
-          {
-            title: '⌨️ Runtimes support',
-            collapsable: false,
-            sidebarDepth: 0,
-            children: [
-              '/runtimes/docker',
-              '/runtimes/dot-net',
-              '/runtimes/java',
-              '/runtimes/spring-boot',
-              '/runtimes/quarkus',
-              '/runtimes/micronaut',
-              '/runtimes/nodejs',
-              '/runtimes/python',
-            ],
-          },
-          {
-            title: '🪅 GitOps',
-            collapsable: false,
-            sidebarDepth: 0,
-            children: [
-              '/gitops/gitops-overview',
-              '/gitops/gitops-quick-start',
-            ],
-          },
+          // {
+          //   title: '🔎 What is NubesGen?',
+          //   path: '/what-is-nubesgen/overview/',
+          //   collapsable: false,
+          //   sidebarDepth: 0,
+          //   children: [
+          //     {
+          //       title: 'Overview',
+          //       path: '/what-is-nubesgen/overview',
+          //     },
+          //     '/what-is-nubesgen/features',
+          //     '/what-is-nubesgen/philosophy',
+          //     '/what-is-nubesgen/roadmap',
+          //     '/what-is-nubesgen/telemetry',
+          //     '/what-is-nubesgen/contact',
+          //   ],
+          // },
+          // {
+          //   title: '🚀 Getting started',
+          //   collapsable: false,
+          //   sidebarDepth: 0,
+          //   children: [
+          //     '/getting-started/terraform',
+          //     '/getting-started/bicep',
+          //     '/getting-started/gitops',
+          //     '/getting-started/cli',
+          //   ],
+          // },
+          // {
+          //   title: '⌨️ Runtimes support',
+          //   collapsable: false,
+          //   sidebarDepth: 0,
+          //   children: [
+          //     '/runtimes/docker',
+          //     '/runtimes/dot-net',
+          //     '/runtimes/java',
+          //     '/runtimes/spring-boot',
+          //     '/runtimes/quarkus',
+          //     '/runtimes/micronaut',
+          //     '/runtimes/nodejs',
+          //     '/runtimes/python',
+          //   ],
+          // },
+          // {
+          //   title: '🪅 GitOps',
+          //   collapsable: false,
+          //   sidebarDepth: 0,
+          //   children: [
+          //     '/gitops/gitops-overview',
+          //     '/gitops/gitops-quick-start',
+          //   ],
+          // },
+          // {
+          //   title: '👐 Contributing',
+          //   path: '/contributing/contributing',
+          //   collapsable: true,
+          //   sidebarDepth: 0,
+          //   children: [
+          //     '/contributing/contributing',
+          //     '/contributing/bug-report',
+          //     '/contributing/feature-request',
+          //     '/contributing/documentation',
+          //   ],
+          // },
+          // {
+          //   title: '📚 Reference',
+          //   collapsable: true,
+          //   sidebarDepth: 0,
+          //   children: [
+          //     '/reference/frequently-asked-questions',
+          //     '/reference/troubleshooting',
+          //     '/reference/rest-api',
+          //     '/reference/what-is-being-generated',
+          //   ],
+          // },
+          // {
+          //   title: '✨ Community content',
+          //   path: '/community-content'
+          // }
           {
               title: '🪅 Azure Spring Apps Button',
               collapsable: false,
@@ -76,33 +103,6 @@ module.exports = {
                   '/deploy-asa-button/create-asa-button',
               ],
           },
-          {
-            title: '👐 Contributing',
-            path: '/contributing/contributing',
-            collapsable: true,
-            sidebarDepth: 0,
-            children: [
-              '/contributing/contributing',
-              '/contributing/bug-report',
-              '/contributing/feature-request',
-              '/contributing/documentation',
-            ],
-          },
-          {
-            title: '📚 Reference',
-            collapsable: true,
-            sidebarDepth: 0,
-            children: [
-              '/reference/frequently-asked-questions',
-              '/reference/troubleshooting',
-              '/reference/rest-api',
-              '/reference/what-is-being-generated',
-            ],
-          },
-          {
-            title: '✨ Community content',
-            path: '/community-content'
-          }
       ]
     },
     plugins: [
