@@ -21,8 +21,11 @@ module.exports = {
       sidebar: [
           {
             title: '📖 Azure Architecture',
-            collapsable: true,
+            collapsable: false,
             sidebarDepth: 0,
+              children: [
+                  {link: "https://learn.microsoft.com/en-us/azure/architecture/", text: "Dynos (app containers)" },
+              ],
           },
           {
               title: '⌨️ Azure Spring Apps Button',
