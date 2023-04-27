@@ -22,18 +22,15 @@ module.exports = {
           {
             title: '📖 Azure Architecture',
             collapsable: false,
-            sidebarDepth: 1,
+            sidebarDepth: 0,
             children: [
-                {
-                    text: 'Dynos (app containers)',
-                    link: 'https://learn.microsoft.com/azure/architecture/',
-                },
+                 ['https://learn.microsoft.com/azure/architecture/', 'Dynos (app containers)']
             ],
           },
           {
               title: '⌨️ Azure Spring Apps Button',
               collapsable: false,
-              sidebarDepth: 1,
+              sidebarDepth: 0,
               children: [
                   '/deploy-asa-button/create-asa-button',
               ],
