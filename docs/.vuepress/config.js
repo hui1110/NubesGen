@@ -33,26 +33,26 @@ module.exports = {
               ],
           },
           {
-              title: '👐 Command Line',
+              title: '🗜️ Command Line',
               collapsable: true,
               sidebarDepth: 0,
           },
           {
-              title: '🪅 Deployment',
+              title: '📌 Deployment',
               collapsable: true,
               sidebarDepth: 0,
           },
           {
-              title: '📚 Continuous Delivery',
+              title: '🗞️ Continuous Delivery',
               collapsable: true,
               sidebarDepth: 0,
           },
           {
-              title: '✨ Database & Data Management',
+              title: '📊 Database & Data Management',
               collapsable: true,
               sidebarDepth: 0,
           },{
-              title: '🐛 Monitoring & Mertrics',
+              title: '♾️ Monitoring & Mertrics',
               collapsable: true,
               sidebarDepth: 0,
           },{
@@ -66,7 +66,7 @@ module.exports = {
               sidebarDepth: 0,
           },
           {
-              title: '🚀 Security',
+              title: '🛡️ Security',
               collapsable: true,
               sidebarDepth: 0,
           },
@@ -76,7 +76,7 @@ module.exports = {
               sidebarDepth: 0,
           },
           {
-              title: '🐸 Patterns & Best Practices',
+              title: '📇 Patterns & Best Practices',
               collapsable: true,
               sidebarDepth: 0,
           },

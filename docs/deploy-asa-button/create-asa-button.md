@@ -4,7 +4,7 @@ __Table of Contents:__
 
 [[toc]]
 
-The *Deploy to Azure* button enables users to deploy apps to Azure without leaving the web browser, and with little or no configuration. The button is ideal for customers, open-source project maintainers or add-on providers who wish to provide their customers with a quick and easy way to deploy and configure a Azure Spring Apps.
+The *Deploy to Azure* button enables users to deploy apps to Azure without leaving the web browser, and with little or no configuration. The button is ideal for customers, open-source project maintainers or add-on providers who wish to provide their customers with a quick and easy way to deploy and configure an Azure Spring Apps.
 
 The button is well-suited for use in README files, and is intended to serve as a replacement to a list of manual steps typically required to configure an app.
 
@@ -90,12 +90,12 @@ https://azure.com/deploy?url=https://github.com/azure/deploy&branch=mian
 
 For more detailed information about see the following documents:
 
-Azure Platform API Reference: App Setups
+- [Azure Platform API Reference: App Setups](https://learn.microsoft.com/rest/api/azure/)
 
-## Keep reading
+## 📑 Keep reading
 
-Deployment Integrations
+📓 [Deployment Integrations](https://azure.microsoft.com/solutions/integration-services).
 
-## Feedback
+## ⚡ Feedback
 
-Log in to submit feedback.
+◀️ [Log in to submit feedback](https://github.com/).
