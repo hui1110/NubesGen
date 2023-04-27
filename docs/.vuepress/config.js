@@ -20,30 +20,33 @@ module.exports = {
       displayAllHeaders: true,
       sidebar: [
           {
-            title: '📖 Azure Architecture',
-            collapsable: false,
+            title: '📖 Azure Architecture Center',
+            collapsable: true,
             sidebarDepth: 0,
             children: [
-                 ['https://learn.microsoft.com/azure/architecture/', 'Dynos (app containers)']
+                 ['https://learn.microsoft.com/azure/architecture/#architecting-applications-on-azure', 'Architecting applications on Azure'],
+                 ['https://learn.microsoft.com/azure/architecture/#technology-areas', 'Technology Areas'],
+                 ['https://learn.microsoft.com/azure/architecture/#build-your-skills-with-microsoft-learn-training', 'Build your skills with Microsoft Learn training'],
             ],
           },
           {
-              title: '⌨️ Azure Spring Apps Button',
+              title: '🗜️ Command Line',
               collapsable: false,
               sidebarDepth: 0,
               children: [
-                  '/deploy-asa-button/create-asa-button',
+                  ['https://learn.microsoft.com/cli/azure/spring/app?view=azure-cli-latest', 'Azure CLI']
               ],
-          },
-          {
-              title: '🗜️ Command Line',
-              collapsable: true,
-              sidebarDepth: 0,
           },
           {
               title: '📌 Deployment',
               collapsable: true,
               sidebarDepth: 0,
+              children: [
+                  ['/deploy-asa-button/create-asa-button', 'Azure Spring Apps Button'],
+                  ['https://learn.microsoft.com/cli/azure/spring/app?view=azure-cli-latest', 'Azure CLI'],
+                  ['https://learn.microsoft.com/azure/spring-apps/how-to-github-actions?pivots=programming-language-java', 'CI/CD with GitHub Actions'],
+                  ['https://learn.microsoft.com/azure/spring-apps/how-to-cicd?pivots=programming-language-java', 'CI/CD with Azure DevOps'],
+              ],
           },
           {
               title: '🗞️ Continuous Delivery',
