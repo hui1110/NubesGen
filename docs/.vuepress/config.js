@@ -24,9 +24,8 @@ module.exports = {
             collapsable: true,
             sidebarDepth: 0,
             children: [
-                 ['https://learn.microsoft.com/azure/architecture/#architecting-applications-on-azure', 'Architecting applications on Azure'],
-                 ['https://learn.microsoft.com/azure/architecture/#technology-areas', 'Technology Areas'],
-                 ['https://learn.microsoft.com/azure/architecture/#build-your-skills-with-microsoft-learn-training', 'Build your skills with Microsoft Learn training'],
+                 ['https://learn.microsoft.com/azure/spring-apps/reference-architecture?tabs=azure-spring-standard', 'Reference architecture'],
+                 ['https://learn.microsoft.com/azure/architecture/reference-architectures/microservices/spring-apps-multi-region?toc=%2Fazure%2Fspring-apps%2Ftoc.json&bc=%2Fazure%2Fspring-apps%2Fbreadcrumb%2Ftoc.json', 'Deploy to multiple regions'],
             ],
           },
           {
@@ -49,62 +48,55 @@ module.exports = {
               ],
           },
           {
-              title: '🗞️ Continuous Delivery',
-              collapsable: true,
-              sidebarDepth: 0,
-          },
-          {
               title: '📊 Database & Data Management',
-              collapsable: true,
+              collapsable: false,
               sidebarDepth: 0,
+              children: [
+                  ['https://learn.microsoft.com/azure/developer/java/spring-framework/deploy-passwordless-spring-database-app?toc=%2Fazure%2Fspring-apps%2Ftoc.json&bc=%2Fazure%2Fspring-apps%2Fbreadcrumb%2Ftoc.json&tabs=mysql', 'Passwordless connections to Azure databases'],
+              ],
           },{
               title: '♾️ Monitoring & Mertrics',
               collapsable: true,
               sidebarDepth: 0,
-          },{
-              title: '💡 Add-ons',
-              collapsable: true,
-              sidebarDepth: 0,
-          },
-          {
-              title: '📝 Collaboration',
-              collapsable: true,
-              sidebarDepth: 0,
+              children: [
+                  ['https://learn.microsoft.com/azure/spring-apps/concepts-for-java-memory-management', 'Java memory management'],
+                  ['https://learn.microsoft.com/azure/spring-apps/concept-metrics', 'Metrics for Azure Spring Apps'],
+              ],
           },
           {
               title: '🛡️ Security',
               collapsable: true,
               sidebarDepth: 0,
+              children: [
+                  ['https://learn.microsoft.com/azure/spring-apps/concept-security-controls', 'Security controls'],
+                  ['https://learn.microsoft.com/security/benchmark/azure/baselines/azure-spring-apps-security-baseline?toc=%2Fazure%2Fspring-apps%2Ftoc.json&bc=%2Fazure%2Fspring-apps%2Fbreadcrumb%2Ftoc.json', 'Security baseline'],
+                  ['https://learn.microsoft.com/azure/spring-apps/security-controls-policy', 'Azure Policy Security controls'],
+              ],
           },
           {
               title: '🐳 Azure Enterprise',
-              collapsable: true,
+              collapsable: false,
               sidebarDepth: 0,
+              children: [
+                  ['https://learn.microsoft.com/azure/spring-apps/quickstart-deploy-apps-enterprise', 'Build and deploy apps'],
+              ],
           },
           {
-              title: '📇 Patterns & Best Practices',
+              title: '✒️ Troubleshooting',
               collapsable: true,
               sidebarDepth: 0,
-          },
-          {
-              title: '🎦 Extending Azure',
-              collapsable: true,
-              sidebarDepth: 0,
-          },
-          {
-              title: '🍁 Account & Building',
-              collapsable: true,
-              sidebarDepth: 0,
-          },
-          {
-              title: '✒️ Troubleshooting & Support',
-              collapsable: true,
-              sidebarDepth: 0,
+              children: [
+                  ['https://learn.microsoft.com/azure/spring-apps/troubleshoot', 'Troubleshoot common issues'],
+              ],
           },
           {
               title: '🕔 Integrating with Salesforce',
               collapsable: true,
               sidebarDepth: 0,
+              children: [
+                  ['https://learn.microsoft.com/azure/active-directory/saas-apps/salesforce-tutorial', 'Salesforce'],
+                  ['https://learn.microsoft.com/en-us/azure/active-directory/saas-apps/salesforce-sandbox-tutorial', 'Salesforce Sandbox'],
+              ],
           },
       ]
     },
