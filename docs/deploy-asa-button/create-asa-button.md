@@ -2,13 +2,7 @@
 
 __Table of Contents:__
 
-- Requirements
-- Button Terms of Use
-- Adding the Azure button
-- Using a custom Git branch
-- Debugging Azure Buttons
-- Private GitHub repos
-- Further reading
+[[toc]]
 
 The *Deploy to Azure* button enables users to deploy apps to Azure without leaving the web browser, and with little or no configuration. The button is ideal for customers, open-source project maintainers or add-on providers who wish to provide their customers with a quick and easy way to deploy and configure a Azure Spring Apps.
 
