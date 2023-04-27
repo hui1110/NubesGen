@@ -21,7 +21,7 @@ module.exports = {
       sidebar: [
           {
             title: '📖 Azure Architecture Center',
-            collapsable: true,
+            collapsable: false,
             sidebarDepth: 0,
             children: [
                  ['https://learn.microsoft.com/azure/spring-apps/reference-architecture?tabs=azure-spring-standard', 'Reference architecture'],
@@ -38,7 +38,7 @@ module.exports = {
           },
           {
               title: '📌 Deployment',
-              collapsable: true,
+              collapsable: false,
               sidebarDepth: 0,
               children: [
                   ['/deploy-asa-button/create-asa-button', 'Azure Spring Apps Button'],
@@ -48,7 +48,7 @@ module.exports = {
               ],
           },
           {
-              title: '📊 Database & Data Management',
+              title: '📊 Database',
               collapsable: false,
               sidebarDepth: 0,
               children: [
@@ -56,7 +56,7 @@ module.exports = {
               ],
           },{
               title: '♾️ Monitoring & Mertrics',
-              collapsable: true,
+              collapsable: false,
               sidebarDepth: 0,
               children: [
                   ['https://learn.microsoft.com/azure/spring-apps/concepts-for-java-memory-management', 'Java memory management'],
@@ -65,7 +65,7 @@ module.exports = {
           },
           {
               title: '🛡️ Security',
-              collapsable: true,
+              collapsable: false,
               sidebarDepth: 0,
               children: [
                   ['https://learn.microsoft.com/azure/spring-apps/concept-security-controls', 'Security controls'],
@@ -83,7 +83,7 @@ module.exports = {
           },
           {
               title: '✒️ Troubleshooting',
-              collapsable: true,
+              collapsable: false,
               sidebarDepth: 0,
               children: [
                   ['https://learn.microsoft.com/azure/spring-apps/troubleshoot', 'Troubleshoot common issues'],
@@ -91,7 +91,7 @@ module.exports = {
           },
           {
               title: '🕔 Integrating with Salesforce',
-              collapsable: true,
+              collapsable: false,
               sidebarDepth: 0,
               children: [
                   ['https://learn.microsoft.com/azure/active-directory/saas-apps/salesforce-tutorial', 'Salesforce'],
