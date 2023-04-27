@@ -12,7 +12,13 @@ module.exports = {
         sidebarDepth: 1,
         smoothScroll: true,
         nav: [
-         { text: "Getting Started", link: "/"},
+         { text: "Getting Started", items: [
+                 {text: 'Python', link: 'https://learn.microsoft.com/azure/developer/python/'},
+                 {text: '.NET', link:'https://learn.microsoft.com/dotnet/azure/'},
+                 {text: 'JavaScript & Node.js', link: 'https://learn.microsoft.com/azure/developer/javascript/'},
+                 {text: 'Java', link: 'https://learn.microsoft.com/azure/developer/java/'},
+                 {text: 'Go', link: 'https://learn.microsoft.com/azure/developer/go/'}
+             ]},
          { text: "Document", link: "/"},
          { text: "Changelog", link: "/"},
          { text: "more", link: "/"}
