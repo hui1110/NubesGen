@@ -30,6 +30,10 @@ The Azure Terms of Use (Default) governs the Terms of Use of your button unless 
 
 The following is an example that changes the template query parameter to the `URL` of the repository:
 
+:::tip
+When adding only the `url`, Azure Button will pull the source code from the default branch of your GitHub repository.
+:::
+
 ```markdown
 [![Deploy to Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://azure.com/deploy?url=https://github.com/azure/deploy)
 ```
