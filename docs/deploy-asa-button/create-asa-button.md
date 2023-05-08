@@ -4,15 +4,15 @@ __Table of Contents:__
 
 [[toc]]
 
-The *Deploy to Azure* button enables users to deploy apps to Azure without leaving the web browser, and with little or no configuration. The button is ideal for customers, open-source project maintainers or add-on providers who wish to provide their customers with a quick and easy way to deploy and configure an Azure Spring Apps.
+The *Deploy to Azure* button enables users to deploy apps to Azure Spring Apps without leaving the web browser and with little or no configuration. The button is ideal for customers, open-source project maintainers, or add-on providers who wish to provide their customers with a quick and easy way to deploy Azure Spring Apps.
 
-The button is well-suited for use in README files, and is intended to serve as a replacement to a list of manual steps typically required to configure an app.
+The basic requirement of the creation button is that your application source code hosting is in the GitHub repository. We will add deployment buttons to the `README.md` file.
 
 Here’s an example button that deploys a sample to Azure Spring Apps:
 
 [![Deploy to Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)]()
 
-This document describes the requirements for apps that use the ‘Deploy to Azure’ service, and how to use these buttons make it easy to deploy source code you maintain to Azure Spring Apps.
+This document describes the requirements for apps that use the `Deploy to Azure` service, and how to use these buttons make it easy to deploy source code you maintain to Azure Spring Apps.
 
 ## Requirements
 
@@ -28,7 +28,7 @@ The Azure Terms of Use (Default) governs the Terms of Use of your button unless 
 
 ## Adding the Azure button
 
-Here’s an example:
+The following is an example that changes the template query parameter to the `URL` of the repository:
 
 ```markdown
 [![Deploy to Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://azure.com/deploy?url=https://github.com/azure/deploy)
@@ -42,37 +42,9 @@ Here’s the equivalent content as HTML if you’d prefer not to use Markdown:
 </a>
 ```
 
-A `button.svg` is also available.
-
-### Adding an explicit parameter
-
-Use the following Markdown snippet as a template, changing the url query parameter to the URL of your repository:
-
-```markdown
-[![Deploy to Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://azure.com/deploy?url=https://github.com/azure/deploy)
-```
-
-Here’s the equivalent content as HTML if you’d prefer not to use Markdown:
-
-```html
-<a href="https://azure.com/deploy?url=https://github.com/azure/deploy">
-  <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy to Azure">
-</a>
-```
-
-### Parametrizing buttons
-
-It’s possible to supply URL parameters in the Button.
-
-For example, you might have the following button URL:
-
-```bash
-https://azure.com/deploy?url=https://github.com/azure/deploy
-```
-
 ### Button image
 
-When linking to the Azure Button set-up flow, you can either use a raw link or an image link. If using an image, Azure makes available both PNG and SVG versions at these URLs:
+When linking to the Azure Button set-up flow, you can either use a raw link or an image link. If using an image, Azure makes available SVG versions at these URLs:
 
 ```bash
 https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true
@@ -83,7 +55,7 @@ https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONT
 If you’d like the button to deploy from a specific Git branch, you can use a fully qualified GitHub URL as the branch parameter:
 
 ```bash
-https://azure.com/deploy?url=https://github.com/azure/deploy&branch=mian
+https://azure.com/deploy?url=https://github.com/azure/deploy&branch=main
 ```
 
 ## Further reading
