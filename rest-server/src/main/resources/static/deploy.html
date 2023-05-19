@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Azure Spring Apps Launcher</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.5/axios.min.js"></script>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+          crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/dist/index.css" rel="stylesheet" />
+</head>
+<style>
+label {
+    display: block;
+    vertical-align: middle;
+}
+label, input, select {
+    vertical-align: middle;
+}
+svg{
+    display:inline-block
+}
+.deployment {
+    width: 60%;
+    padding: 5px;
+    margin: 10px auto;
+}
+.form-control:focus {
+    outline: 0 !important;
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+}
+.col-sm-3{
+    font-size: 14px
+}
+.col-sm-4{
+    font-size: 14px;
+    font-weight: normal;
+}
+.form-control{
+    font-size: 14px;
+}
+.detail-title{
+    font-weight: 500;
+}
+.detail{
+    margin-left: 1px;
+}
+.deploy-title{
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-size: 25px;
+    font-weight: bold;
+    margin-left: 20px;
+}
+.required{
+    color:red;
+    display:inline-block;
+    margin-right: 10px;
+    margin-left: 5px;
+}
+.readonly{
+    border: none;
+}
+.vl{
+    display:inline-block;
+    margin: -25px 5px 5px 10px;
+    border-left: 1px solid #C0C0C0;
+    height: 40px;
+    width: 40px;
+    border-bottom: 1px solid #C0C0C0;
+}
+</style>
+<body>
+<div id="app">
+    <div class="deployment">
+        <div class="mb-3 row">
+            <div  class="deploy-title">Azure Spring Apps Web Launcher</div>
+        </div>
+        <hr/>
+        <div class="mb-3 row">
+            <label class="col-sm-4 col-form-label">GitHub repository address:</label>
+            <div class="col-sm-7">
+                <label>
+                    <input type="text" class="form-control readonly" v-model="url" readonly/>
+                </label>
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="selectSubId" class="col-sm-4 col-form-label">Subscription:<span class="required"> * </span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16"
+                     height="16"
+                     fill="currentColor"
+                     class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                    <title>An Azure subscription grants you access to Azure services. Your subscription is also how resource usage is reported and services are billed.</title>
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                </svg>
+            </label>
+            <div class="col-sm-7">
+                <select class="form-control" v-model="subscriptionId" id="selectSubId" name="Subscription" @change="changeRgInstance(subscriptionId)">
+                    <option value="" disabled selected hidden>Please select Subscription</option>
+                    <option v-for="item in SubList" :key="item.name" :value="item.id">{{ item.name }}</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3 row">
+            <label for="SelectResourceGroup" class="col-sm-4 col-form-label"><div class="vl"></div>Resource group:<span class="required"> * </span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16"
+                     height="16"
+                     fill="currentColor"
+                     class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                    <title>A resource group is a collection of resources that share the same lifecycle, permission, and policies.</title>
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path
+                            d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                </svg>
+            </label>
+            <div class="col-sm-7">
+                <select class="form-control" v-model="resourceGroupName" id="SelectResourceGroup" @change="getASAInstanceByResourceGroupName(resourceGroupName)">
+                    <option value="" disabled selected hidden>Please select Resource group</option>
+                    <option v-for="item in ResourceGroup" :key="item.name" :value="item.name">{{ item.name }}</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3 row">
+            <label for="SelectAsaInstance" class="col-sm-4 col-form-label">Service Instance:<span class="required"> * </span></label>
+            <div class="col-sm-7">
+                <select class="form-control" v-model="ASAName" id="SelectAsaInstance" @change="changeAppInstance(ASAName)">
+                    <option value="" disabled selected hidden>Please select Service Instance</option>
+                    <option v-for="item in ASAList" :key="item.name" :value="item.name">{{ item.name }}</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3 row">
+            <label class="col-sm-4 col-form-label detail-title">Application details:</label>
+        </div>
+
+        <div class="mb-3 row detail">
+            <label class="col-sm-3 col-form-label">App name:<span class="required"> * </span></label>
+            <div class="col-sm-5">
+                <label>
+                    <input type="text" class="form-control" v-model="AppInstance.name"/>
+                </label>
+            </div>
+        </div>
+
+        <div class="mb-3 row detail">
+            <label class="col-sm-3 col-form-label">Runtime platform:<span class="required"> * </span></label>
+            <div class="col-sm-5">
+                <label>
+                    <input type="text" class="form-control readonly" id="appInstance" v-model="AppInstance.runtimePlatform" readonly/>
+                </label>
+            </div>
+        </div>
+
+        <div class="mb-3 row detail">
+            <label class="col-sm-3 col-form-label">vCPU:<span class="required"> * </span></label>
+            <div class="col-sm-5">
+                <label>
+                    <input type="text" class="form-control" v-model="AppInstance.cpu"/>
+                </label>
+            </div>
+        </div>
+
+        <div class="mb-3 row detail">
+            <label class="col-sm-3 col-form-label">Memory(Gi):<span class="required"> * </span></label>
+            <div class="col-sm-5">
+                <label>
+                    <input type="text" class="form-control" v-model="AppInstance.memory"/>
+                </label>
+            </div>
+        </div>
+
+        <div class="mb-3 row detail">
+            <label class="col-sm-3 col-form-label">Instance count:<span class="required"> * </span></label>
+            <div class="col-sm-5">
+                <label>
+                    <input type="text" class="form-control" v-model="AppInstance.instanceCount"/>
+                </label>
+            </div>
+        </div>
+
+        <div class="mb-3 row detail">
+            <label class="col-sm-3 col-form-label">Deployment type:<span class="required"> * </span></label>
+            <div class="col-sm-5">
+                <label>
+                    <input type="text" class="form-control readonly" v-model="AppInstance.deploymentType" readonly/>
+                </label>
+            </div>
+        </div>
+
+        <hr/>
+        <div class="form-group">
+            <button class="btn btn-primary btn-sm" @click="deployCode()">Deploy</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+</body>
+
+<script type="module">
+    import { toast } from 'https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/+esm';
+    const app = Vue.createApp({
+        data() {
+            return {
+                url: sessionStorage.getItem('githubRepoUrl'),
+                branch: sessionStorage.getItem('branchName'),
+                resourceGroupName: '',
+                subscriptionId: '',
+                region:'',
+                ASAName: '',
+                JavaVersion: '',
+                ASAInstance: {},
+                SubList: [],
+                ASAList: [],
+                ResourceGroup: [],
+                AppInstance: {},
+            }
+        },
+        methods: {
+            querySubId() {
+                axios.get('/subscriptionList')
+                    .then(res => {
+                        this.SubList = res.data;
+                        if (this.SubList.length === 0) {
+                            toast.info('Not found Subscription', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                        }
+                    })
+                    .catch(err => {
+                        toast.error(err, { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                    })
+            },
+            getAppNameAndJavaVersion() {
+                axios.get('/getAppNameAndJavaVersion' + '?url=' + this.url + '&branchName=' + this.branch)
+                    .then(res => {
+                        this.AppInstance.name = res.data.name;
+                        this.AppInstance.runtimePlatform = res.data.version;
+                        this.AppInstance.cpu = 1;
+                        this.AppInstance.memory = 1;
+                        this.AppInstance.instanceCount = 1;
+                        this.AppInstance.deploymentType = 'GitHub repository';
+                    })
+                    .catch(err => {
+                        toast.error(err, { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                    })
+            },
+            changeRgInstance(subscriptionId) {
+                this.ResourceGroup = [];
+                axios.get('/getResourceGroups/' + subscriptionId)
+                    .then(res => {
+                        this.ResourceGroup = res.data;
+                        if (this.ResourceGroup.length === 0) {
+                            toast.info('Not found Resource group', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                        }
+                    })
+                    .catch(err => {
+                        toast.error(err, { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                    })
+            },
+            getASAInstanceByResourceGroupName(resourceGroupName) {
+                this.ASAList = [];
+                axios.get('/instanceList/' + this.subscriptionId + '/' + resourceGroupName)
+                    .then(res => {
+                        this.ASAList = res.data;
+                        if (this.ASAList.length === 0) {
+                            toast.info('Not found Service Instance', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                        }
+                    })
+                    .catch(err => {
+                        toast.error(err, { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                    })
+            },
+            changeAppInstance(ASAName) {
+                // Get ASA region
+                for (const instance of this.ASAList) {
+                    if (instance.name === ASAName) {
+                        this.region = instance.region;
+                    }
+                }
+            },
+            deployCode() {
+                if (this.subscriptionId === '' || this.subscriptionId === undefined) {
+                    toast.info('Please select subscription !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                    return;
+                }
+                if (this.resourceGroupName === '' || this.resourceGroupName === undefined) {
+                    toast.info('Please select Resource group !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                    return;
+                }
+                if (this.ASAName === '' || this.ASAName === undefined) {
+                    toast.info('Please select Service Instance !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                    return;
+                }
+                if (this.AppInstance.name === null || this.AppInstance.name === '' || this.AppInstance.name === undefined) {
+                    toast.info('Please type app name !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                    return;
+                }
+                if (this.AppInstance.runtimePlatform === null || this.AppInstance.runtimePlatform === '' || this.AppInstance.runtimePlatform === undefined) {
+                    toast.info('Please configured Java version in pom.xml !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                    return;
+                }
+                if (this.AppInstance.cpu === '' || this.AppInstance.cpu === undefined) {
+                    toast.info('Please type cpu count !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                    return;
+                }
+                if (this.AppInstance.memory === '' || this.AppInstance.memory === undefined) {
+                    toast.info('Please type memory !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                    return;
+                }
+                if (this.AppInstance.instanceCount === '' || this.AppInstance.instanceCount === undefined) {
+                    toast.info('Please type instance count !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                    return;
+                }
+
+                if (this.AppInstance.runtimePlatform === 'Java_17') {
+                    this.JavaVersion = 17;
+                } else if (this.AppInstance.runtimePlatform === 'Java_11') {
+                    this.JavaVersion = 11;
+                } else {
+                    this.JavaVersion = 8;
+                }
+
+                const appDetails = '&cpu=' + this.AppInstance.cpu + '&memory=' + this.AppInstance.memory + '&instanceCount=' + this.AppInstance.instanceCount;
+                const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&rgName=' + this.resourceGroupName + '&serviceName=' + this.ASAName + '&javaVersion=' + this.JavaVersion + '&appName=' + this.AppInstance.name + '&enableAction=' + '' + '&region=' + this.region + '&branchName=' + this.branch;
+                location.assign('/loading.html?' + url + appDetails);
+            },
+            stringify: JSON.stringify,
+        },
+        beforeCreate() {
+            const url = new URLSearchParams(location.search).get('url')
+            const branchName = new URLSearchParams(location.search).get('branch')
+            if (url !== null) {
+                sessionStorage.setItem('githubRepoUrl', url);
+                if (branchName !== null) {
+                    sessionStorage.setItem('branchName', branchName);
+                }
+            }
+        },
+        created() {
+            this.querySubId();
+            this.getAppNameAndJavaVersion();
+        },
+    })
+    app.mount('#app')
+</script>
+</html>
