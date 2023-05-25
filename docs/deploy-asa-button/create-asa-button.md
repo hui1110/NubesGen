@@ -4,23 +4,20 @@ __Table of Contents:__
 
 [[toc]]
 
-The *Deploy to Azure* button enables users to deploy apps to Azure Spring Apps without leaving the web browser and with little or no configuration. The button is ideal for customers, open-source project maintainers, or add-on providers who wish to provide their customers with a quick and easy way to deploy Azure Spring Apps.
+The *Deploy to Azure* button enables users to deploy apps to Azure Spring Apps without leaving the web browser and with little or no configuration. The button is ideal for customers, open-source project maintainers, or add-on providers who wish to provide their customers with a quick and easy way to deploy application to Azure Spring Apps.
 
 The basic requirement of the creation button is that your application source code hosting is in the GitHub repository. We will add deployment buttons to the `README.md` file.
 
 Here’s an example button that deploys a sample to Azure Spring Apps:
 
-[![Deploy to Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)]()
+[![Deploy to Azure](https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-892a-445fa33f1612.png)]()
 
 This document describes the requirements for apps that use the `Deploy to Azure` service, and how to use these buttons make it easy to deploy source code you maintain to Azure Spring Apps.
 
 ## Requirements
 
-The basic requirements for creating a button are that your app has a valid app.json file in its root directory, and that the app source code is hosted in a GitHub repository.
-
-:::tip
-Azure Button also works with repositories that have submodules. Azure Button gets the source code from GitHub and generates a tar.gz file. You can choose the submodule name to deploy.
-:::
+- The application source code is hosted in the GitHub public repository.
+- An Azure AD user with admin permission.
 
 ## Button Terms of Use
 
@@ -35,14 +32,14 @@ When adding only the `url`, Azure Button will pull the source code from the defa
 :::
 
 ```markdown
-[![Deploy to Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://azure.com/deploy?url=https://github.com/azure/deploy)
+[![Deploy to Azure](https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-892a-445fa33f1612.png)](https://azure.spring.launcher.com/deploy.html?url=https://github.com/azure/deploy)
 ```
 
 Here’s the equivalent content as HTML if you’d prefer not to use Markdown:
 
 ```html
-<a href="https://azure.com/deploy?url=https://github.com/azure/deploy">
-  <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true" alt="Deploy to Azure">
+<a href="https://azure.spring.launcher.com/deploy.html?url=https://github.com/azure/deploy">
+  <img src="https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-892a-445fa33f1612.png" alt="Deploy to Azure">
 </a>
 ```
 
@@ -51,7 +48,7 @@ Here’s the equivalent content as HTML if you’d prefer not to use Markdown:
 When linking to the Azure Button set-up flow, you can either use a raw link or an image link. If using an image, Azure makes available SVG versions at these URLs:
 
 ```bash
-https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true
+https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-892a-445fa33f1612.png
 ```
 
 ## Using a custom Git branch
@@ -59,7 +56,7 @@ https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONT
 If you’d like the button to deploy from a specific Git branch, you can use a fully qualified GitHub URL as the branch parameter:
 
 ```bash
-https://azure.com/deploy?url=https://github.com/azure/deploy&branch=main
+https://azure.spring.launcher.com/deploy.html?url=https://github.com/azure/deploy&branch=main
 ```
 
 ## Further reading
