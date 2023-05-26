@@ -1,5 +1,6 @@
 module.exports = {
     title: "NubesGen Documentation",
+    base: "/NubesGen/",
     description: "From code to deployment in minutes",
     themeConfig: {
         logo: '/assets/nubesgen-logo.svg',
