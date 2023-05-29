@@ -15,7 +15,7 @@ Here’s an example button that deploys a sample to Azure Spring Apps:
 This document describes the requirements for apps that use the `Deploy to Azure` service, and how to use these buttons make it easy to deploy source code you maintain to Azure Spring Apps.
 
 :::tip
-**This article applies to: ✔️ Standard ✔️ Enterprise**.
+This article applies to: ✔️ **Standard** ✔️ **Enterprise**.
 :::
 
 ## Requirements
@@ -61,6 +61,14 @@ If you’d like the button to deploy from a specific Git branch, you can use a f
 
 ```bash
 https://azure.spring.launcher.com/deploy.html?url=https://github.com/azure/deploy&branch=main
+```
+
+## Use a custom module
+
+If you want the button to deploy from a module specified in the source code, you can use the fully qualified GitHub URL as the module parameter:
+
+```bash
+https://azure.spring.launcher.com/deploy.html?url=https://github.com/azure/deploy&branch=main&module=web
 ```
 
 ## Further reading
