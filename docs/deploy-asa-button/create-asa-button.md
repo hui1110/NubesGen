@@ -14,6 +14,10 @@ Here’s an example button that deploys a sample to Azure Spring Apps:
 
 This document describes the requirements for apps that use the `Deploy to Azure` service, and how to use these buttons make it easy to deploy source code you maintain to Azure Spring Apps.
 
+:::tip
+**This article applies to: ✔️ Standard ✔️ Enterprise**.
+:::
+
 ## Requirements
 
 - The application source code is hosted in the GitHub public repository.
@@ -39,7 +43,7 @@ Here’s the equivalent content as HTML if you’d prefer not to use Markdown:
 
 ```html
 <a href="https://azure.spring.launcher.com/deploy.html?url=https://github.com/azure/deploy">
-  <img src="https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-892a-445fa33f1612.png" alt="Deploy to Azure">
+    <img src="https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-892a-445fa33f1612.png" alt="Deploy to Azure">
 </a>
 ```
 
