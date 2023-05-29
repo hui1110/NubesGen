@@ -55,7 +55,7 @@ When linking to the Azure Button set-up flow, you can either use a raw link or a
 https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-892a-445fa33f1612.png
 ```
 
-## Using a custom Git branch
+## Use a custom Git branch
 
 If you’d like the button to deploy from a specific Git branch, you can use a fully qualified GitHub URL as the branch parameter:
 
