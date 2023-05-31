@@ -69,6 +69,17 @@ module.exports = {
             ],
           },
           {
+              title: '❔ What is Azure Spring Apps button',
+              collapsable: false,
+              sidebarDepth: 0,
+              children: [
+                  {
+                      title: 'Features',
+                      path: '/deploy-asa-button/create-asa-button',
+                  },
+              ],
+          },
+          {
             title: '👐 Contributing',
             path: '/contributing/contributing',
             collapsable: true,
