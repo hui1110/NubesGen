@@ -26,17 +26,14 @@ public class ResourceManagerUtils {
             .withLogLevel(HttpLogDetailLevel.BASIC)
             .authenticate(credential, profile)
             .withDefaultSubscription();
-//            .withSubscription("8c81302b-c67a-494e-ac1b-17e93b7e2e5a");
     }
 
-//    public static AzureResourceManager getResourceManager(TokenCredential token, String subscription) {
     public static AzureResourceManager getResourceManager(String token, String subscription) {
         final AzureProfile profile = new AzureProfile(AzureEnvironment.AZURE);
         final TokenCredential credential = toTokenCredential(token);
         return AzureResourceManager
             .configure()
             .withLogLevel(HttpLogDetailLevel.BASIC)
-//            .authenticate(token, profile)
             .authenticate(credential, profile)
             .withSubscription(subscription);
     }
@@ -82,7 +79,7 @@ public class ResourceManagerUtils {
                 .append("\n\t\tApp Insight Instrumentation Key: ").append(monitoringSettingProperties.appInsightsInstrumentationKey());
         }
 
-        System.out.println(info.toString());
+        System.out.println(info);
     }
 
     /**
@@ -119,6 +116,7 @@ public class ResourceManagerUtils {
                 .append("\n\t\tTenant Id: ").append(springApp.identity().tenantId());
         }
 
-        System.out.println(info.toString());
+        System.out.println(info);
     }
+
 }

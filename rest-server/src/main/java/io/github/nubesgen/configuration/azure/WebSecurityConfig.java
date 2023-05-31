@@ -23,10 +23,6 @@ public class WebSecurityConfig {
             .loginPage("/oauth2/authorization/management");
 
         http.authorizeHttpRequests()
-            .requestMatchers("/**")
-            .permitAll();
-
-        http.authorizeHttpRequests()
             .anyRequest().permitAll();
 
         return http.build();

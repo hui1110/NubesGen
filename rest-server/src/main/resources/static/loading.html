@@ -52,7 +52,8 @@ button {
     margin-right: 20px;
 }
 code{
-    color: #3366FF;
+    color: black;
+    font-weight: bold;
 }
 .mb-3{
     margin-left: 40PX
@@ -104,46 +105,47 @@ code{
         </div>
         <div class="modal-body">
             <div class="col-sm-6" style="margin-bottom: 20px;">
-                <label class="label-div" v-if="showUploadIcon === true && showUpdateDeploymentIcon === true">Deployment is complted</label>
-                <label class="label-div" v-else>Deployment is in progress...</label>
+                <label class="label-div" v-show="showUploadIcon === 'success' && showUpdateDeploymentIcon === 'success'">Deployment is complted</label>
+                <label class="label-div" v-show="showUploadIcon === 'execute' || showUpdateDeploymentIcon === 'execute'">Deployment is in progress...</label>
+                <label class="label-div" v-show="showUploadIcon === 'error' || showUpdateDeploymentIcon === 'error'">Deployment failed.</label>
                 <label class="text-div">The operation may take a while.</label>
             </div>
 
             <div class="mb-3 row">
-                <div class="icon-container rotating" v-if="showUploadIcon === 'execute'">
+                <div class="icon-container rotating" v-show="showUploadIcon === 'execute'">
                     <i class="bi bi-arrow-repeat icon-loading"></i>
                 </div>
-                <div class="icon-container success" v-if="showUploadIcon === 'success'">
+                <div class="icon-container success" v-show="showUploadIcon === 'success'">
                     <i class="bi bi-check-circle-fill icon-success rotating"></i>
                 </div>
-                <div class="icon-container" v-if="showUploadIcon === 'error'">
+                <div class="icon-container" v-show="showUploadIcon === 'error'">
                     <i class="bi bi-exclamation-circle-fill icon-error"></i>
                 </div>
                 <div class="col-sm-10">
-                    <label class="text-div" v-if="showUploadIcon === 'execute'">Creating app [ <code>{{ appName }}</code> ] and uploading source code...</label>
-                    <label class="text-div" v-else-if="showUploadIcon === 'success'">Successfully create app [ <code>{{ appName }}</code> ] and upload source code.</label>
-                    <label class="text-div" v-else-if="showUploadIcon === 'error'">Failed to create app [ <code>{{ appName }}</code> ] and upload source code.</label>
+                    <label class="text-div" v-show="showUploadIcon === 'execute'">Creating app <code>{{ appName }}</code> and uploading source code...</label>
+                    <label class="text-div" v-show="showUploadIcon === 'success'">Successfully create app <code>{{ appName }}</code> and upload source code.</label>
+                    <label class="text-div" v-show="showUploadIcon === 'error'">Failed to create app <code>{{ appName }}</code> and upload source code.</label>
                 </div>
             </div>
 
             <div class="mb-3 row">
-                <div class="icon-container" v-if="showUpdateDeploymentIcon === 'wait'">
+                <div class="icon-container" v-show="showUpdateDeploymentIcon === 'wait'">
                     <i class="bi bi-arrow-repeat icon-loading inactive"></i>
                 </div>
-                <div class="icon-container rotating" v-if="showUpdateDeploymentIcon === 'execute'">
+                <div class="icon-container rotating" v-show="showUpdateDeploymentIcon === 'execute'">
                     <i class="bi bi-arrow-repeat icon-loading"></i>
                 </div>
-                <div class="icon-container success" v-if="showUpdateDeploymentIcon === 'success'">
+                <div class="icon-container success" v-show="showUpdateDeploymentIcon === 'success'">
                     <i class="bi bi-check-circle-fill icon-success rotating"></i>
                 </div>
-                <div class="icon-container" v-if="showUpdateDeploymentIcon === 'error'">
+                <div class="icon-container" v-show="showUpdateDeploymentIcon === 'error'">
                     <i class="bi bi-exclamation-circle-fill icon-error"></i>
                 </div>
                 <div class="col-sm-10">
-                    <label class="text-div" v-if="showUpdateDeploymentIcon === 'wait'">waiting to update deployments in app [ <code>{{ appName }}</code> ].</label>
-                    <label class="text-div" v-else-if="showUpdateDeploymentIcon === 'execute'">Updating deployments in app [ <code>{{ appName }}</code> ].</label>
-                    <label class="text-div" v-else-if="showUpdateDeploymentIcon === 'success'">Updated deployment in app [ <code>{{ appName }}</code> ].</label>
-                    <label class="text-div" v-else-if="showUpdateDeploymentIcon === 'error'">Failed to update deployment in app [ <code>{{ appName }}</code> ].</label>
+                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'wait'">Waiting to update deployments in app <code>{{ appName }}</code>.</label>
+                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'execute'">Updating deployments in app <code>{{ appName }}</code>.</label>
+                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'success'">Updated deployment in app <code>{{ appName }}</code>.</label>
+                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'error'">Failed to update deployment in app <code>{{ appName }}</code>.</label>
                 </div>
             </div>
 
@@ -161,7 +163,7 @@ code{
                 <hr/>
             </div>
         </div>
-    <div class="mb-3 row view" v-if="showView === true">
+    <div class="mb-3 row view" v-show="showView === true">
         <button class="btn btn-primary btn-sm" @click="viewEndpoint()">View the app</button>
         <button class="btn btn-primary btn-sm" @click="viewOnPortal()">Go to Azure Spring Apps</button>
     </div>
@@ -196,30 +198,29 @@ code{
         },
         methods: {
             deploySourceCode() {
-                axios.get("/deployApp" + this.url)
+                axios.get("/deploy" + this.url)
                     .then(res => {
-                        console.log(res.data);
-                        if (res.data === "done") {
+                        if (res.status === 200) {
                             this.showUploadIcon = 'success';
                             this.updateActiveDeployment();
                             this.showUpdateDeploymentIcon = 'execute';
-                        } else {
-                            this.showUploadIcon = 'error';
-                            toast.error(res.data, { position: toast.POSITION.TOP_CENTER, autoClose: 5000,hideProgressBar: true});
                         }
-                    })
+                    }).catch(err => {
+                        this.showUploadIcon = 'error';
+                        toast.error(err.response.data, { position: toast.POSITION.TOP_CENTER, autoClose: 5000,hideProgressBar: true});
+                })
             },
             updateActiveDeployment() {
                 axios.get("/updateActiveDeployment" + "?subscriptionId=" + this.subscriptionId + "&rgName=" + this.rgName + "&serviceName=" + this.serviceName + "&appName=" + this.appName)
                     .then(res => {
-                        if (res.data === true) {
+                        if (res.status === 200) {
                             this.showUpdateDeploymentIcon = 'success';
                             this.showView = true;
                             toast.success('Deployment succeeded.', { position: toast.POSITION.TOP_CENTER, autoClose: 5000,hideProgressBar: true});
-                        } else {
-                            this.showUpdateDeploymentIcon = 'error';
-                            toast.error(res.data, { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
                         }
+                    }).catch(err => {
+                        this.showUpdateDeploymentIcon = 'error';
+                        toast.error(err.response.data, { position: toast.POSITION.TOP_CENTER, autoClose: 5000,hideProgressBar: true});
                     })
             },
             viewEndpoint() {
