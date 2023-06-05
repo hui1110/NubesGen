@@ -17,7 +17,7 @@ This document describes the requirements for apps that use the `Deploy to Azure 
 ## Requirements
 
 - The application source code is hosted in the GitHub public repository.
-- An Azure AD user with admin permission.
+- An Azure AD user with admin permission or a service principal with admin consent.
 
 ## Button Terms of Use
 
