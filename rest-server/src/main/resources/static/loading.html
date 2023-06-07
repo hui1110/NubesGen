@@ -7,82 +7,98 @@
           href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
           crossorigin="anonymous">
-    <link href="https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/dist/index.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/dist/index.css" rel="stylesheet"/>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.5/axios.min.js"></script>
 </head>
 <style>
-.modal-content{
+.loading {
     width: 70%;
-    margin-left: 10%;
-    border: none;
+    padding: 5px;
+    margin: 10px auto;
 }
-.view{
-    margin-top: -15px;
-}
-.deploy-title{
+
+.deploy-title {
     font-size: 25px;
     font-weight: bold;
     margin-left: 20px;
+    margin-top: 10px;
 }
+
 label {
     display: block;
     vertical-align: middle;
 }
+
 label, input, select {
     vertical-align: middle;
 }
+
 .label-div {
     font-size: 16px;
     font-weight: 500;
 }
-.text-div{
+
+.text-div {
     font-size: 14px;
 }
-p{
-    font-size: 14px;
-}
-ul li{
-    font-size: 14px;
-}
+
 button {
     margin-right: 20px;
 }
-code{
+
+code {
     color: black;
     font-weight: bold;
 }
-.mb-3{
+
+.title{
+ margin-left: 20px;
+}
+
+.speed {
     margin-left: 40PX
 }
+
+.view {
+    margin-left: 20px;
+}
+
 .icon-loading::before {
     color: white;
     font-size: 24px;
-    background-color: #3366FF ;
+    background-color: #3366FF;
     border-radius: 50% 50%;
     animation: spin 1s infinite;
 }
+
 .icon-success {
     color: green;
     font-size: 24px;
 }
+
 .icon-error::before {
     color: red;
     font-size: 24px;
     vertical-align: 3px;
 }
+
 .inactive::before {
     background-color: grey;
 }
+
 .rotating {
     animation: rotation 2s infinite linear;
 }
-.success{
+
+.success {
     margin-top: -8px;
 }
+
 @keyframes rotation {
     from {
         transform: rotate(0deg);
@@ -92,6 +108,7 @@ code{
         transform: rotate(360deg);
     }
 }
+
 .icon-container {
     width: 24px;
     height: 24px;
@@ -99,19 +116,27 @@ code{
 </style>
 <body>
 <div id="app">
-    <div class="modal-content">
-        <div class="modal-header">
-            <span class="deploy-title">Azure Spring Apps Web Launcher</span>
+    <div class="loading">
+        <div class="mb-3 row title">
+            <img width="55" height="55" src="https://img.icons8.com/fluency/48/azure-1.png" alt="azure-1"/>
+            <div class="deploy-title">Azure Spring Apps Web Launcher</div>
         </div>
-        <div class="modal-body">
+        <hr/>
+        <div class="deploy-progress">
             <div class="col-sm-6" style="margin-bottom: 20px;">
-                <label class="label-div" v-show="showUploadIcon === 'success' && showUpdateDeploymentIcon === 'success'">Deployment is complted</label>
-                <label class="label-div" v-show="showUploadIcon === 'execute' || showUpdateDeploymentIcon === 'execute'">Deployment is in progress...</label>
-                <label class="label-div" v-show="showUploadIcon === 'error' || showUpdateDeploymentIcon === 'error'">Deployment failed.</label>
+                <label class="label-div"
+                       v-show="showUploadIcon === 'success' && showUpdateDeploymentIcon === 'success'">Deployment
+                    is complted</label>
+                <label class="label-div"
+                       v-show="showUploadIcon === 'execute' || showUpdateDeploymentIcon === 'execute'">Deployment
+                    is in progress...</label>
+                <label class="label-div"
+                       v-show="showUploadIcon === 'error' || showUpdateDeploymentIcon === 'error'">Deployment
+                    failed.</label>
                 <label class="text-div">The operation may take a while.</label>
             </div>
 
-            <div class="mb-3 row">
+            <div class="mb-3 row speed">
                 <div class="icon-container rotating" v-show="showUploadIcon === 'execute'">
                     <i class="bi bi-arrow-repeat icon-loading"></i>
                 </div>
@@ -122,17 +147,21 @@ code{
                     <i class="bi bi-exclamation-circle-fill icon-error"></i>
                 </div>
                 <div class="col-sm-10">
-                    <label class="text-div" v-show="showUploadIcon === 'execute'">Creating app <code>{{ appName }}</code> and uploading source code...</label>
-                    <label class="text-div" v-show="showUploadIcon === 'success'">Successfully create app <code>{{ appName }}</code> and upload source code.</label>
-                    <label class="text-div" v-show="showUploadIcon === 'error'">Failed to create app <code>{{ appName }}</code> and upload source code.</label>
+                    <label class="text-div" v-show="showUploadIcon === 'execute'">Creating app
+                        <code>{{ appName }}</code> and uploading source code...</label>
+                    <label class="text-div" v-show="showUploadIcon === 'success'">Successfully
+                        create app <code>{{ appName }}</code> and upload source code.</label>
+                    <label class="text-div" v-show="showUploadIcon === 'error'">Failed to create app
+                        <code>{{ appName }}</code> and upload source code.</label>
                 </div>
             </div>
 
-            <div class="mb-3 row">
+            <div class="mb-3 row speed">
                 <div class="icon-container" v-show="showUpdateDeploymentIcon === 'wait'">
                     <i class="bi bi-arrow-repeat icon-loading inactive"></i>
                 </div>
-                <div class="icon-container rotating" v-show="showUpdateDeploymentIcon === 'execute'">
+                <div class="icon-container rotating"
+                     v-show="showUpdateDeploymentIcon === 'execute'">
                     <i class="bi bi-arrow-repeat icon-loading"></i>
                 </div>
                 <div class="icon-container success" v-show="showUpdateDeploymentIcon === 'success'">
@@ -142,31 +171,22 @@ code{
                     <i class="bi bi-exclamation-circle-fill icon-error"></i>
                 </div>
                 <div class="col-sm-10">
-                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'wait'">Waiting to update deployments in app <code>{{ appName }}</code>.</label>
-                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'execute'">Updating deployments in app <code>{{ appName }}</code>.</label>
-                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'success'">Updated deployment in app <code>{{ appName }}</code>.</label>
-                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'error'">Failed to update deployment in app <code>{{ appName }}</code>.</label>
+                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'wait'">Waiting to
+                        update deployments in app <code>{{ appName }}</code>.</label>
+                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'execute'">Updating
+                        deployments in app <code>{{ appName }}</code>.</label>
+                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'success'">Updated
+                        deployment in app <code>{{ appName }}</code>.</label>
+                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'error'">Failed to
+                        update deployment in app <code>{{ appName }}</code>.</label>
                 </div>
             </div>
-
-            <div class="col-sm-10">
-                <label class="label-div">Next steps</label>
-                <p class="text-left">Lorem ipsum dolor sif amet consectetur. Sagittis auctor netus suscipif lectus neque velit. leo lacus et adipiscing elif lectus aliquam mauris pharetra. Pellentesque sapien.</p>
-                <p class="text-left">Et scelerisque mauris aliquet quis libero. Vulputate mattis cursus ut en auctor integer gravide suspendisse turpis.</p>
-                <ul>
-                    <li>Lorem eget arcu felis amet mauris id vitae ac.Imperdiet imperdiet.</li>
-                    <li>Consequat adipiscing faucibus feugiat. Eget nisi facliisis posuere risus.</li>
-                    <li>Et eu mauris eo. Uttrice morbi ament arcu semper morbi.</li>
-                    <li>Vulputate nibh lelmentum sit turpis donec sed.</li>
-                    <li>Proin felis.</li>
-                </ul>
-                <hr/>
-            </div>
         </div>
-    <div class="mb-3 row view" v-show="showView === true">
-        <button class="btn btn-primary btn-sm" @click="viewEndpoint()">View the app</button>
-        <button class="btn btn-primary btn-sm" @click="viewOnPortal()">Go to Azure Spring Apps</button>
-    </div>
+        <hr/>
+        <div class="mb-3 row view" v-show="showView === true">
+            <button class="btn btn-primary btn-sm" @click="viewEndpoint()">View the app</button>
+            <button class="btn btn-primary btn-sm" @click="viewOnPortal()">Go to Azure Spring Apps</button>
+        </div>
     </div>
 </div>
 
@@ -182,13 +202,13 @@ code{
 </body>
 
 <script type="module">
-    import { toast } from 'https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/+esm';
+    import {toast} from 'https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/+esm';
     const app = Vue.createApp({
         data() {
             return {
                 url: location.search,
                 subscriptionId: new URLSearchParams(location.search).get("subscriptionId"),
-                rgName: new URLSearchParams(location.search).get("rgName"),
+                resourceGroupName: new URLSearchParams(location.search).get("resourceGroupName"),
                 serviceName: new URLSearchParams(location.search).get("serviceName"),
                 appName: new URLSearchParams(location.search).get("appName"),
                 showUploadIcon: 'execute',
@@ -206,29 +226,41 @@ code{
                             this.showUpdateDeploymentIcon = 'execute';
                         }
                     }).catch(err => {
-                        this.showUploadIcon = 'error';
-                        toast.error(err.response.data, { position: toast.POSITION.TOP_CENTER, autoClose: 5000,hideProgressBar: true});
+                    this.showUploadIcon = 'error';
+                    toast.error(err.response.data, {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
                 })
             },
             updateActiveDeployment() {
-                axios.get("/updateActiveDeployment" + "?subscriptionId=" + this.subscriptionId + "&rgName=" + this.rgName + "&serviceName=" + this.serviceName + "&appName=" + this.appName)
+                axios.get("/updateActiveDeployment/" + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
                     .then(res => {
                         if (res.status === 200) {
                             this.showUpdateDeploymentIcon = 'success';
                             this.showView = true;
-                            toast.success('Deployment succeeded.', { position: toast.POSITION.TOP_CENTER, autoClose: 5000,hideProgressBar: true});
+                            toast.success('Deployment succeeded.', {
+                                position: toast.POSITION.TOP_CENTER,
+                                autoClose: 5000,
+                                hideProgressBar: true
+                            });
                         }
                     }).catch(err => {
-                        this.showUpdateDeploymentIcon = 'error';
-                        toast.error(err.response.data, { position: toast.POSITION.TOP_CENTER, autoClose: 5000,hideProgressBar: true});
-                    })
+                    this.showUpdateDeploymentIcon = 'error';
+                    toast.error(err.response.data, {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
+                })
             },
             viewEndpoint() {
                 const endpoint = "https://" + this.serviceName + "-" + this.appName + ".azuremicroservices.io/";
                 open(endpoint);
             },
             viewOnPortal() {
-                const portalUrl = "https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/" + this.subscriptionId + "/resourceGroups/" + this.rgName + "/providers/Microsoft.AppPlatform/Spring/" + this.serviceName + "/application_dashboard";
+                const portalUrl = "https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/" + this.subscriptionId + "/resourceGroups/" + this.resourceGroupName + "/providers/Microsoft.AppPlatform/Spring/" + this.serviceName + "/application_dashboard";
                 open(portalUrl);
             },
             stringify: JSON.stringify,

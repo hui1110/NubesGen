@@ -10,77 +10,89 @@
           href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
           crossorigin="anonymous">
-    <link href="https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/dist/index.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/dist/index.css" rel="stylesheet"/>
 </head>
 <style>
 label {
     display: block;
     vertical-align: middle;
 }
+
 label, input, select {
     vertical-align: middle;
 }
-svg{
-    display:inline-block
+
+svg {
+    display: inline-block
 }
+
 .deployment {
     width: 60%;
     padding: 5px;
     margin: 10px auto;
 }
+
 .form-control:focus {
     outline: 0 !important;
     -webkit-box-shadow: none !important;
     box-shadow: none !important;
 }
-.col-sm-3{
+
+.col-sm-3 {
     font-size: 14px
 }
-.col-sm-4{
+
+.col-sm-4 {
     font-size: 14px;
     font-weight: normal;
 }
-.form-control{
+
+.form-control {
     font-size: 14px;
 }
-.detail-title{
+
+.detail-title {
     font-weight: 500;
 }
-.detail{
+
+.detail {
     margin-left: 1px;
 }
-.deploy-title{
+
+.deploy-title {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     font-size: 25px;
     font-weight: bold;
     margin-left: 20px;
+    margin-top: 10px;
 }
-.required{
-    color:red;
-    display:inline-block;
+
+.required {
+    color: red;
+    display: inline-block;
     margin-right: 10px;
     margin-left: 5px;
 }
-.readonly{
+
+.readonly {
     border: none;
 }
-.vl{
-    display:inline-block;
+
+.vl {
+    display: inline-block;
     margin: -25px 5px 5px 10px;
     border-left: 1px solid #C0C0C0;
     height: 40px;
     width: 40px;
     border-bottom: 1px solid #C0C0C0;
 }
-.Toastify__toast {
-    width: 500px;
-}
 </style>
 <body>
 <div id="app">
     <div class="deployment">
-        <div class="mb-3 row">
-            <div  class="deploy-title">Azure Spring Apps Web Launcher</div>
+        <div class="mb-3 row" style="margin-left: 10px;">
+            <img width="55" height="55" src="https://img.icons8.com/fluency/48/azure-1.png" alt="azure-1"/>
+            <div class="deploy-title">Azure Spring Apps Web Launcher</div>
         </div>
         <hr/>
         <div class="mb-3 row">
@@ -92,49 +104,67 @@ svg{
             </div>
         </div>
         <div class="mb-3 row">
-            <label for="selectSubId" class="col-sm-4 col-form-label">Subscription:<span class="required"> * </span>
+            <label for="selectSubId" class="col-sm-4 col-form-label">Subscription:<span
+                    class="required"> * </span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16"
                      height="16"
                      fill="currentColor"
                      class="bi bi-exclamation-circle" viewBox="0 0 16 16">
-                    <title>An Azure subscription grants you access to Azure services. Your subscription is also how resource usage is reported and services are billed.</title>
+                    <title>An Azure subscription grants you access to Azure services. Your
+                        subscription is also how resource usage is reported and services are
+                        billed.</title>
                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                     <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
                 </svg>
             </label>
             <div class="col-sm-7">
-                <select class="form-control" v-model="subscriptionId" id="selectSubId" name="Subscription" @change="changeRgInstance(subscriptionId)">
+                <select class="form-control" v-model="subscriptionId" id="selectSubId"
+                        name="Subscription"
+                        @change="getResourceGroupListBySubscriptionId(subscriptionId)">
                     <option value="" disabled selected hidden>Please select Subscription</option>
-                    <option v-for="item in SubList" :key="item.name" :value="item.id">{{ item.name }}</option>
+                    <option v-for="item in subscriptionList" :key="item.name" :value="item.id">
+                        {{ item.name }}
+                    </option>
                 </select>
             </div>
         </div>
 
         <div class="mb-3 row">
-            <label for="SelectResourceGroup" class="col-sm-4 col-form-label"><div class="vl"></div>Resource group:<span class="required"> * </span>
+            <label for="SelectResourceGroup" class="col-sm-4 col-form-label">
+                <div class="vl"></div>
+                Resource group:<span class="required"> * </span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16"
                      height="16"
                      fill="currentColor"
                      class="bi bi-exclamation-circle" viewBox="0 0 16 16">
-                    <title>A resource group is a collection of resources that share the same lifecycle, permission, and policies.</title>
+                    <title>A resource group is a collection of resources that share the same
+                        lifecycle, permission, and policies.</title>
                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                     <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
                 </svg>
             </label>
             <div class="col-sm-7">
-                <select class="form-control" v-model="resourceGroupName" id="SelectResourceGroup" @change="getASAInstanceByResourceGroupName(resourceGroupName)">
+                <select class="form-control" v-model="resourceGroupName" id="SelectResourceGroup"
+                        @change="getServiceInstanceByResourceGroupName(resourceGroupName)">
                     <option value="" disabled selected hidden>Please select Resource group</option>
-                    <option v-for="item in ResourceGroup" :key="item.name" :value="item.name">{{ item.name }}</option>
+                    <option v-for="item in resourceGroupList" :key="item.name" :value="item.name">
+                        {{ item.name }}
+                    </option>
                 </select>
             </div>
         </div>
 
         <div class="mb-3 row">
-            <label for="SelectAsaInstance" class="col-sm-4 col-form-label">Service Instance:<span class="required"> * </span></label>
+            <label for="SelectAsaInstance" class="col-sm-4 col-form-label">Service Instance:<span
+                    class="required"> * </span></label>
             <div class="col-sm-7">
-                <select class="form-control" v-model="ASAName" id="SelectAsaInstance" @change="changeAppInstance(ASAName)">
-                    <option value="" disabled selected hidden>Please select Service Instance</option>
-                    <option v-for="item in ASAList" :key="item.name" :value="item.name">{{ item.name }}</option>
+                <select class="form-control" v-model="serviceInstanceName" id="SelectAsaInstance"
+                        @change="changeAppInstance(serviceInstanceName)">
+                    <option value="" disabled selected hidden>Please select Service Instance
+                    </option>
+                    <option v-for="item in serviceInstanceList" :key="item.name" :value="item.name">
+                        {{ item.name }}
+                    </option>
                 </select>
             </div>
         </div>
@@ -144,19 +174,41 @@ svg{
         </div>
 
         <div class="mb-3 row detail">
-            <label class="col-sm-3 col-form-label">App name:<span class="required"> * </span></label>
+            <label class="col-sm-3 col-form-label">App name:<span class="required"> * </span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16"
+                     height="16"
+                     fill="currentColor"
+                     class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                    <title>The application name will be read from the name field in the project's
+                        pom.xml file.</title>
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                </svg>
+            </label>
             <div class="col-sm-5">
                 <label>
-                    <input type="text" class="form-control" v-model="AppInstance.name"/>
+                    <input type="text" class="form-control" v-model="appInstance.name"/>
                 </label>
             </div>
         </div>
 
         <div class="mb-3 row detail">
-            <label class="col-sm-3 col-form-label">Runtime platform:<span class="required"> * </span></label>
+            <label class="col-sm-3 col-form-label">Runtime platform:<span
+                    class="required"> * </span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16"
+                     height="16"
+                     fill="currentColor"
+                     class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                    <title>The java version of the running platform will be read from the java.version field in the project's
+                        pom.xml file.</title>
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                </svg>
+            </label>
             <div class="col-sm-5">
                 <label>
-                    <input type="text" class="form-control readonly" id="appInstance" v-model="AppInstance.runtimePlatform" readonly/>
+                    <input type="text" class="form-control readonly" id="appInstance"
+                           v-model="appInstance.runtimePlatform" readonly/>
                 </label>
             </div>
         </div>
@@ -165,23 +217,24 @@ svg{
             <label class="col-sm-3 col-form-label">vCPU:<span class="required"> * </span></label>
             <div class="col-sm-5">
                 <label>
-<!--                    <input type="text" class="form-control" v-model="AppInstance.cpu"/>-->
-                    <select class="form-control" v-model="AppInstance.cpu">
-                        <option v-for="item in vCPUList" :key="item" :value="item">{{ item }}</option>
+                    <select class="form-control" v-model="appInstance.cpu">
+                        <option v-for="item in vCPUList" :key="item" :value="item">{{ item }}
+                        </option>
                     </select>
                 </label>
             </div>
         </div>
 
         <div class="mb-3 row detail">
-            <label class="col-sm-3 col-form-label">Memory(Gi):<span class="required"> * </span></label>
+            <label class="col-sm-3 col-form-label">Memory(Gi):<span
+                    class="required"> * </span></label>
             <div class="col-sm-5">
                 <label>
-<!--                    <input type="text" class="form-control" v-model="AppInstance.memory"/>-->
-                <select class="form-control" v-model="AppInstance.memory">
-                    <option v-for="item in MemoryList" :key="item" :value="item">{{ item }}</option>
-                </select>
-                    </label>
+                    <select class="form-control" v-model="appInstance.memory">
+                        <option v-for="item in memoryList" :key="item" :value="item">{{ item }}
+                        </option>
+                    </select>
+                </label>
             </div>
         </div>
 
@@ -189,16 +242,26 @@ svg{
             <label class="col-sm-3 col-form-label">Instance count:<span class="required"> * </span></label>
             <div class="col-sm-5">
                 <label>
-                    <input type="text" class="form-control" v-model="AppInstance.instanceCount"/>
+                    <input type="text" class="form-control" v-model="appInstance.instanceCount"/>
                 </label>
             </div>
         </div>
 
         <div class="mb-3 row detail">
-            <label class="col-sm-3 col-form-label">Deployment type:<span class="required"> * </span></label>
+            <label class="col-sm-3 col-form-label">Deployment type:<span class="required"> * </span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16"
+                     height="16"
+                     fill="currentColor"
+                     class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                    <title>Deploy using the source code from the GitHub repository.</title>
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                </svg>
+            </label>
             <div class="col-sm-5">
                 <label>
-                    <input type="text" class="form-control readonly" v-model="AppInstance.deploymentType" readonly/>
+                    <input type="text" class="form-control readonly"
+                           v-model="appInstance.deploymentType" readonly/>
                 </label>
             </div>
         </div>
@@ -222,171 +285,186 @@ svg{
 </body>
 
 <script type="module">
-    import { toast } from 'https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/+esm';
+    import {toast} from 'https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/+esm';
     const app = Vue.createApp({
         data() {
             return {
-                url: sessionStorage.getItem('githubRepoUrl'),
-                branch: sessionStorage.getItem('branchName'),
-                module: sessionStorage.getItem('moduleName'),
+                url: new URLSearchParams(location.search).get('url'),
+                branch: new URLSearchParams(location.search).get('branch'),
+                module: new URLSearchParams(location.search).get('module'),
                 resourceGroupName: '',
                 subscriptionId: '',
-                region:'',
-                ASAName: '',
-                JavaVersion: '',
-                ASAInstance: {},
-                SubList: [],
-                ASAList: [],
+                region: '',
+                serviceInstanceName: '',
+                javaVersion: '',
+                subscriptionList: [],
+                serviceInstanceList: [],
                 vCPUList: [0.5, 1, 2, 3, 4],
-                MemoryList: ['512 Mi', '1 Gi',  '2 Gi', '3 Gi', '4 Gi', '5 Gi', '6 Gi', '7 Gi', '8 Gi'],
-                ResourceGroup: [],
-                AppInstance: {},
+                memoryList: ['512 Mi', '1 Gi', '2 Gi', '3 Gi', '4 Gi', '5 Gi', '6 Gi', '7 Gi', '8 Gi'],
+                resourceGroupList: [],
+                appInstance: {},
             }
         },
         methods: {
             getAppNameAndJavaVersion() {
-                axios.get('/getAppNameAndJavaVersion' + '?url=' + this.url + '&branchName=' + this.branch  + "&module=" + this.module)
+                axios.get('/getAppNameAndJavaVersion' + '?url=' + this.url + '&branchName=' + this.branch + "&module=" + this.module)
                     .then(res => {
-                        this.AppInstance.name = res.data.name;
-                        this.AppInstance.runtimePlatform = res.data.version;
+                        this.appInstance.name = res.data.name;
+                        this.appInstance.runtimePlatform = res.data.version;
                     }).catch(err => {
-                        toast.error(err.response.data, { position: toast.POSITION.TOP_CENTER, autoClose: 5000,hideProgressBar: true});
-                    })
+                    toast.error(err.response.data, {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
+                })
             },
-            querySubId() {
-                axios.get('/subscriptionList')
+            querySubscriptionList() {
+                axios.get('/getSubscriptionList')
                     .then(res => {
-                        this.SubList = res.data;
-                        if (this.SubList.length === 0) {
-                            toast.info('Not found Subscription', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                        this.subscriptionList = res.data;
+                        if (this.subscriptionList.length === 0) {
+                            toast.info('Not found Subscription', {
+                                position: toast.POSITION.TOP_CENTER,
+                                autoClose: 2000,
+                                hideProgressBar: true
+                            });
                         }
                     }).catch(err => {
-                        toast.error(err.response.data, { position: toast.POSITION.TOP_CENTER, autoClose: 5000,hideProgressBar: true});
-                    })
+                    toast.error(err.response.data, {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
+                })
             },
-            changeRgInstance(subscriptionId) {
-                this.ResourceGroup = [];
-                axios.get('/getResourceGroups/' + subscriptionId)
+            getResourceGroupListBySubscriptionId(subscriptionId) {
+                this.resourceGroupList = [];
+                axios.get('/getResourceGroupList/' + subscriptionId)
                     .then(res => {
-                        this.ResourceGroup = res.data;
-                        if (this.ResourceGroup.length === 0) {
-                            toast.info('Not found Resource group', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                        this.resourceGroupList = res.data;
+                        if (this.resourceGroupList.length === 0) {
+                            toast.info('Not found Resource group', {
+                                position: toast.POSITION.TOP_CENTER,
+                                autoClose: 2000,
+                                hideProgressBar: true
+                            });
                         }
                     }).catch(err => {
-                        toast.error(err.response.data, { position: toast.POSITION.TOP_CENTER, autoClose: 5000,hideProgressBar: true});
-                    })
+                    toast.error(err.response.data, {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
+                })
             },
-            getASAInstanceByResourceGroupName(resourceGroupName) {
-                this.ASAList = [];
-                axios.get('/instanceList/' + this.subscriptionId + '/' + resourceGroupName)
+            getServiceInstanceByResourceGroupName(resourceGroupName) {
+                this.serviceInstanceList = [];
+                axios.get('/getServiceInstanceList/' + this.subscriptionId + '/' + resourceGroupName)
                     .then(res => {
-                        this.ASAList = res.data;
-                        if (this.ASAList.length === 0) {
-                            toast.info('Not found Service Instance', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                        this.serviceInstanceList = res.data;
+                        if (this.serviceInstanceList.length === 0) {
+                            toast.info('Not found Service Instance', {
+                                position: toast.POSITION.TOP_CENTER,
+                                autoClose: 2000,
+                                hideProgressBar: true
+                            });
                         }
                     }).catch(err => {
-                        toast.error(err.response.data, { position: toast.POSITION.TOP_CENTER, autoClose: 5000,hideProgressBar: true});
-                    })
+                    toast.error(err.response.data, {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
+                })
             },
-            changeAppInstance(ASAName) {
+            changeAppInstance(serviceInstanceName) {
                 // Get ASA region
-                for (const instance of this.ASAList) {
-                    if (instance.name === ASAName) {
+                for (const instance of this.serviceInstanceList) {
+                    if (instance.name === serviceInstanceName) {
                         this.region = instance.region;
                     }
                 }
             },
             deployCode() {
                 if (this.checkValue(this.url)) {
-                    toast.info('Please add GitHub  repository url !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                    this.showMessage('Please add GitHub  repository url !');
                     return;
                 }
                 if (this.checkValue(this.subscriptionId)) {
-                    toast.info('Please select subscription !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                    this.showMessage('Please select subscription !');
                     return;
                 }
                 if (this.checkValue(this.resourceGroupName)) {
-                    toast.info('Please select Resource group !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                    this.showMessage('Please select Resource group !');
                     return;
                 }
-                if (this.checkValue(this.ASAName)) {
-                    toast.info('Please select Service Instance !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                if (this.checkValue(this.serviceInstanceName)) {
+                    this.showMessage('Please select Service Instance !');
                     return;
                 }
                 const pattern = /^[a-z][a-z0-9-]{3,31}$/;
-                if (this.checkValue(this.AppInstance.name)) {
-                    toast.info('Please type app name !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                if (this.checkValue(this.appInstance.name)) {
+                    this.showMessage('Please type app name !');
                     return;
-                }else if(!pattern.test(this.AppInstance.name)){
-                    toast.warning('The App name is invalid. It can contain only lowercase letters, numbers and hyphens. The first character must be a letter. The last character must be a letter or number. The value must be between 4 and 32 characters long. !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
-                    return;
-                }
-                if (this.checkValue(this.AppInstance.runtimePlatform)) {
-                    toast.info('Please configured Java version in pom.xml !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                } else if (!pattern.test(this.appInstance.name)) {
+                    this.showMessage('The App name is invalid. It can contain only lowercase letters, numbers and hyphens. The first character must be a letter. The last character must be a letter or number. The value must be between 4 and 32 characters long. !');
                     return;
                 }
-                if (this.checkValue(this.AppInstance.cpu)) {
-                    toast.info('Please select cpu count !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                if (this.checkValue(this.appInstance.runtimePlatform)) {
+                    this.showMessage('Please configured Java version in pom.xml !');
                     return;
                 }
-                if (this.checkValue(this.AppInstance.memory)) {
-                    toast.info('Please select memory !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                if (this.checkValue(this.appInstance.cpu)) {
+                    this.showMessage('Please select cpu count !');
                     return;
                 }
-                if (this.checkValue(this.AppInstance.instanceCount)) {
-                    toast.info('Please type instance count !', { position: toast.POSITION.TOP_CENTER, autoClose: 2000,hideProgressBar: true});
+                if (this.checkValue(this.appInstance.memory)) {
+                    this.showMessage('Please select memory !');
+                    return;
+                }
+                if (this.checkValue(this.appInstance.instanceCount)) {
+                    this.showMessage('Please type instance count !');
                     return;
                 }
 
-                if (this.AppInstance.runtimePlatform === 'Java_17') {
-                    this.JavaVersion = 17;
-                } else if (this.AppInstance.runtimePlatform === 'Java_11') {
-                    this.JavaVersion = 11;
+                if (this.appInstance.runtimePlatform === 'Java_17') {
+                    this.javaVersion = 17;
+                } else if (this.appInstance.runtimePlatform === 'Java_11') {
+                    this.javaVersion = 11;
                 } else {
-                    this.JavaVersion = 8;
+                    this.javaVersion = 8;
                 }
 
-                if(this.AppInstance.memory === '512 Mi'){
-                    this.AppInstance.memory = 0.5;
-                }else {
-                    this.AppInstance.memory = this.AppInstance.memory.charAt(0);
+                if (this.appInstance.memory === '512 Mi') {
+                    this.appInstance.memory = 0.5;
+                } else {
+                    this.appInstance.memory = this.appInstance.memory.charAt(0);
                 }
 
-                const appDetails = '&cpu=' + this.AppInstance.cpu + '&memory=' + this.AppInstance.memory + '&instanceCount=' + this.AppInstance.instanceCount;
-                const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&rgName=' + this.resourceGroupName + '&serviceName=' + this.ASAName + '&javaVersion=' + this.JavaVersion + '&appName=' + this.AppInstance.name + '&enableAction=' + '' + '&region=' + this.region + '&branchName=' + this.branch + "&module=" + this.module;
+                const appDetails = '&cpu=' + this.appInstance.cpu + '&memory=' + this.appInstance.memory + '&instanceCount=' + this.appInstance.instanceCount;
+                const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceInstanceName + '&javaVersion=' + this.javaVersion + '&appName=' + this.appInstance.name + '&region=' + this.region + '&branchName=' + this.branch + "&module=" + this.module;
                 location.assign('/loading.html?' + url + appDetails);
             },
-            checkValue(string){
+            checkValue(string) {
                 return (string === '' || string === undefined || string === null);
+            },
+            showMessage(string) {
+                toast.warning(string, {
+                    position: toast.POSITION.TOP_CENTER,
+                    autoClose: 3000,
+                    hideProgressBar: true
+                });
             },
             stringify: JSON.stringify,
         },
-        beforeCreate() {
-            sessionStorage.removeItem("githubRepoUrl");
-            sessionStorage.removeItem("branchName");
-            sessionStorage.removeItem("moduleName");
-            const url = new URLSearchParams(location.search).get('url')
-            const branchName = new URLSearchParams(location.search).get('branch')
-            const moduleName = new URLSearchParams(location.search).get('module')
-            if (url !== null) {
-                sessionStorage.setItem('githubRepoUrl', url);
-                if (branchName !== null) {
-                    sessionStorage.setItem('branchName', branchName);
-                }
-                if (moduleName !== null) {
-                    sessionStorage.setItem('moduleName', moduleName);
-                }
-            }
-        },
         created() {
-            this.querySubId();
+            this.querySubscriptionList();
             this.getAppNameAndJavaVersion();
-            this.AppInstance.cpu = 1;
-            this.AppInstance.memory = '2 Gi';
-            this.AppInstance.instanceCount = 1;
-            this.AppInstance.deploymentType = 'GitHub repository';
-            // this.ASAName = 'yonghui-web-dev-apps';
-            // this.region = 'eastasia';
+            this.appInstance.cpu = 1;
+            this.appInstance.memory = '2 Gi';
+            this.appInstance.instanceCount = 1;
+            this.appInstance.deploymentType = 'GitHub repository';
         },
     })
     app.mount('#app')

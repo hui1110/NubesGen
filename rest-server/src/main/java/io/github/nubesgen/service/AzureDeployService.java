@@ -4,12 +4,10 @@ import com.azure.core.management.Region;
 import com.azure.resourcemanager.AzureResourceManager;
 import com.azure.resourcemanager.appplatform.models.RuntimeVersion;
 import com.azure.resourcemanager.appplatform.models.SpringApp;
-import com.azure.resourcemanager.appplatform.models.SpringApps;
 import com.azure.resourcemanager.appplatform.models.SpringService;
 import com.azure.resourcemanager.resources.models.ResourceGroup;
 import com.azure.resourcemanager.resources.models.Subscription;
 import io.github.nubesgen.model.ASAInstance;
-import io.github.nubesgen.model.AppInstance;
 import io.github.nubesgen.model.ProjectInstance;
 import io.github.nubesgen.model.RegionInstance;
 import io.github.nubesgen.model.ResourceGrooupInstance;
@@ -77,46 +75,22 @@ public class AzureDeployService {
                                    .collect(Collectors.toList());
     }
 
-
     /**
      * Get Azure Spring Apps instance list.
      *
      * @param management OAuth2 authorization client after login
      * @param subscriptionId the subscription id
-     * @param rgName the resource group name
+     * @param resourceGroupName the resource group name
      * @return Azure Spring Apps instance list
      */
     public List<ASAInstance> getServiceinstanceList(OAuth2AuthorizedClient management, String subscriptionId,
-                                                    String rgName) {
+                                                    String resourceGroupName) {
         AzureResourceManager azureResourceManager = getAzureResourceManager(management, subscriptionId);
-        return azureResourceManager.springServices().list().stream().filter(springService -> Objects.equals(springService.resourceGroupName(), rgName)).sorted(Comparator.comparing(SpringService::name))
+        return azureResourceManager.springServices().list().stream().filter(springService -> Objects.equals(springService.resourceGroupName(), resourceGroupName)).sorted(Comparator.comparing(SpringService::name))
                                    .map(springService -> new ASAInstance(springService.region(),
                                        springService.resourceGroupName(), springService.id(), springService.name(),
                                        springService.sku().tier()))
                                    .collect(Collectors.toList());
-    }
-
-    /**
-     * Get Azure Spring Apps instance list.
-     *
-     * @param management OAuth2 authorization client after login
-     * @param subscriptionId the subscription id
-     * @param rgName the resource group name
-     * @param serviceName the service name
-     * @return Azure Spring Apps instance list
-     */
-    public List<AppInstance> getAppList(OAuth2AuthorizedClient management, String subscriptionId, String rgName,
-                                        String serviceName) {
-        AzureResourceManager azureResourceManager = getAzureResourceManager(management, subscriptionId);
-        SpringApps apps = azureResourceManager.springServices().getByResourceGroup(rgName, serviceName).apps();
-        return apps.list().stream().sorted(Comparator.comparing(SpringApp::name))
-                   .map(springApp -> new AppInstance(springApp.id(), springApp.name(),
-                       springApp.getActiveDeployment() == null ? "---" :
-                           String.valueOf(springApp.getActiveDeployment().runtimeVersion()),
-                       springApp.getActiveDeployment() == null ? 0 : springApp.getActiveDeployment().cpu(),
-                       springApp.getActiveDeployment() == null ? 0 : springApp.getActiveDeployment().memoryInGB(),
-                       springApp.getActiveDeployment() == null || springApp.getActiveDeployment().instances() == null ? 0 : springApp.getActiveDeployment().instances().size()))
-                   .toList();
     }
 
     /**
@@ -192,16 +166,18 @@ public class AzureDeployService {
      *
      * @param management OAuth2 authorization client after login
      * @param subscriptionId the subscription id
-     * @param rgName the resource group name
+     * @param resourceGroupName the resource group name
      * @param serviceName the service name
      * @param appName the app name
      */
-    public void updateActiveDeployment(OAuth2AuthorizedClient management, String subscriptionId, String rgName,
+    public void updateActiveDeployment(OAuth2AuthorizedClient management, String subscriptionId,
+                                       String resourceGroupName,
                                        String serviceName, String appName) {
         try {
             log.info("Updating deployment in app {} ", appName);
             AzureResourceManager azureResourceManager = getAzureResourceManager(management, subscriptionId);
-            SpringService service = azureResourceManager.springServices().getByResourceGroup(rgName, serviceName);
+            SpringService service = azureResourceManager.springServices().getByResourceGroup(resourceGroupName,
+                serviceName);
             SpringApp app = service.apps()
                                    .getByName(appName)
                                    .update()
@@ -223,7 +199,7 @@ public class AzureDeployService {
      * @param management OAuth2 authorization client after login
      * @param subscriptionId the subscription id
      * @param regionName the region name
-     * @param rgName the resource group name
+     * @param resourceGroupName the resource group name
      * @param serviceName the service name
      * @param appName the app name
      * @param javaVersion the java version
@@ -231,7 +207,8 @@ public class AzureDeployService {
      * @param branchName the branch name
      */
     public synchronized void deploySourceCodeToSpringApps(OAuth2AuthorizedClient management, String subscriptionId,
-                                                          String regionName, String rgName, String serviceName,
+                                                          String regionName, String resourceGroupName,
+                                                          String serviceName,
                                                           String appName,
                                                           String module, String javaVersion, Integer cpu,
                                                           Integer memory,
@@ -243,10 +220,10 @@ public class AzureDeployService {
         File sourceCode = createTarGzFile(new File(pathName));
         AzureResourceManager azureResourceManager = getAzureResourceManager(management, subscriptionId);
         try {
-            if (!azureResourceManager.resourceGroups().contain(rgName)) {
-                createResourceGroup(azureResourceManager, rgName, region);
+            if (!azureResourceManager.resourceGroups().contain(resourceGroupName)) {
+                createResourceGroup(azureResourceManager, resourceGroupName, region);
             } else {
-                log.info("Resource Group " + rgName + " already exists.");
+                log.info("Resource Group " + resourceGroupName + " already exists.");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -255,7 +232,7 @@ public class AzureDeployService {
 
         try {
             if (azureResourceManager.springServices().checkNameAvailability(serviceName, region).nameAvailable()) {
-                createASA(azureResourceManager, rgName, serviceName, region);
+                createASA(azureResourceManager, resourceGroupName, serviceName, region);
             } else {
                 log.info("Azure Spring Apps " + serviceName + " already exists.");
             }
@@ -265,10 +242,12 @@ public class AzureDeployService {
         }
 
         try {
-            deployToSpringApp(azureResourceManager, rgName, serviceName, appName, module, runtimeVersion, sourceCode,
+            deployToSpringApp(azureResourceManager, resourceGroupName, serviceName, appName, module, runtimeVersion,
+                sourceCode,
                 cpu, memory, instanceCount);
         } catch (Exception e) {
-            SpringService service = azureResourceManager.springServices().getByResourceGroup(rgName, serviceName);
+            SpringService service = azureResourceManager.springServices().getByResourceGroup(resourceGroupName,
+                serviceName);
             service.apps().deleteByName(appName);
             log.info("Delete app " + appName);
             e.printStackTrace();
@@ -406,8 +385,7 @@ public class AzureDeployService {
         if (subscriptionId == null) {
             return ResourceManagerUtils.getResourceManager(management.getAccessToken().getTokenValue());
         } else {
-            return ResourceManagerUtils.getResourceManager(management.getAccessToken().getTokenValue(),
-                subscriptionId);
+            return ResourceManagerUtils.getResourceManager(management.getAccessToken().getTokenValue(), subscriptionId);
         }
     }
 
