@@ -12,7 +12,7 @@ Here’s an example button that deploys a sample to Azure Spring Apps:
 
 [![Deploy to Azure Spring Apps](https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-892a-445fa33f1612.png)]()
 
-This document describes the requirements for apps that use the `Deploy to Azure Spring Apps` service, and how to use these buttons make it easy to deploy source code you maintain to Azure Spring Apps.
+This document describes how to easily deploy your maintained source code to Azure Spring Apps using the `Deploy to Azure Spring Apps` button.
 
 ## Requirements
 
