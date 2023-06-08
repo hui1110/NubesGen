@@ -1,4 +1,4 @@
-# Create a Deploy to Azure Button
+# Create a Deploy to Azure Spring Apps Button
 
 __Table of Contents:__
 
@@ -37,7 +37,6 @@ The following steps need to be in the same tenant.
 2. Grant permission.
 
     - Select **Delegated permission** in **API permissions** of the service principal and add the following permissions:
-      - user_impersonation
       - openid
       - profile
       - offline_access
@@ -52,13 +51,15 @@ The following steps need to be in the same tenant.
 
 The Azure Terms of Use (Default) governs the Terms of Use of your button unless you provide your own Terms of Use in your GitHub repository. It is common practice to link to your Terms of Use in your README file or to add them as a license file to your GitHub repository.
 
-## Add ASA button
+## Add deploy to Azure Spring Apps Button
 
 The following is an example that changes the template query parameter to the `url` of the repository:
 
 :::tip
 When adding only the `url`, Azure Button will pull the source code from the default branch of your GitHub repository.
 :::
+
+**Markdown**:
 
 ```markdown
 [![Deploy to Azure](https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-892a-445fa33f1612.png)](https://azure.spring.launcher.com/deploy.html?url=https://github.com/azure/deploy)
@@ -68,15 +69,21 @@ Here’s the equivalent content as HTML if you’d prefer not to use Markdown:
 
 ```html
 <a href="https://azure.spring.launcher.com/deploy.html?url=https://github.com/azure/deploy">
-    <img src="https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-892a-445fa33f1612.png" alt="Deploy to Azure">
+    <img src="https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-892a-445fa33f1612.png" alt="Deploy to Azure Spring Apps">
 </a>
+```
+
+**AsciiDoc**:
+    
+```asciidoc
+image:https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-892a-445fa33f1612.png[link="https://azure.spring.launcher.com/deploy.html?url=https://github.com/azure/deploy" alt="Deploy to Azure Spring Apps" width="200px"]
 ```
 
 ### Button image
 
 When linking to the Azure Button set-up flow, you can either use a raw link or an image link. If using an image, Azure makes available SVG versions at these URLs:
 
-```bash
+```url
 https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-892a-445fa33f1612.png
 ```
 
@@ -84,7 +91,7 @@ https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-
 
 If you’d like the button to deploy from a specific Git branch, you can use a fully qualified GitHub URL as the `branch` parameter:
 
-```bash
+```url
 https://azure.spring.launcher.com/deploy.html?url=https://github.com/azure/deploy&branch=main
 ```
 
@@ -92,7 +99,7 @@ https://azure.spring.launcher.com/deploy.html?url=https://github.com/azure/deplo
 
 If you want the button to deploy from a module specified in the source code, you can use the fully qualified GitHub URL as the `module` parameter:
 
-```bash
+```url
 https://azure.spring.launcher.com/deploy.html?url=https://github.com/azure/deploy&branch=main&module=web
 ```
 
