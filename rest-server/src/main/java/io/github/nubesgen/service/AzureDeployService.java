@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
@@ -117,7 +118,7 @@ public class AzureDeployService {
      * @param module module name
      * @return project name and java version
      */
-    public synchronized ProjectInstance getNameAndJavaVersion(String url, String branchName, String module) {
+    public ProjectInstance getNameAndJavaVersion(String url, String branchName, String module) {
         module = Objects.equals(module, "null") ? null : module;
         String pathName = getRepositoryPath(url, branchName);
         assert pathName != null;
@@ -127,24 +128,25 @@ public class AzureDeployService {
                 MavenXpp3Reader reader = new MavenXpp3Reader();
                 model = reader.read(fis);
             } catch (Exception e) {
-                deleteRepositoryDirectory(new File(pathName));
                 e.printStackTrace();
+                deleteRepositoryDirectory(new File(pathName));
                 throw new RuntimeException(e);
             }
         } else {
             try (FileInputStream fis = new FileInputStream(pathName.concat("/").concat(module.concat("/pom.xml")))) {
                 MavenXpp3Reader reader = new MavenXpp3Reader();
                 model = reader.read(fis);
-                if (model.getProperties() != null && !model.getProperties().containsKey("java.version")) {
+                if (model.getProperties().isEmpty()) {
                     FileInputStream fisParent = new FileInputStream(pathName.concat("/pom.xml"));
                     MavenXpp3Reader readerParent = new MavenXpp3Reader();
-                    model.getProperties().put("java.version", readerParent.read(fisParent).getProperties().get("java"
-                        + ".version"));
+                    Properties properties = readerParent.read(fisParent).getProperties();
                     fisParent.close();
+                    Assert.isTrue(properties.isEmpty() || properties.containsKey("java.version"), "Please configure the java version in the pom.xml file of module a or parent.");
+                    model.getProperties().put("java.version", properties.getProperty("java.version"));
                 }
             } catch (Exception e) {
-                deleteRepositoryDirectory(new File(pathName));
                 e.printStackTrace();
+                deleteRepositoryDirectory(new File(pathName));
                 throw new RuntimeException(e);
             }
         }
@@ -206,7 +208,7 @@ public class AzureDeployService {
      * @param url the repository url
      * @param branchName the branch name
      */
-    public synchronized void deploySourceCodeToSpringApps(OAuth2AuthorizedClient management, String subscriptionId,
+    public void deploySourceCodeToSpringApps(OAuth2AuthorizedClient management, String subscriptionId,
                                                           String regionName, String resourceGroupName,
                                                           String serviceName,
                                                           String appName,
@@ -246,11 +248,11 @@ public class AzureDeployService {
                 sourceCode,
                 cpu, memory, instanceCount);
         } catch (Exception e) {
+            e.printStackTrace();
             SpringService service = azureResourceManager.springServices().getByResourceGroup(resourceGroupName,
                 serviceName);
             service.apps().deleteByName(appName);
             log.info("Delete app " + appName);
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
