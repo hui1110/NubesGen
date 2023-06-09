@@ -20,3 +20,7 @@ trademarks or logos is subject to and must follow
 [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
 Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
 Any use of third-party trademarks or logos are subject to those third-party's policies.
+
+<a href="https://yonghui-dev-apps-deploy-webapp.azuremicroservices.io/deploy.html?url=https://github.com/hui1110/NubesGen&branch=asa_button&module=rest-server" data-linktype="external">
+    <img src="https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-892a-445fa33f1612.png" alt="Deploy to Azure" width="200px" data-linktype="relative-path">
+</a>
