@@ -69,13 +69,17 @@ module.exports = {
             ],
           },
           {
-              title: '❔ What is Azure Spring Apps button',
+              title: '🔹 Azure Spring Apps button',
               collapsable: false,
               sidebarDepth: 0,
               children: [
                   {
-                      title: 'Features',
-                      path: '/deploy-asa-button/create-asa-button',
+                      title: 'Overview',
+                      path: '/asa-button/overview',
+                  },
+                  {
+                      title: 'Quick start',
+                      path: '/asa-button/quick-start',
                   },
               ],
           },

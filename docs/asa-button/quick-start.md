@@ -23,7 +23,7 @@ This document describes how to easily deploy your maintained source code to Azur
 ## Create a service principal
 
 See this [article](https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#register-an-application-with-azure-ad-and-create-a-service-principal) to register an application with Azure AD and create a service principal, then [create a new application secret](https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#option-3-create-a-new-application-secret).
-ASA button needs to be authenticated and authorized by the service principal, use Azure resource manager to create an Azure Spring Apps app that deploys the source code.
+ASA button needs to be authenticated and authorized by the service principal, use Azure resource manager to create an Azure Spring Apps app that deploys the source code. 
 
 ## Set up account
 
@@ -37,19 +37,15 @@ The following steps need to be in the same tenant.
 2. Grant permission.
 
     - Select **Delegated permission** in **API permissions** of the service principal and add the following permissions:
-        - openid
-        - profile
-        - offline_access
+      - openid
+      - profile
+      - offline_access
 
     - Select **Azure Service Management** in **API permissions** of the service principal and add the following permissions:
-        - user_impersonation
-
+      - user_impersonation
+     
 3. [Grant admin consent in App registrations](https://learn.microsoft.com/en-us/azure/active-directory/manage-apps/grant-admin-consent?pivots=portal#grant-admin-consent-in-app-registrations).
 4. [Assign a user as an administrator of an Azure subscription](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal#assign-a-user-as-an-administrator-of-an-azure-subscription).
-
-## Button Terms of Use
-
-The Azure Terms of Use (Default) governs the Terms of Use of your button unless you provide your own Terms of Use in your GitHub repository. It is common practice to link to your Terms of Use in your README file or to add them as a license file to your GitHub repository.
 
 ## Add deploy to Azure Spring Apps Button
 
@@ -74,7 +70,7 @@ Here’s the equivalent content as HTML if you’d prefer not to use Markdown:
 ```
 
 **AsciiDoc**:
-
+    
 ```asciidoc
 image:https://user-images.githubusercontent.com/58474919/236122963-8c0857bb-3822-4485-892a-445fa33f1612.png[link="https://azure.spring.launcher.com/deploy.html?url=https://github.com/azure/deploy" alt="Deploy to Azure Spring Apps" width="200px"]
 ```
