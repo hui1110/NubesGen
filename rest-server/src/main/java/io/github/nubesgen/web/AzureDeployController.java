@@ -89,19 +89,45 @@ public class AzureDeployController {
             Integer memory = Integer.valueOf(request.getParameter("memory"));
             Integer instanceCount = Integer.valueOf(request.getParameter("instanceCount"));
             azureDeployService.deploySourceCodeToSpringApps(management, subscriptionId, regionName, resourceGroupName
-                , serviceName,
-                appName, module, javaVersion, cpu, memory, instanceCount, url, branchName);
+                , serviceName, appName, module, javaVersion, cpu, memory, instanceCount, url, branchName);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @GetMapping("/updateActiveDeployment/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
-    public @ResponseBody ResponseEntity<?> updateActiveDeployment(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
+    @GetMapping("/getUploadSourceCodeResult/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
+    public @ResponseBody ResponseEntity<?> getUploadSourceCodeResult(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
+        String res = azureDeployService.getUploadSourceCodeResult(management, subscriptionId, resourceGroupName, serviceName, appName);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    @GetMapping("/checkAppExists/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
+    public @ResponseBody ResponseEntity<?> checkAppExists(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
+            String res = azureDeployService.checkAppExists(management, subscriptionId, resourceGroupName, serviceName, appName);
+            return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    @GetMapping("/getBuildLogs/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
+    public @ResponseBody ResponseEntity<?> getBuildLogs(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
+            String res = azureDeployService.getBuildLogs(management, subscriptionId, resourceGroupName, serviceName, appName);
+            return new ResponseEntity<>(res.replaceAll("\u001B\\[[;\\d]*m", ""), HttpStatus.OK);
+    }
+
+    @GetMapping("/getApplicationLog/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
+    public @ResponseBody ResponseEntity<?> getApplicationLog(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
         try {
-            azureDeployService.updateActiveDeployment(management, subscriptionId, resourceGroupName, serviceName,
-                appName);
+            String res = azureDeployService.getApplicationLogs(management, subscriptionId, resourceGroupName, serviceName, appName);
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/createASAApp/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
+    public @ResponseBody ResponseEntity<?> createASAApp(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
+        try {
+            azureDeployService.createASAApp(management, subscriptionId, resourceGroupName, serviceName, appName);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
