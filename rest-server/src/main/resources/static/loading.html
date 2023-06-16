@@ -21,53 +21,19 @@
     padding: 5px;
     margin: 10px auto;
 }
-
 .deploy-title {
     font-size: 25px;
     font-weight: bold;
     margin-left: 20px;
     margin-top: 10px;
 }
-
-label {
-    display: block;
-    vertical-align: middle;
-}
-
-label, input, select {
-    vertical-align: middle;
-}
-
-.label-div {
-    font-size: 16px;
-    font-weight: 500;
-}
-
-.text-div {
-    font-size: 14px;
-}
-
-button {
-    margin-right: 20px;
-}
-
-code {
-    color: black;
-    font-weight: bold;
-}
-
 .title{
- margin-left: 20px;
+    margin-left: 5px;
 }
-
-.speed {
-    margin-left: 40PX
-}
-
 .view {
-    margin-left: 20px;
+    margin-left: 5px;
+    margin-top: 30px;
 }
-
 .icon-loading::before {
     color: white;
     font-size: 24px;
@@ -75,30 +41,21 @@ code {
     border-radius: 50% 50%;
     animation: spin 1s infinite;
 }
-
 .icon-success {
     color: green;
     font-size: 24px;
 }
-
 .icon-error::before {
     color: red;
     font-size: 24px;
     vertical-align: 3px;
 }
-
 .inactive::before {
-    background-color: grey;
+    background-color: #E0E0E0;
 }
-
 .rotating {
     animation: rotation 2s infinite linear;
 }
-
-.success {
-    margin-top: -8px;
-}
-
 @keyframes rotation {
     from {
         transform: rotate(0deg);
@@ -108,10 +65,27 @@ code {
         transform: rotate(360deg);
     }
 }
-
 .icon-container {
     width: 24px;
     height: 24px;
+    float: right;
+    padding-bottom: 5px;
+}
+.log{
+    background-color: #A9A9A9;
+    height: 400px;
+    overflow-x: scroll;
+    overflow-y: scroll;
+    padding: 10px;
+}
+.stages{
+    padding-top: 10px;
+}
+button {
+    margin-right: 20px;
+}
+pre {
+    color: white;
 }
 </style>
 <body>
@@ -123,66 +97,39 @@ code {
         </div>
         <hr/>
         <div class="deploy-progress">
-            <div class="col-sm-6" style="margin-bottom: 20px;">
-                <label class="label-div"
-                       v-show="showUploadIcon === 'success' && showUpdateDeploymentIcon === 'success'">Deployment
-                    is completed.</label>
-                <label class="label-div"
-                       v-show="showUploadIcon === 'execute' || showUpdateDeploymentIcon === 'execute'">Deployment
-                    is in progress...</label>
-                <label class="label-div"
-                       v-show="showUploadIcon === 'error' || showUpdateDeploymentIcon === 'error'">Deployment
-                    failed.</label>
-                <label class="text-div">The operation may take a while.</label>
-            </div>
-
-            <div class="mb-3 row speed">
-                <div class="icon-container rotating" v-show="showUploadIcon === 'execute'">
-                    <i class="bi bi-arrow-repeat icon-loading"></i>
+            <div class="card border-light">
+                <div class="card-body">
+                    <h4 class="card-title">Deploy</h4>
                 </div>
-                <div class="icon-container success" v-show="showUploadIcon === 'success'">
-                    <i class="bi bi-check-circle-fill icon-success rotating"></i>
-                </div>
-                <div class="icon-container" v-show="showUploadIcon === 'error'">
-                    <i class="bi bi-exclamation-circle-fill icon-error"></i>
-                </div>
-                <div class="col-sm-10">
-                    <label class="text-div" v-show="showUploadIcon === 'execute'">Creating app
-                        <code>{{ appName }}</code> and uploading source code...</label>
-                    <label class="text-div" v-show="showUploadIcon === 'success'">Successfully
-                        create app <code>{{ appName }}</code> and upload source code.</label>
-                    <label class="text-div" v-show="showUploadIcon === 'error'">Failed to create app
-                        <code>{{ appName }}</code> and upload source code.</label>
-                </div>
-            </div>
-
-            <div class="mb-3 row speed">
-                <div class="icon-container" v-show="showUpdateDeploymentIcon === 'wait'">
-                    <i class="bi bi-arrow-repeat icon-loading inactive"></i>
-                </div>
-                <div class="icon-container rotating"
-                     v-show="showUpdateDeploymentIcon === 'execute'">
-                    <i class="bi bi-arrow-repeat icon-loading"></i>
-                </div>
-                <div class="icon-container success" v-show="showUpdateDeploymentIcon === 'success'">
-                    <i class="bi bi-check-circle-fill icon-success rotating"></i>
-                </div>
-                <div class="icon-container" v-show="showUpdateDeploymentIcon === 'error'">
-                    <i class="bi bi-exclamation-circle-fill icon-error"></i>
-                </div>
-                <div class="col-sm-10">
-                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'wait'">Waiting to
-                        update deployments in app <code>{{ appName }}</code>.</label>
-                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'execute'">Updating
-                        deployments in app <code>{{ appName }}</code>.</label>
-                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'success'">Updated
-                        deployment in app <code>{{ appName }}</code>.</label>
-                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'error'">Failed to
-                        update deployment in app <code>{{ appName }}</code>.</label>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">{{deploymentResult}}</li>
+                </ul>
+                <div class="card">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item" v-for="item in stages" :key="item.key">
+                            <div class="icon-container" v-show="item.status === 'success'">
+                                <i class="bi bi-check-circle-fill icon-success"></i>
+                            </div>
+                            <div class="icon-container rotating" v-show="item.status === 'loading'">
+                                <i class="bi bi-arrow-repeat icon-loading"></i>
+                            </div>
+                            <div class="icon-container" v-show="item.status === 'wait'">
+                                <i class="bi bi-arrow-repeat icon-loading inactive"></i>
+                            </div>
+                            <div class="icon-container" v-show="item.status === 'error'">
+                                <i class="bi bi-exclamation-circle-fill icon-error"></i>
+                            </div>
+                            <i @click="handleListItemCollapse(item.key)" class="bi bi-chevron-right" :id="item.key" data-toggle="collapse" :data-target="'#'+item.id"></i>
+                            <span class="ml-2">{{item.stageName}}</span>
+                            <div class="collapse stages" :id="item.id">
+                                <div class="log" :id="'scroll-' + item.id"><pre>{{item.log}}</pre></div>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
-        <hr/>
+
         <div class="mb-3 row view" v-show="showView === true">
             <button class="btn btn-primary btn-sm" @click="viewEndpoint()">View the app</button>
             <button class="btn btn-primary btn-sm" @click="viewOnPortal()">Go to Azure Spring Apps</button>
@@ -211,35 +158,141 @@ code {
                 resourceGroupName: new URLSearchParams(location.search).get("resourceGroupName"),
                 serviceName: new URLSearchParams(location.search).get("serviceName"),
                 appName: new URLSearchParams(location.search).get("appName"),
-                showUploadIcon: 'execute',
-                showUpdateDeploymentIcon: 'wait',
+                deploymentResult: 'Deployment is in progress...',
                 showView: false,
+                provisionSourceTimer: null,
+                getBuildSourceLogsTimer: null,
+                getUploadSourceCodeTimer: null,
+                stages: [
+                    {
+                        key: 'provision',
+                        id: 'provision-resource',
+                        status: 'loading',
+                        stageName: 'Provision resource',
+                        log: ''
+                    },
+                    {
+                        key: 'upload',
+                        id: 'upload-source-code',
+                        status: 'wait',
+                        stageName: 'Upload source code',
+                        log: ''
+                    },
+                    {
+                        key: 'build',
+                        id: 'build-source',
+                        status: 'wait',
+                        stageName: 'Build source',
+                        log: ''
+                    },
+                    {
+                        key: 'deploy',
+                        id: 'deployment',
+                        status: 'wait',
+                        stageName: 'Deploy',
+                        log: ''
+                    },
+                ],
             }
         },
         methods: {
+            handleListItemCollapse(iconId) {
+                const icon = document.getElementById(iconId);
+                if (icon.classList.contains('bi-chevron-right')) {
+                    icon.classList.remove('bi-chevron-right');
+                    icon.classList.add('bi-chevron-down');
+                } else {
+                    icon.classList.remove('bi-chevron-down');
+                    icon.classList.add('bi-chevron-right');
+                }
+            },
+            createASAApp() {
+                this.stages[0].log = 'Creating app ' + this.appName + ' in service ' + this.serviceName + '...';
+                axios.get("/createASAApp/" + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
+                    .then(res => {
+                        if (res.status === 200) {
+                            this.stages[0].status = 'success';
+                            this.stages[1].status = 'loading';
+                            this.stages[1].log = 'Uploading source code...';
+                            this.deploySourceCode();
+                        }
+                    }).catch(err => {
+                    this.stages[0].status = 'error';
+                    this.stages[0].log = err.response.data;
+                    this.deploymentResult = 'Deployment failed';
+                })
+                this.checkAppExists();
+            },
             deploySourceCode() {
                 axios.get("/deploy" + this.url)
                     .then(res => {
                         if (res.status === 200) {
-                            this.showUploadIcon = 'success';
-                            this.updateActiveDeployment();
-                            this.showUpdateDeploymentIcon = 'execute';
+                            this.stages[2].status = 'success';
+                            this.stages[3].status = 'loading';
+                            this.stages[3].log = "Deploying in app " + this.appName + "...";
+                            this.getApplicationLog();
                         }
                     }).catch(err => {
-                    this.showUploadIcon = 'error';
-                    toast.error(err.response.data, {
-                        position: toast.POSITION.TOP_CENTER,
-                        autoClose: 5000,
-                        hideProgressBar: true
-                    });
+                    this.stages[2].status = 'error';
+                    this.stages[2].log = err.response.data;
+                    this.deploymentResult = 'Deployment failed';
+                })
+                this.getUploadSourceCodeResult();
+            },
+            checkAppExists(){
+                axios.get("/checkAppExists/" + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
+                    .then(res => {
+                        if (res.data !== 'none' && this.stages[0].status === 'success') {
+                            this.stages[0].log = res.data;
+                            this.logScrollButtom(this.stages[0].id);
+                        }else {
+                            this.checkAppExists();
+                        }
+                    })
+            },
+            getUploadSourceCodeResult(){
+                axios.get("/getUploadSourceCodeResult/" + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
+                    .then(res => {
+                        if (res.data !== 'none') {
+                            if(this.stages[1].status !== 'success'){
+                                this.stages[1].status = 'success';
+                                this.stages[1].log = 'Upload source code is complete.';
+                            }
+                            if(this.stages[2].status  === 'wait' && this.stages[1].status === 'success'){
+                                this.stages[2].status = 'loading';
+                                this.stages[2].log = 'Building source in app ' + this.appName + '...';
+                            }
+                            this.getBuildLogs();
+                        } else {
+                            this.getUploadSourceCodeResult();
+                        }
+                    }).catch(() => {
+                    this.stages[1].log = 'Upload source code failed.';
+                    this.stages[1].status = 'error';
+                    this.deploymentResult = 'Deployment failed';
                 })
             },
-            updateActiveDeployment() {
-                axios.get("/updateActiveDeployment/" + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
+            getBuildLogs(){
+                axios.get("/getBuildLogs/" + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
+                    .then(res => {
+                        if (res.data !== 'none' && this.stages[2].status === 'loading') {
+                            this.stages[2].log = res.data;
+                            this.logScrollButtom(this.stages[2].id);
+                            this.getBuildLogs();
+                        } else if (res.data === 'none') {
+                            this.getBuildLogs();
+                        }
+                    })
+            },
+            getApplicationLog(){
+                axios.get("/getApplicationLog/" + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
                     .then(res => {
                         if (res.status === 200) {
-                            this.showUpdateDeploymentIcon = 'success';
+                            this.stages[3].status = 'success'
+                            this.stages[3].log = res.data;
+                            this.logScrollButtom(this.stages[3].id);
                             this.showView = true;
+                            this.deploymentResult = 'Deployment completed';
                             toast.success('Deployment succeeded.', {
                                 position: toast.POSITION.TOP_CENTER,
                                 autoClose: 5000,
@@ -247,13 +300,15 @@ code {
                             });
                         }
                     }).catch(err => {
-                    this.showUpdateDeploymentIcon = 'error';
-                    toast.error(err.response.data, {
-                        position: toast.POSITION.TOP_CENTER,
-                        autoClose: 5000,
-                        hideProgressBar: true
-                    });
+                    this.stages[3].log = err.response.data;
+                    this.stages[3].status = 'error';
+                    this.deploymentResult = 'Deployment failed.';
                 })
+            },
+            logScrollButtom(logId) {
+                let logScroll = document.getElementById('scroll-' + logId);
+                console.log(logScroll);
+                logScroll.scrollTop = logScroll.scrollHeight;
             },
             viewEndpoint() {
                 const endpoint = "https://" + this.serviceName + "-" + this.appName + ".azuremicroservices.io/";
@@ -265,8 +320,8 @@ code {
             },
             stringify: JSON.stringify,
         },
-        created() {
-            this.deploySourceCode();
+        created(){
+            this.createASAApp();
         },
     })
     app.mount("#app")
