@@ -47,10 +47,6 @@ The following steps need to be in the same tenant.
 3. [Grant admin consent in App registrations](https://learn.microsoft.com/en-us/azure/active-directory/manage-apps/grant-admin-consent?pivots=portal#grant-admin-consent-in-app-registrations).
 4. [Assign a user as an administrator of an Azure subscription](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal#assign-a-user-as-an-administrator-of-an-azure-subscription).
 
-## Button Terms of Use
-
-The Azure Terms of Use (Default) governs the Terms of Use of your button unless you provide your own Terms of Use in your GitHub repository. It is common practice to link to your Terms of Use in your README file or to add them as a license file to your GitHub repository.
-
 ## Add deploy to Azure Spring Apps Button
 
 The following is an example that changes the template query parameter to the `url` of the repository:
