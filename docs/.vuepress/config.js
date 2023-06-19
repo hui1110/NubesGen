@@ -70,7 +70,7 @@ module.exports = {
             ],
           },
           {
-              title: '🔹 Azure Spring Apps button',
+              title: '💠 Azure Spring Apps button',
               collapsable: false,
               sidebarDepth: 0,
               children: [
