@@ -4,7 +4,7 @@
 
 Azure Spring Apps Button is a bundle of source code combined with a tiny set of instructions. It provides a way to deploy applications to Azure Spring Apps in the browser, without leaving the web browser, just click a button to deploy code from a specific repository to Azure Spring Apps. The Azure Spring Apps Button is a pointer to the source code repository, which determines the deployment branch and module of the code, and clicking the Azure Spring Apps Button will initiate the deployment of the application. It’s also easy to [make your own Azure Spring Apps Button](quick-start/).
 
-## What are the benefits of Azure Spring Apps Button
+## What are the benefits of Azure Spring Apps Button?
 
 ### Easily share your work
 

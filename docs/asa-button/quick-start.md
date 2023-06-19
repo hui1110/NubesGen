@@ -79,7 +79,8 @@ https://azure.spring.launcher.com/deploy.html?url=https://github.com/azure/deplo
 
 For more detailed information about see the following documents:
 
-- [Azure Platform API Reference: App Setups](https://learn.microsoft.com/rest/api/azure/)
+- [What is Azure Spring Apps?](https://learn.microsoft.com/azure/spring-apps/overview)
+- [Azure Spring Apps REST API reference](https://learn.microsoft.com/rest/api/azurespringcloud/)
 
 ## 📑 Keep reading
 
