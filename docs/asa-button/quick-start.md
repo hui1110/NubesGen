@@ -6,7 +6,7 @@ __Table of Contents:__
 
 The `Deploy to Azure Spring Apps` button enables users to deploy applications to Azure Spring Apps without leaving the web browser and requires only simple configuration.
 
-The basic requirement of the creation button is that your application source code hosting is in the GitHub repository. We will add deploy button to the `README.md` file.
+The basic requirement of the creation button is that your application source code hosting is in the GitHub repository. We will add deploy button to the `README` file.
 
 Here’s an example button that deploys a sample to Azure Spring Apps:
 
