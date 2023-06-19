@@ -81,11 +81,4 @@ For more detailed information about see the following documents:
 
 - [What is Azure Spring Apps?](https://learn.microsoft.com/azure/spring-apps/overview)
 - [Azure Spring Apps REST API reference](https://learn.microsoft.com/rest/api/azurespringcloud/)
-
-## 📑 Keep reading
-
-📓 [Deployment Integrations](https://azure.microsoft.com/solutions/integration-services).
-
-## ⚡ Feedback
-
-◀️ [Log in to submit feedback](https://github.com/).
+- [Deployment Integrations](https://azure.microsoft.com/solutions/integration-services)
