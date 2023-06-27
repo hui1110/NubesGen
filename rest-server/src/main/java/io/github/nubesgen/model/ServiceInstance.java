@@ -2,21 +2,17 @@ package io.github.nubesgen.model;
 
 import com.azure.core.management.Region;
 
-public class ASAInstance {
+public class ServiceInstance {
 
     private Region region;
     private String resourceGroupName;
-
     private String id;
-
     private String name;
-
     private String sku;
-
-    public ASAInstance() {
+    public ServiceInstance() {
     }
 
-    public ASAInstance(Region region,String resourceGroupName, String id, String name, String sku) {
+    public ServiceInstance(Region region, String resourceGroupName, String id, String name, String sku) {
         this.region = region;
         this.resourceGroupName = resourceGroupName;
         this.id = id;

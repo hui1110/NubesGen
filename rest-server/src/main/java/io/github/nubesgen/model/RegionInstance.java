@@ -3,7 +3,6 @@ package io.github.nubesgen.model;
 public class RegionInstance {
     
     private String name;
-    
     private String label;
 
     public RegionInstance(String name, String label) {
@@ -26,4 +25,5 @@ public class RegionInstance {
     public void setLabel(String label) {
         this.label = label;
     }
+
 }

@@ -20,4 +20,5 @@ public class AzureConfiguration {
                         .apply(function.oauth2Configuration())
                         .build();
     }
+
 }

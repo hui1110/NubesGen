@@ -2,6 +2,8 @@ package io.github.nubesgen.model;
 
 public class ResourceGrooupInstance {
 
+    private String name;
+
     public ResourceGrooupInstance(String name) {
         this.name = name;
     }
@@ -14,5 +16,4 @@ public class ResourceGrooupInstance {
         this.name = name;
     }
 
-    private String name;
 }

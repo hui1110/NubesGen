@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Azure Spring Apps Launcher Loading</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+          crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/dist/index.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.5/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ansi_up@5.2.1/ansi_up.min.js"></script>
+</head>
+<style>
+#app {
+    background-color: #005fff;
+    padding-bottom: 30px;
+}
+img {
+    width: 10%;
+    vertical-align: middle;
+    margin-top: -1%;
+}
+a{
+    color: black;
+}
+.loading {
+    width: 75%;
+    margin: 4% auto 4%;
+    background-color: white;
+}
+.icon-loading::before {
+    color: white;
+    font-size: 24px;
+    background-color: #3366FF;
+    border-radius: 50% 50%;
+    animation: spin 1s infinite;
+}
+.icon-success {
+    color: green;
+    font-size: 24px;
+}
+.icon-error::before {
+    color: red;
+    font-size: 24px;
+    vertical-align: 3px;
+}
+.inactive::before {
+    background-color: #E0E0E0;
+}
+.rotating {
+    animation: rotation 2s infinite linear;
+}
+@keyframes rotation {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+.icon-container {
+    width: 24px;
+    height: 24px;
+    float: right;
+    padding-bottom: 5px;
+}
+.log {
+    background-color: #E0E0E0;
+    height: 400px;
+    overflow: auto;
+    padding: 10px;
+}
+.stages {
+    padding-top: 10px;
+}
+.title {
+    padding: 0.5%;
+    background-color: white;
+}
+.launcher {
+    font-weight: 750;
+    display: inline-block;
+    margin-left: 20px;
+    margin-top: 1.5%;
+}
+.back {
+    font-weight: 650;
+    float: right;
+    padding-right: 10px;
+    margin-top: 1.5%;
+}
+.endpoint{
+    width: 96%;
+    padding-left: 2%;
+    padding-top: 2%;
+}
+.portal{
+   width: 96%;
+   padding-left: 2%;
+   padding-bottom: 2%;
+}
+</style>
+<body>
+<div id="app">
+    <div class="title">
+        <img src="img/nubesgen-logo.svg" alt="NubesGen logo">
+        <label class="launcher">Azure Spring Apps Web Launcher</label>
+        <label class="back">Back to <a href="/">NubesGen.com</a></label>
+    </div>
+    <div class="loading">
+        <div class="card border-light">
+            <div class="card-body">
+                <h4 class="card-title">Deploy</h4>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">{{deploymentResult}}</li>
+            </ul>
+            <div class="card">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item" v-for="item in stages" :key="item.key">
+                        <div class="icon-container" v-show="item.status === 'success'">
+                            <i class="bi bi-check-circle-fill icon-success"></i>
+                        </div>
+                        <div class="icon-container rotating" v-show="item.status === 'loading'">
+                            <i class="bi bi-arrow-repeat icon-loading"></i>
+                        </div>
+                        <div class="icon-container" v-show="item.status === 'wait'">
+                            <i class="bi bi-arrow-repeat icon-loading inactive"></i>
+                        </div>
+                        <div class="icon-container" v-show="item.status === 'error'">
+                            <i class="bi bi-exclamation-circle-fill icon-error"></i>
+                        </div>
+                        <i @click="handleListItemCollapse(item.key)" class="bi bi-chevron-right"
+                           :id="item.key" data-toggle="collapse" :data-target="'#'+item.id"></i>
+                        <span class="ml-2">{{item.stageName}}</span>
+                        <div class="collapse stages" :id="item.id">
+                            <div class="log" :id="'scroll-' + item.id">
+                                <pre :id="'pre-' + item.id">{{item.log}}</pre>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="form-group endpoint" v-show="showView === true">
+            <button class="btn btn-secondary btn-sm btn-block" @click="viewEndpoint()">Access the app</button>
+        </div>
+        <div class="form-group portal" v-show="showView === true">
+            <button class="btn btn-info btn-sm btn-block" @click="viewOnPortal()">Manage the app</button>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+</body>
+<script type="module">
+    import {toast} from 'https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/+esm';
+    import Convert from 'https://cdn.jsdelivr.net/npm/ansi-to-html@0.7.2/+esm'
+    const app = Vue.createApp({
+        data() {
+            return {
+                url: location.search,
+                subscriptionId: new URLSearchParams(location.search).get('subscriptionId'),
+                resourceGroupName: new URLSearchParams(location.search).get('resourceGroupName'),
+                serviceName: new URLSearchParams(location.search).get('serviceName'),
+                appName: new URLSearchParams(location.search).get('appName'),
+                region: new URLSearchParams(location.search).get('region'),
+                deploymentResult: 'Deployment is in progress...',
+                showView: false,
+                result: '',
+                provisionSourceTimer: null,
+                getBuildSourceLogsTimer: null,
+                getUploadSourceCodeTimer: null,
+                stages: [
+                    {
+                        key: 'provision',
+                        id: 'provision-resource',
+                        status: 'loading',
+                        stageName: 'Provision resource',
+                        log: ''
+                    },
+                    {
+                        key: 'upload',
+                        id: 'upload-source-code',
+                        status: 'wait',
+                        stageName: 'Upload source code',
+                        log: ''
+                    },
+                    {
+                        key: 'build',
+                        id: 'build-source',
+                        status: 'wait',
+                        stageName: 'Build source',
+                        log: ''
+                    },
+                    {
+                        key: 'deploy',
+                        id: 'deployment',
+                        status: 'wait',
+                        stageName: 'Deploy',
+                        log: ''
+                    },
+                ],
+                convert: new Convert({
+                    fg: '#FFF', // default value
+                    bg: '#000', // default value
+                    newline: true, // default value is false
+                    escapeXML: false, // default value
+                    stream: false // default value
+                }),
+            }
+        },
+        methods: {
+            handleListItemCollapse(iconId) {
+                const icon = document.getElementById(iconId);
+                if (icon.classList.contains('bi-chevron-right')) {
+                    icon.classList.remove('bi-chevron-right');
+                    icon.classList.add('bi-chevron-down');
+                } else {
+                    icon.classList.remove('bi-chevron-down');
+                    icon.classList.add('bi-chevron-right');
+                }
+            },
+            provisionResource() {
+                this.stages[0].log = 'Creating app ' + this.appName + ' in service ' + this.serviceName + '...';
+                axios.get('/provisionResource/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName + '/' + this.region)
+                    .then(res => {
+                        if (res.status === 200) {
+                            this.stages[0].status = 'success';
+                            this.stages[0].log = res.data;
+                            this.stages[1].status = 'loading';
+                            this.stages[1].log = 'Uploading source code...';
+                            this.deploySourceCode();
+                        }
+                    }).catch(error => {
+                    this.stages[0].status = 'error';
+                    this.stages[0].log = error.response.data;
+                    this.deploymentResult = 'Deployment failed';
+                    toast.error('Provision resource failed.', {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
+                })
+            },
+            deploySourceCode() {
+                axios.get('/deploy' + this.url)
+                    .then(res => {
+                        if (res.status === 200) {
+                            this.getApplicationLog();
+                        }
+                    }).catch(error => {
+                    if (this.stages[2].status === 'success') {
+                        this.getApplicationLog();
+                    }
+                    console.log(error)
+                })
+                this.getUploadSourceCodeResult();
+            },
+            getUploadSourceCodeResult() {
+                axios.get('/getUploadSourceCodeResult/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
+                    .then(res => {
+                        if (res.data === 'Succeeded') {
+                            if (this.stages[1].status !== 'success') {
+                                this.stages[1].status = 'success';
+                                this.stages[1].log = 'Upload source code is complete.';
+                            }
+                            if (this.stages[2].status === 'wait' && this.stages[1].status === 'success') {
+                                this.stages[2].status = 'loading';
+                                this.stages[2].log = 'Building source in app ' + this.appName + '...';
+                            }
+                            this.getBuildLogs();
+                        } else {
+                            this.getUploadSourceCodeResult();
+                        }
+                    }).catch(err => {
+                    this.stages[1].log = err.response.data;
+                    this.stages[1].status = 'error';
+                    this.deploymentResult = 'Deployment failed';
+                    toast.error('Upload source code failed.', {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
+                })
+            },
+            getBuildLogs() {
+                axios.get('/getBuildLogs/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
+                    .then(res => {
+                        if (res.status === 202 && this.stages[2].status === 'loading') {
+                            this.getBuildLogs();
+                        } else if (res.status === 200) {
+                            this.stages[2].status = 'success';
+                            this.stages[3].status = 'loading';
+                            this.stages[3].log = "Deploying in app " + this.appName + "...";
+                        }
+                        this.logScrollButtom(this.stages[2].id, res.data);
+                    }).catch(error => {
+                    this.stages[2].status = 'error';
+                    this.deploymentResult = 'Deployment failed';
+                    this.logScrollButtom(this.stages[2].id, error.response.data);
+                    toast.error('Build source failed.', {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
+                })
+            },
+            getApplicationLog() {
+                axios.get('/getApplicationLog/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
+                    .then(res => {
+                        if (res.status === 200) {
+                            this.stages[3].status = 'success'
+                            this.showView = true;
+                            this.deploymentResult = 'Deployment completed';
+                            toast.success('Deployment succeeded.', {
+                                position: toast.POSITION.TOP_CENTER,
+                                autoClose: 5000,
+                                hideProgressBar: true
+                            });
+                        }
+                        this.logScrollButtom(this.stages[3].id, res.data);
+                    }).catch(err => {
+                    this.stages[3].status = 'error'
+                    this.deploymentResult = 'Deployment failed';
+                    this.logScrollButtom(this.stages[3].id, err.response.data);
+                    toast.error('Deploy failed.', {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
+                })
+            },
+            logScrollButtom(logId, data) {
+                const target = document.getElementById('pre-' + logId);
+                target.innerHTML = this.convert.toHtml(data)
+                const logScroll = document.getElementById('scroll-' + logId);
+                logScroll.scrollTop = logScroll.scrollHeight;
+            },
+            viewEndpoint() {
+                const endpoint = 'https://' + this.serviceName + "-" + this.appName + '.azuremicroservices.io/';
+                open(endpoint);
+            },
+            viewOnPortal() {
+                const portalUrl = 'https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/' + this.subscriptionId + '/resourceGroups/' + this.resourceGroupName + '/providers/Microsoft.AppPlatform/Spring/' + this.serviceName + '/application_dashboard';
+                open(portalUrl);
+            },
+            stringify: JSON.stringify,
+        },
+        mounted() {
+            this.provisionResource();
+        },
+    })
+    app.mount('#app')
+</script>
+</html>

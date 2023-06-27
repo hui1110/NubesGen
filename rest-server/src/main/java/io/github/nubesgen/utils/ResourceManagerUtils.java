@@ -83,43 +83,6 @@ public class ResourceManagerUtils {
     }
 
     /**
-     * Print spring app settings.
-     *
-     * @param springApp spring app instance
-     */
-    public static void print(SpringApp springApp) {
-        StringBuilder info = new StringBuilder("Spring Service: ")
-            .append("\n\tId: ").append(springApp.id())
-            .append("\n\tName: ").append(springApp.name())
-            .append("\n\tPublic Endpoint: ").append(springApp.isPublic())
-            .append("\n\tUrl: ").append(springApp.url())
-            .append("\n\tHttps Only: ").append(springApp.isHttpsOnly())
-            .append("\n\tFully Qualified Domain Name: ").append(springApp.fqdn())
-            .append("\n\tActive Deployment Name: ").append(springApp.activeDeploymentName());
-
-        if (springApp.temporaryDisk() != null) {
-            info.append("\n\tTemporary Disk:")
-                .append("\n\t\tSize In GB: ").append(springApp.temporaryDisk().sizeInGB())
-                .append("\n\t\tMount Path: ").append(springApp.temporaryDisk().mountPath());
-        }
-
-        if (springApp.persistentDisk() != null) {
-            info.append("\n\tPersistent Disk:")
-                .append("\n\t\tSize In GB: ").append(springApp.persistentDisk().sizeInGB())
-                .append("\n\t\tMount Path: ").append(springApp.persistentDisk().mountPath());
-        }
-
-        if (springApp.identity() != null) {
-            info.append("\n\tIdentity:")
-                .append("\n\t\tType: ").append(springApp.identity().type())
-                .append("\n\t\tPrincipal Id: ").append(springApp.identity().principalId())
-                .append("\n\t\tTenant Id: ").append(springApp.identity().tenantId());
-        }
-
-        System.out.println(info);
-    }
-
-    /**
      * Get spring app settings.
      *
      * @param springApp spring app instance

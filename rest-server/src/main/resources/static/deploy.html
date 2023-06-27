@@ -10,15 +10,20 @@
           href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
           crossorigin="anonymous">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.3/css/bootstrapValidator.min.css"
+          integrity="sha512-Mqfoc3Z3HrXDAkb9KWQklaedI9QNM01mqRaruK/LWtT3JU6BuxnbHg0MTqowzr2P8/Xdd0ITR0po3A4R5T0h2w=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"/>
     <link href="https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/dist/index.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
 </head>
 <style>
+#app {
+    background-color: #005fff;
+    padding-bottom: 30px;
+}
 label {
     display: block;
-    vertical-align: middle;
-}
-
-label, input, select {
     vertical-align: middle;
 }
 
@@ -26,249 +31,246 @@ svg {
     display: inline-block
 }
 
+img {
+    width: 10%;
+    vertical-align: middle;
+}
+a{
+    color: black;
+}
 .deployment {
-    width: 60%;
-    padding: 5px;
-    margin: 10px auto;
+    width: 75%;
+    margin: 3% auto 10px;
+    padding: 30px;
+    background-color: white;
 }
-
-.form-control:focus {
-    outline: 0 !important;
-    -webkit-box-shadow: none !important;
-    box-shadow: none !important;
-}
-
-.col-sm-3 {
-    font-size: 14px
-}
-
-.col-sm-4 {
-    font-size: 14px;
-    font-weight: normal;
-}
-
 .form-control {
     font-size: 14px;
 }
-
-.detail-title {
+.filter-option-inner-inner {
+    font-size: 14px;
+}
+.bs-placeholder {
+    background-color: #fff;
+    border: 1px solid #ced4da;
+}
+.col-sm-4 {
+    font-size: 0.875rem;
     font-weight: 500;
 }
-
-.detail {
-    margin-left: 1px;
+.readonly {
+    border: none;
 }
-
-.deploy-title {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    font-size: 25px;
-    font-weight: bold;
-    margin-left: 20px;
-    margin-top: 10px;
+.row {
+    padding-bottom: 1%;
+    padding-left: 3%;
 }
-
 .required {
     color: red;
     display: inline-block;
     margin-right: 10px;
     margin-left: 5px;
 }
-
-.readonly {
-    border: none;
+.title {
+    padding: 0.5%;
+    background-color: white;
 }
-
-.vl {
+.launcher {
+    font-weight: 750;
     display: inline-block;
-    margin: -25px 5px 5px 10px;
-    border-left: 1px solid #C0C0C0;
-    height: 40px;
-    width: 40px;
-    border-bottom: 1px solid #C0C0C0;
+    margin-left: 20px;
+    margin-top: 1.5%;
+}
+.back {
+    font-weight: 650;
+    float: right;
+    padding-right: 10px;
+    margin-top: 1.5%;
 }
 </style>
 <body>
 <div id="app">
+    <div class="title">
+        <img src="img/nubesgen-logo.svg" alt="NubesGen logo">
+        <label class="launcher">Azure Spring Apps Web Launcher</label>
+        <label class="back">Back to <a href="/">NubesGen.com</a></label>
+    </div>
     <div class="deployment">
-        <div class="mb-3 row" style="margin-left: 10px;">
-            <img width="55" height="55" src="https://img.icons8.com/fluency/48/azure-1.png" alt="azure-1"/>
-            <div class="deploy-title">Azure Spring Apps Web Launcher</div>
-        </div>
-        <hr/>
-        <div class="mb-3 row">
-            <label class="col-sm-4 col-form-label">GitHub repository address:</label>
-            <div class="col-sm-7">
-                <label>
-                    <input type="text" class="form-control readonly" v-model="url" readonly/>
+
+        <form id="setting">
+            <div class="mb-3 row">
+                <label class="col-sm-4 col-form-label">GitHub repository address</label>
+                <div class="col-sm-7">
+                    <label>
+                        <input type="text" class="form-control readonly" v-model="url" readonly/>
+                    </label>
+                </div>
+            </div>
+
+
+            <div class="mb-3 row">
+                <label class="col-sm-4 col-form-label">Subscription<span
+                        class="required"> * </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14"
+                         height="14"
+                         fill="currentColor"
+                         class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                        <title>An Azure subscription grants you access to Azure services. Your
+                            subscription is also how resource usage is reported and services are
+                            billed.</title>
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                    </svg>
                 </label>
-            </div>
-        </div>
-        <div class="mb-3 row">
-            <label for="selectSubId" class="col-sm-4 col-form-label">Subscription:<span
-                    class="required"> * </span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                     height="16"
-                     fill="currentColor"
-                     class="bi bi-exclamation-circle" viewBox="0 0 16 16">
-                    <title>An Azure subscription grants you access to Azure services. Your
-                        subscription is also how resource usage is reported and services are
-                        billed.</title>
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                    <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
-                </svg>
-            </label>
-            <div class="col-sm-7">
-                <select class="form-control" v-model="subscriptionId" id="selectSubId"
-                        name="Subscription"
-                        @change="getResourceGroupListBySubscriptionId(subscriptionId)">
-                    <option value="" disabled selected hidden>Please select Subscription</option>
-                    <option v-for="item in subscriptionList" :key="item.name" :value="item.id">
-                        {{ item.name }}
-                    </option>
-                </select>
-            </div>
-        </div>
+                <div class="col-sm-7">
+                    <label for="subscription">
+                        <select title="Please select subscription" class="form-control selectpicker"
+                                data-live-search="true" v-model="subscriptionId" id="subscription"
+                                name="subscription"
+                                @change="getResourceGroupListBySubscriptionId(subscriptionId)">
+                            <option v-for="item in subscriptionList" :value="item.id">
+                                {{item.name}}
+                            </option>
+                        </select>
 
-        <div class="mb-3 row">
-            <label for="SelectResourceGroup" class="col-sm-4 col-form-label">
-                <div class="vl"></div>
-                Resource group:<span class="required"> * </span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                     height="16"
-                     fill="currentColor"
-                     class="bi bi-exclamation-circle" viewBox="0 0 16 16">
-                    <title>A resource group is a collection of resources that share the same
-                        lifecycle, permission, and policies.</title>
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                    <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
-                </svg>
-            </label>
-            <div class="col-sm-7">
-                <select class="form-control" v-model="resourceGroupName" id="SelectResourceGroup"
-                        @change="getServiceInstanceByResourceGroupName(resourceGroupName)">
-                    <option value="" disabled selected hidden>Please select Resource group</option>
-                    <option v-for="item in resourceGroupList" :key="item.name" :value="item.name">
-                        {{ item.name }}
-                    </option>
-                </select>
+                    </label>
+                    <span id="subscription_error" style="color: red"></span>
+                </div>
             </div>
-        </div>
 
-        <div class="mb-3 row">
-            <label for="SelectAsaInstance" class="col-sm-4 col-form-label">Service Instance:<span
-                    class="required"> * </span></label>
-            <div class="col-sm-7">
-                <select class="form-control" v-model="serviceInstanceName" id="SelectAsaInstance"
-                        @change="changeAppInstance(serviceInstanceName)">
-                    <option value="" disabled selected hidden>Please select Service Instance
-                    </option>
-                    <option v-for="item in serviceInstanceList" :key="item.name" :value="item.name">
-                        {{ item.name }}
-                    </option>
-                </select>
-            </div>
-        </div>
-
-        <div class="mb-3 row">
-            <label class="col-sm-4 col-form-label detail-title">Application details:</label>
-        </div>
-
-        <div class="mb-3 row detail">
-            <label class="col-sm-3 col-form-label">App name:<span class="required"> * </span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                     height="16"
-                     fill="currentColor"
-                     class="bi bi-exclamation-circle" viewBox="0 0 16 16">
-                    <title>The application name will be read from the name field in the project's
-                        pom.xml file, which you can also edit.</title>
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                    <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
-                </svg>
-            </label>
-            <div class="col-sm-5">
-                <label>
-                    <input type="text" class="form-control" v-model="appInstance.name"/>
+            <div class="mb-3 row">
+                <label class="col-sm-4 col-form-label">
+                    Resource group<span class="required"> * </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14"
+                         height="14"
+                         fill="currentColor"
+                         class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                        <title>A resource group is a collection of resources that share the same
+                            lifecycle, permission, and policies.</title>
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                    </svg>
                 </label>
+                <div class="col-sm-7">
+                    <label for="resourceGroup">
+                        <select title="Please select resource group"
+                                class="form-control selectpicker" data-live-search="true"
+                                data-placeholder="Please select Resource group"
+                                v-model="resourceGroupName" id="resourceGroup" name="resourceGroup"
+                                @change="getServiceInstanceByResourceGroupName(resourceGroupName)">
+                            <option v-for="item in resourceGroupList" :key="item.name"
+                                    :value="item.name">
+                                {{ item.name }}
+                            </option>
+                        </select>
+                    </label>
+                    <span id="resourceGroup_error" style="color: red"></span>
+                </div>
             </div>
-        </div>
 
-        <div class="mb-3 row detail">
-            <label class="col-sm-3 col-form-label">Runtime platform:<span
-                    class="required"> * </span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                     height="16"
-                     fill="currentColor"
-                     class="bi bi-exclamation-circle" viewBox="0 0 16 16">
-                    <title>The java version of the running platform will be read from the java.version field in the project's
-                        pom.xml file.</title>
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                    <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
-                </svg>
-            </label>
-            <div class="col-sm-5">
-                <label>
-                    <input type="text" class="form-control readonly" id="appInstance"
-                           v-model="appInstance.runtimePlatform" readonly/>
-                </label>
-            </div>
-        </div>
-
-        <div class="mb-3 row detail">
-            <label class="col-sm-3 col-form-label">vCPU:<span class="required"> * </span></label>
-            <div class="col-sm-5">
-                <label>
-                    <select class="form-control" v-model="appInstance.cpu">
-                        <option v-for="item in vCPUList" :key="item" :value="item">{{ item }}
+            <div class="mb-3 row">
+                <label for="serviceInstance" class="col-sm-4 col-form-label">Service Instance<span
+                        class="required"> * </span></label>
+                <div class="col-sm-7">
+                    <select title="Please select service instance" class="form-control selectpicker"
+                            data-live-search="true"
+                            data-placeholder="Please select Service Instance"
+                            v-model="serviceInstanceName" id="serviceInstance"
+                            name="serviceInstance"
+                            @change="changeAppInstance(serviceInstanceName)">
+                        <option v-for="item in serviceInstanceList" :key="item.name"
+                                :value="item.name">
+                            {{ item.name }}
                         </option>
                     </select>
-                </label>
+                    <span id="serviceInstance_error" style="color: red"></span>
+                </div>
             </div>
-        </div>
 
-        <div class="mb-3 row detail">
-            <label class="col-sm-3 col-form-label">Memory(Gi):<span
-                    class="required"> * </span></label>
-            <div class="col-sm-5">
-                <label>
-                    <select class="form-control" v-model="appInstance.memory">
-                        <option v-for="item in memoryList" :key="item" :value="item">{{ item }}
-                        </option>
-                    </select>
+            <div class="mb-3 row">
+                <label class="col-sm-4 col-form-label">App name:<span class="required"> * </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14"
+                         height="14"
+                         fill="currentColor"
+                         class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                        <title>The application name will be read from the name field in the
+                            project's
+                            pom.xml file, which you can also edit.</title>
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                    </svg>
                 </label>
+                <div class="col-sm-7">
+                    <label for="appName">
+                        <input type="text" class="form-control"
+                               v-model="appInstance.name" id="appName" name="appName"/>
+                    </label>
+                    <span id="appName_error" style="color: red"></span>
+                </div>
             </div>
-        </div>
 
-        <div class="mb-3 row detail">
-            <label class="col-sm-3 col-form-label">Instance count:<span class="required"> * </span></label>
-            <div class="col-sm-5">
-                <label>
-                    <input type="text" class="form-control" v-model="appInstance.instanceCount"/>
-                </label>
+            <div class="mb-3 row">
+                <label class="col-sm-4 col-form-label">Deployment settings</label>
+                <div class="col-sm-7">
+                    <label style="font-size: 14px;">Runtime platform:<span
+                            class="required"> * </span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14"
+                             height="14"
+                             fill="currentColor"
+                             class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                            <title>The java version of the running platform will be read from the
+                                java.version field in the project's
+                                pom.xml file.</title>
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                        </svg>
+                    </label>
+                    <label for="appInstance">
+                        <input type="text" class="form-control readonly" id="appInstance"
+                               v-model="appInstance.runtimePlatform" readonly/>
+                    </label>
+                </div>
             </div>
-        </div>
 
-        <div class="mb-3 row detail">
-            <label class="col-sm-3 col-form-label">Deployment type:<span class="required"> * </span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                     height="16"
-                     fill="currentColor"
-                     class="bi bi-exclamation-circle" viewBox="0 0 16 16">
-                    <title>Deploy using the source code from the GitHub repository.</title>
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                    <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
-                </svg>
-            </label>
-            <div class="col-sm-5">
-                <label>
-                    <input type="text" class="form-control readonly"
-                           v-model="appInstance.deploymentType" readonly/>
-                </label>
+            <div class="mb-3 row">
+                <label class="col-sm-4 col-form-label">Scale up</label>
+                <div class="col-sm-7">
+                    <label style="font-size: 14px;">vCPU<span class="required"> * </span></label>
+                    <label>
+                        <select class="form-control" v-model="appInstance.cpu">
+                            <option v-for="item in vCPUList" :key="item" :value="item">{{ item }}
+                            </option>
+                        </select>
+                    </label>
+
+                    <label style="font-size: 14px;">Memory(Gi)<span
+                            class="required"> * </span></label>
+                    <label>
+                        <select class="form-control" v-model="appInstance.memory">
+                            <option v-for="item in memoryList" :key="item" :value="item">{{ item }}
+                            </option>
+                        </select>
+                    </label>
+                </div>
             </div>
-        </div>
+
+            <div class="mb-3 row">
+                <label class="col-sm-4 col-form-label">Instance count:<span
+                        class="required"> * </span></label>
+                <div class="col-sm-7">
+                    <label>
+                        <input type="number" class="form-control"
+                               v-model="appInstance.instanceCount" id="instanceCount"
+                               name="instanceCount"/>
+                    </label>
+                    <span id="instanceCount_error" style="color: red"></span>
+                </div>
+            </div>
+        </form>
 
         <hr/>
         <div class="form-group">
-            <button class="btn btn-primary btn-sm" @click="deployCode()">Deploy</button>
+            <button class="btn btn-primary btn-sm btn-block" @click="deployCode()">Deploy</button>
         </div>
     </div>
 </div>
@@ -282,6 +284,10 @@ svg {
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
         crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.3/js/bootstrapValidator.min.js"
+        integrity="sha512-Vp2UimVVK8kNOjXqqj/B0Fyo96SDPj9OCSm1vmYSrLYF3mwIOBXh/yRZDVKo8NemQn1GUjjK0vFJuCSCkYai/A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
 </body>
 
 <script type="module">
@@ -307,7 +313,7 @@ svg {
         },
         methods: {
             getAppNameAndJavaVersion() {
-                axios.get('/getAppNameAndJavaVersion' + '?url=' + this.url + '&branchName=' + this.branch + "&module=" + this.module)
+                axios.get('/getAppNameAndJavaVersion' + '?url=' + this.url + '&branchName=' + this.branch + '&module=' + this.module)
                     .then(res => {
                         this.appInstance.name = res.data.name;
                         this.appInstance.runtimePlatform = res.data.version;
@@ -330,7 +336,9 @@ svg {
                                 hideProgressBar: true
                             });
                         }
-                    }).catch(err => {
+                    }).finally(() => {
+                    $('.selectpicker').selectpicker('refresh');
+                }).catch(err => {
                     toast.error(err.response.data, {
                         position: toast.POSITION.TOP_CENTER,
                         autoClose: 5000,
@@ -350,7 +358,9 @@ svg {
                                 hideProgressBar: true
                             });
                         }
-                    }).catch(err => {
+                    }).finally(() => {
+                    $('.selectpicker').selectpicker('refresh');
+                }).catch(err => {
                     toast.error(err.response.data, {
                         position: toast.POSITION.TOP_CENTER,
                         autoClose: 5000,
@@ -370,7 +380,9 @@ svg {
                                 hideProgressBar: true
                             });
                         }
-                    }).catch(err => {
+                    }).finally(() => {
+                    $('.selectpicker').selectpicker('refresh');
+                }).catch(err => {
                     toast.error(err.response.data, {
                         position: toast.POSITION.TOP_CENTER,
                         autoClose: 5000,
@@ -387,47 +399,10 @@ svg {
                 }
             },
             deployCode() {
-                if (this.checkValue(this.url)) {
-                    this.showMessage('Please add GitHub  repository url !');
+                const bootstrapValidator = $('#setting').data('bootstrapValidator').validate();
+                if (bootstrapValidator.isValid() === false) {
                     return;
                 }
-                if (this.checkValue(this.subscriptionId)) {
-                    this.showMessage('Please select subscription !');
-                    return;
-                }
-                if (this.checkValue(this.resourceGroupName)) {
-                    this.showMessage('Please select Resource group !');
-                    return;
-                }
-                if (this.checkValue(this.serviceInstanceName)) {
-                    this.showMessage('Please select Service Instance !');
-                    return;
-                }
-                const pattern = /^[a-z][a-z0-9-]{3,31}$/;
-                if (this.checkValue(this.appInstance.name)) {
-                    this.showMessage('Please type app name !');
-                    return;
-                } else if (!pattern.test(this.appInstance.name)) {
-                    this.showMessage('The App name is invalid. It can contain only lowercase letters, numbers and hyphens. The first character must be a letter. The last character must be a letter or number. The value must be between 4 and 32 characters long. !');
-                    return;
-                }
-                if (this.checkValue(this.appInstance.runtimePlatform)) {
-                    this.showMessage('Please configured Java version in pom.xml !');
-                    return;
-                }
-                if (this.checkValue(this.appInstance.cpu)) {
-                    this.showMessage('Please select cpu count !');
-                    return;
-                }
-                if (this.checkValue(this.appInstance.memory)) {
-                    this.showMessage('Please select memory !');
-                    return;
-                }
-                if (this.checkValue(this.appInstance.instanceCount)) {
-                    this.showMessage('Please type instance count !');
-                    return;
-                }
-
                 if (this.appInstance.runtimePlatform === 'Java_17') {
                     this.javaVersion = 17;
                 } else if (this.appInstance.runtimePlatform === 'Java_11') {
@@ -435,36 +410,88 @@ svg {
                 } else {
                     this.javaVersion = 8;
                 }
-
                 if (this.appInstance.memory === '512 Mi') {
                     this.appInstance.memory = 0.5;
                 } else {
                     this.appInstance.memory = this.appInstance.memory.charAt(0);
                 }
-
                 const appDetails = '&cpu=' + this.appInstance.cpu + '&memory=' + this.appInstance.memory + '&instanceCount=' + this.appInstance.instanceCount;
-                const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceInstanceName + '&javaVersion=' + this.javaVersion + '&appName=' + this.appInstance.name + '&region=' + this.region + '&branchName=' + this.branch + "&module=" + this.module;
-                location.assign('/loading.html?' + url + appDetails);
+                const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceInstanceName + '&javaVersion=' + this.javaVersion + '&appName=' + this.appInstance.name + '&region=' + this.region + '&branchName=' + this.branch + '&module=' + this.module;
+                location.assign('/progress.html?' + url + appDetails);
             },
-            checkValue(string) {
-                return (string === '' || string === undefined || string === null);
-            },
-            showMessage(string) {
-                toast.warning(string, {
-                    position: toast.POSITION.TOP_CENTER,
-                    autoClose: 3000,
-                    hideProgressBar: true
+            validatorForm() {
+                $(document).ready(function () {
+                    $("#setting").bootstrapValidator({
+                        excluded: [':disabled', ':hidden'],
+                        feedbackIcons: {
+                            valid: 'glyphicon glyphicon-ok',
+                            invalid: 'glyphicon glyphicon-remove',
+                            validating: 'glyphicon glyphicon-refresh'
+                        },
+                        fields: {
+                            subscription: {
+                                container: '#subscription_error',
+                                validators: {
+                                    notEmpty: {
+                                        message: 'Please select subscription'
+                                    }
+                                }
+                            },
+                            resourceGroup: {
+                                container: '#resourceGroup_error',
+                                validators: {
+                                    notEmpty: {
+                                        message: 'Please select Resource group'
+                                    }
+                                }
+                            },
+                            serviceInstance: {
+                                container: '#serviceInstance_error',
+                                validators: {
+                                    notEmpty: {
+                                        message: 'Please select Service Instance'
+                                    }
+                                }
+                            },
+                            appName: {
+                                container: '#appName_error',
+                                validators: {
+                                    notEmpty: {
+                                        message: 'Please type app name'
+                                    },
+                                    regexp: {
+                                        regexp: /^[a-z][a-z0-9-]{3,31}$/,
+                                        message: 'The App name is invalid. It can contain only lowercase letters, numbers and hyphens. The first character must be a letter. The last character must be a letter or number. The value must be between 4 and 32 characters long.'
+                                    }
+                                }
+                            },
+                            instanceCount: {
+                                container: '#instanceCount_error',
+                                validators: {
+                                    notEmpty: {
+                                        message: 'Please type instance count'
+                                    },
+                                    regexp: {
+                                        regexp: /^(?:[1-9]\d?|[1234]\d{2}|500)$/,
+                                        message: 'The instance count is invalid. It can contain only numbers. The first character must be a number. The value must be between 1 and 500.'
+                                    }
+                                }
+                            },
+                        }
+                    });
                 });
             },
             stringify: JSON.stringify,
         },
-        created() {
+        mounted() {
             this.querySubscriptionList();
             this.getAppNameAndJavaVersion();
+            this.validatorForm();
             this.appInstance.cpu = 1;
             this.appInstance.memory = '2 Gi';
             this.appInstance.instanceCount = 1;
             this.appInstance.deploymentType = 'GitHub repository';
+            $('.selectpicker').selectpicker();
         },
     })
     app.mount('#app')

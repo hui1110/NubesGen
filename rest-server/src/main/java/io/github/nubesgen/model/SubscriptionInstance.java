@@ -28,4 +28,5 @@ public class SubscriptionInstance {
     public void setName(String name) {
         this.name = name;
     }
+
 }

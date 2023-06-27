@@ -1,6 +1,6 @@
 package io.github.nubesgen.web;
 
-import io.github.nubesgen.model.ASAInstance;
+import io.github.nubesgen.model.ServiceInstance;
 import io.github.nubesgen.model.ProjectInstance;
 import io.github.nubesgen.model.RegionInstance;
 import io.github.nubesgen.model.ResourceGrooupInstance;
@@ -53,7 +53,7 @@ public class AzureDeployController {
     @GetMapping("/getServiceInstanceList/{subscriptionId}/{resourceGroupName}")
     public @ResponseBody ResponseEntity<?> getServiceInstanceList(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName) {
         try {
-            List<ASAInstance> asaInstanceList = azureDeployService.getServiceinstanceList(management, subscriptionId,
+            List<ServiceInstance> asaInstanceList = azureDeployService.getServiceinstanceList(management, subscriptionId,
                 resourceGroupName);
             return new ResponseEntity<>(asaInstanceList, HttpStatus.OK);
         } catch (Exception e) {
@@ -82,13 +82,12 @@ public class AzureDeployController {
             String serviceName = request.getParameter("serviceName");
             String appName = request.getParameter("appName");
             String javaVersion = request.getParameter("javaVersion");
-            String regionName = request.getParameter("region");
             String branchName = request.getParameter("branchName");
             String module = request.getParameter("module");
             Integer cpu = Integer.valueOf(request.getParameter("cpu"));
             Integer memory = Integer.valueOf(request.getParameter("memory"));
             Integer instanceCount = Integer.valueOf(request.getParameter("instanceCount"));
-            azureDeployService.deploySourceCodeToSpringApps(management, subscriptionId, regionName, resourceGroupName
+            azureDeployService.deploySourceCodeToSpringApps(management, subscriptionId, resourceGroupName
                 , serviceName, appName, module, javaVersion, cpu, memory, instanceCount, url, branchName);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
@@ -96,22 +95,27 @@ public class AzureDeployController {
         }
     }
 
-    @GetMapping("/checkAppExists/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
-    public @ResponseBody ResponseEntity<?> checkAppExists(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
-        String res = azureDeployService.checkAppExists(management, subscriptionId, resourceGroupName, serviceName, appName);
-        return new ResponseEntity<>(res, HttpStatus.OK);
-    }
-
     @GetMapping("/getUploadSourceCodeResult/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
     public @ResponseBody ResponseEntity<?> getUploadSourceCodeResult(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
-        String res = azureDeployService.getUploadSourceCodeResult(management, subscriptionId, resourceGroupName, serviceName, appName);
-        return new ResponseEntity<>(res, HttpStatus.OK);
+        try {
+            String res = azureDeployService.getUploadSourceCodeResult(management, subscriptionId, resourceGroupName, serviceName, appName);
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/getBuildLogs/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
     public @ResponseBody ResponseEntity<?> getBuildLogs(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
-            String res = azureDeployService.getBuildLogs(management, subscriptionId, resourceGroupName, serviceName, appName);
-            return new ResponseEntity<>(res, HttpStatus.OK);
+        String status = azureDeployService.checkDeployStatus(management, subscriptionId, resourceGroupName, serviceName, appName);
+        String buildLogs = azureDeployService.getBuildLogs(management, subscriptionId, resourceGroupName, serviceName, appName, status);
+        if ("Failed".equals(status)){
+                return new ResponseEntity<>(buildLogs, HttpStatus.INTERNAL_SERVER_ERROR);
+            }else if("Starting".equals(status)) {
+                return new ResponseEntity<>(buildLogs, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(buildLogs, HttpStatus.ACCEPTED);
+            }
     }
 
     @GetMapping("/getApplicationLog/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
@@ -125,10 +129,10 @@ public class AzureDeployController {
         }
     }
 
-    @GetMapping("/createASAApp/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
-    public @ResponseBody ResponseEntity<?> createASAApp(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
+    @GetMapping("/provisionResource/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}/{region}")
+    public @ResponseBody ResponseEntity<?> provisionResource(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName, @PathVariable String region) {
         try {
-            String res = azureDeployService.createASAApp(management, subscriptionId, resourceGroupName, serviceName, appName);
+            String res = azureDeployService.provisionResource(management, subscriptionId, resourceGroupName, serviceName, appName, region);
             return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

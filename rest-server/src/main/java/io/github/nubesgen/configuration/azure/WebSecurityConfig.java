@@ -21,10 +21,8 @@ public class WebSecurityConfig {
             .and()
             .oauth2Login()
             .loginPage("/oauth2/authorization/management");
-
         http.authorizeHttpRequests()
             .anyRequest().permitAll();
-
         return http.build();
     }
 

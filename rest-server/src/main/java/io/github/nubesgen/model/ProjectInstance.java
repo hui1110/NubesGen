@@ -3,12 +3,10 @@ package io.github.nubesgen.model;
 public class ProjectInstance {
 
     private String name;
-
     private String version;
 
     public ProjectInstance() {
     }
-
 
     public String getName() {
         return name;
@@ -25,4 +23,5 @@ public class ProjectInstance {
     public void setVersion(String version) {
         this.version = version;
     }
+
 }
