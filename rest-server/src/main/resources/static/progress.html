@@ -141,6 +141,7 @@ a{
                         <span class="ml-2">{{item.stageName}}</span>
                         <div class="collapse stages" :id="item.id">
                             <div class="log" :id="'scroll-' + item.id">
+                                <pre :style="{'color': item.status === 'success' ? '#4e9a06': (item.status ==='error'? 'red' : '#b58900'), 'font-size': '16px'}">{{item.description}}</pre>
                                 <pre :id="'pre-' + item.id">{{item.log}}</pre>
                             </div>
                         </div>
@@ -173,6 +174,8 @@ a{
         data() {
             return {
                 url: location.search,
+                gitUrl: new URLSearchParams(location.search).get('url'),
+                branch: new URLSearchParams(location.search).get('branchName'),
                 subscriptionId: new URLSearchParams(location.search).get('subscriptionId'),
                 resourceGroupName: new URLSearchParams(location.search).get('resourceGroupName'),
                 serviceName: new URLSearchParams(location.search).get('serviceName'),
@@ -181,15 +184,16 @@ a{
                 deploymentResult: 'Deployment is in progress...',
                 showView: false,
                 result: '',
-                provisionSourceTimer: null,
-                getBuildSourceLogsTimer: null,
-                getUploadSourceCodeTimer: null,
+                relativePath: '',
+                uploadUrl: '',
+                timerProvisionSource: null,
                 stages: [
                     {
                         key: 'provision',
                         id: 'provision-resource',
                         status: 'loading',
                         stageName: 'Provision resource',
+                        description: '',
                         log: ''
                     },
                     {
@@ -197,6 +201,7 @@ a{
                         id: 'upload-source-code',
                         status: 'wait',
                         stageName: 'Upload source code',
+                        description: '',
                         log: ''
                     },
                     {
@@ -204,6 +209,7 @@ a{
                         id: 'build-source',
                         status: 'wait',
                         stageName: 'Build source',
+                        description: '',
                         log: ''
                     },
                     {
@@ -211,6 +217,7 @@ a{
                         id: 'deployment',
                         status: 'wait',
                         stageName: 'Deploy',
+                        description: '',
                         log: ''
                     },
                 ],
@@ -235,21 +242,81 @@ a{
                 }
             },
             provisionResource() {
-                this.stages[0].log = 'Creating app ' + this.appName + ' in service ' + this.serviceName + '...';
+                this.stages[0].description = 'Creating app ' + this.appName + ' in service ' + this.serviceName + '...';
                 axios.get('/provisionResource/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName + '/' + this.region)
                     .then(res => {
                         if (res.status === 200) {
                             this.stages[0].status = 'success';
+                            this.stages[0].description = 'Created app ' + this.appName + ' in service ' + this.serviceName + '.';
                             this.stages[0].log = res.data;
                             this.stages[1].status = 'loading';
-                            this.stages[1].log = 'Uploading source code...';
+                            this.stages[1].description = 'Uploading source code...';
+                            this.getUploadUrl();
+                        }
+                    }).catch(error => {
+                    console.log(error);
+                    this.stages[0].log = error.response.data;
+                    this.stages[0].status = 'error';
+                    this.deploymentResult = 'Deployment failed';
+                    toast.error('Provision resource failed !', {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
+                }).finally(() => {
+                    clearInterval(this.timerProvisionSource);
+                })
+            },
+            getUploadUrl() {
+                const log = document.getElementById('pre-' + this.stages[1].id)
+                log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Getting upload url...' + '</p>';
+                axios.get('/getUploadUrl/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
+                        .then(res => {
+                        if (res.status === 200) {
+                            log.innerHTML = '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Get upload url successfully.' + '</p>';
+                            this.relativePath = res.data.relativePath;
+                            this.uploadUrl = res.data.uploadUrl;
+                            this.uploadFile(log);
+                        }
+                    }).catch(error => {
+                    console.log(error);
+                    this.stages[1].status = 'error';
+                    this.stages[1].description = 'Upload source code failed.';
+                    log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Get upload url failed.' + '</p>' + error.response.data;
+                    this.deploymentResult = 'Deployment failed';
+                    toast.error('Upload source code failed !', {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
+                })
+            },
+            uploadFile(log){
+                const uploadLog = log.innerHTML;
+                log.innerHTML = uploadLog + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Uploading file...' + '</p>';
+                axios.post('/uploadFile',
+                    {
+                        'subscriptionId': this.subscriptionId,
+                        'uploadUrl': this.uploadUrl,
+                        'url': this.gitUrl,
+                        'branchName': this.branch
+                    })
+                    .then(res => {
+                        if (res.status === 200) {
+                            log.innerHTML = uploadLog + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Upload file successfully.' + '</p>';
+                            this.stages[1].status = 'success';
+                            this.stages[1].description = 'Upload source code is complete.';
+                            this.stages[2].status = 'loading';
+                            this.stages[2].description = 'Building source in app ' + this.appName + '...';
                             this.deploySourceCode();
                         }
                     }).catch(error => {
-                    this.stages[0].status = 'error';
-                    this.stages[0].log = error.response.data;
+                    console.log(error);
+                    this.stages[1].status = 'error';
+                    this.stages[1].description = 'Upload source code failed.';
+                    log.innerHTML = uploadLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Upload file failed.' + '</p>' + error.response.data;
                     this.deploymentResult = 'Deployment failed';
-                    toast.error('Provision resource failed.', {
+                    toast.error('Upload source code failed !', {
                         position: toast.POSITION.TOP_CENTER,
                         autoClose: 5000,
                         hideProgressBar: true
@@ -257,66 +324,51 @@ a{
                 })
             },
             deploySourceCode() {
-                axios.get('/deploy' + this.url)
+                axios.get('/deploy' + this.url + '&relativePath=' + this.relativePath)
+                    .then(()=> {
+                        this.result = 'success';
+                    }).catch(error => {
+                    this.result = 'failed';
+                    console.log(error)
+                }).finally(() => {
+                    this.getBuildSourceResult();
+                })
+                this.getBuildLogs();
+            },
+            getBuildSourceResult(){
+                axios.get('/getBuildSourceResult/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
                     .then(res => {
                         if (res.status === 200) {
+                            this.stages[2].status = 'success';
+                            this.stages[2].description = 'Build source in app ' + this.appName + ' succeed.';
+                            this.stages[3].status = 'loading';
+                            this.stages[3].description = 'Deploying in app ' + this.appName + '...';
                             this.getApplicationLog();
                         }
                     }).catch(error => {
-                    if (this.stages[2].status === 'success') {
-                        this.getApplicationLog();
-                    }
-                    console.log(error)
-                })
-                this.getUploadSourceCodeResult();
-            },
-            getUploadSourceCodeResult() {
-                axios.get('/getUploadSourceCodeResult/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
-                    .then(res => {
-                        if (res.data === 'Succeeded') {
-                            if (this.stages[1].status !== 'success') {
-                                this.stages[1].status = 'success';
-                                this.stages[1].log = 'Upload source code is complete.';
-                            }
-                            if (this.stages[2].status === 'wait' && this.stages[1].status === 'success') {
-                                this.stages[2].status = 'loading';
-                                this.stages[2].log = 'Building source in app ' + this.appName + '...';
-                            }
-                            this.getBuildLogs();
-                        } else {
-                            this.getUploadSourceCodeResult();
-                        }
-                    }).catch(err => {
-                    this.stages[1].log = err.response.data;
-                    this.stages[1].status = 'error';
+                    console.log(error);
+                    this.stages[2].status = 'error';
+                    this.stages[2].description = 'Build source in app ' + this.appName + ' failed.';
                     this.deploymentResult = 'Deployment failed';
-                    toast.error('Upload source code failed.', {
+                    toast.error('Build source failed !', {
                         position: toast.POSITION.TOP_CENTER,
                         autoClose: 5000,
                         hideProgressBar: true
                     });
                 })
+            },
+            getProvisionResourceLog(){
+                console.log('getProvisionResourceLog');
             },
             getBuildLogs() {
                 axios.get('/getBuildLogs/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
                     .then(res => {
-                        if (res.status === 202 && this.stages[2].status === 'loading') {
+                        if (res.status === 200 && this.stages[2].status === 'loading' && this.result === '') {
                             this.getBuildLogs();
-                        } else if (res.status === 200) {
-                            this.stages[2].status = 'success';
-                            this.stages[3].status = 'loading';
-                            this.stages[3].log = "Deploying in app " + this.appName + "...";
                         }
                         this.logScrollButtom(this.stages[2].id, res.data);
                     }).catch(error => {
-                    this.stages[2].status = 'error';
-                    this.deploymentResult = 'Deployment failed';
-                    this.logScrollButtom(this.stages[2].id, error.response.data);
-                    toast.error('Build source failed.', {
-                        position: toast.POSITION.TOP_CENTER,
-                        autoClose: 5000,
-                        hideProgressBar: true
-                    });
+                    console.log(error);
                 })
             },
             getApplicationLog() {
@@ -324,19 +376,21 @@ a{
                     .then(res => {
                         if (res.status === 200) {
                             this.stages[3].status = 'success'
+                            this.stages[3].description = 'Deployed in app ' + this.appName + '.';
                             this.showView = true;
                             this.deploymentResult = 'Deployment completed';
-                            toast.success('Deployment succeeded.', {
+                            toast.success('Deployment succeeded !', {
                                 position: toast.POSITION.TOP_CENTER,
                                 autoClose: 5000,
                                 hideProgressBar: true
                             });
                         }
                         this.logScrollButtom(this.stages[3].id, res.data);
-                    }).catch(err => {
+                    }).catch(error => {
                     this.stages[3].status = 'error'
+                    this.stages[3].description = 'Deploy in app ' + this.appName + ' failed.';
                     this.deploymentResult = 'Deployment failed';
-                    this.logScrollButtom(this.stages[3].id, err.response.data);
+                    this.logScrollButtom(this.stages[3].id, error.response.data);
                     toast.error('Deploy failed.', {
                         position: toast.POSITION.TOP_CENTER,
                         autoClose: 5000,
@@ -362,6 +416,11 @@ a{
         },
         mounted() {
             this.provisionResource();
+            this.timerProvisionSource = setInterval(() => {
+                if (this.stages[0].status === 'loading') {
+                    this.getProvisionResourceLog();
+                }
+            },5000);
         },
     })
     app.mount('#app')
