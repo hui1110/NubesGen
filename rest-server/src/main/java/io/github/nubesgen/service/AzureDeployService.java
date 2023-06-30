@@ -3,15 +3,30 @@ package io.github.nubesgen.service;
 import com.azure.core.credential.AccessToken;
 import com.azure.core.credential.TokenCredential;
 import com.azure.core.credential.TokenRequestContext;
+import com.azure.core.management.AzureEnvironment;
 import com.azure.core.management.Region;
+import com.azure.core.management.profile.AzureProfile;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.resourcemanager.AzureResourceManager;
+import com.azure.resourcemanager.appplatform.AppPlatformManager;
+import com.azure.resourcemanager.appplatform.fluent.models.AppResourceInner;
+import com.azure.resourcemanager.appplatform.fluent.models.DeploymentResourceInner;
+import com.azure.resourcemanager.appplatform.fluent.models.ServiceResourceInner;
+import com.azure.resourcemanager.appplatform.models.AppResourceProperties;
 import com.azure.resourcemanager.appplatform.models.DeploymentInstance;
-import com.azure.resourcemanager.appplatform.models.RuntimeVersion;
+import com.azure.resourcemanager.appplatform.models.DeploymentResourceProperties;
+import com.azure.resourcemanager.appplatform.models.DeploymentSettings;
+import com.azure.resourcemanager.appplatform.models.ResourceRequests;
+import com.azure.resourcemanager.appplatform.models.ResourceUploadDefinition;
+import com.azure.resourcemanager.appplatform.models.Sku;
+import com.azure.resourcemanager.appplatform.models.SourceUploadedUserSourceInfo;
 import com.azure.resourcemanager.appplatform.models.SpringApp;
+import com.azure.resourcemanager.appplatform.models.SpringAppDeployment;
 import com.azure.resourcemanager.appplatform.models.SpringService;
 import com.azure.resourcemanager.resources.models.ResourceGroup;
 import com.azure.resourcemanager.resources.models.Subscription;
+import com.azure.storage.file.share.ShareFileAsyncClient;
+import com.azure.storage.file.share.ShareFileClientBuilder;
 import io.github.nubesgen.model.ProjectInstance;
 import io.github.nubesgen.model.RegionInstance;
 import io.github.nubesgen.model.ResourceGrooupInstance;
@@ -30,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import reactor.core.publisher.Mono;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
@@ -40,6 +56,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
@@ -56,11 +73,8 @@ public class AzureDeployService {
 
     private final Logger log = LoggerFactory.getLogger(AzureDeployService.class);
     private static final String DEFAULT_DEPLOYMENT_NAME = "default";
-    private static final String STATUS_STARTING = "Starting";
     private static final String STATUS_FAILED = "Failed";
-    private static final String STATUS_RUNNING = "Running";
     private static final String STATUS_SUCCEED = "Succeeded";
-    private static final String STATUS_UPLOAD = "Uploading";
 
     /**
      * Get subscription list.
@@ -167,14 +181,14 @@ public class AzureDeployService {
         }
         deleteRepositoryDirectory(new File(pathName));
         ProjectInstance projectInstance = new ProjectInstance();
-        if (model != null) {
-            Assert.isTrue(model.getName() != null, "Project name is not configured in pom.xml");
-            Assert.isTrue(model.getProperties().containsKey("java.version"), "Java version is not configured in pom"
-                + ".xml");
+//        Assert.isTrue(model.getName() != null, "Project name is not configured in pom.xml");
+        Assert.isTrue(model.getProperties().containsKey("java.version"), "Java version is not configured in pom"
+            + ".xml");
+        if(model.getName() != null) {
             projectInstance.setName(model.getName().replaceAll(" ", "").toLowerCase());
-            String version = String.valueOf(model.getProperties().get("java.version"));
-            projectInstance.setVersion(Objects.equals(version, "null") ? null : "Java_" + version);
         }
+        String version = String.valueOf(model.getProperties().get("java.version"));
+        projectInstance.setVersion(Objects.equals(version, "null") ? null : "Java_" + version);
         return projectInstance;
     }
 
@@ -192,41 +206,127 @@ public class AzureDeployService {
     public String provisionResource(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName,
                                     String serviceName,
                                     String appName, String regionName) {
-        AzureResourceManager azureResourceManager = getAzureResourceManager(management, subscriptionId);
-        SpringService service = azureResourceManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
-        Region region = Region.fromName(regionName);
-        if (!azureResourceManager.resourceGroups().contain(resourceGroupName)) {
-            createResourceGroup(azureResourceManager, resourceGroupName, region);
-        } else {
-            log.info("Resource Group " + resourceGroupName + " already exists.");
-        }
-        if (azureResourceManager.springServices().checkNameAvailability(serviceName, region).nameAvailable()) {
-            createASA(azureResourceManager, resourceGroupName, serviceName, region);
-        } else {
-            log.info("Azure Spring Apps " + serviceName + " already exists.");
-        }
-        service.apps().define(appName).withDefaultActiveDeployment().withDefaultPublicEndpoint().withHttpsOnly().create();
-        return ResourceManagerUtils.getAppDetails(service.apps().getByName(appName));
+        AppPlatformManager appPlatformManager = getAppPlatformManager(management, subscriptionId);
+        ServiceResourceInner serviceResourceInner = new ServiceResourceInner()
+            .withLocation(regionName)
+            .withSku(new Sku().withName("S0"));
+
+        // provision spring service
+        appPlatformManager.serviceClient().getServices().createOrUpdate(resourceGroupName, serviceName, serviceResourceInner);
+        log.info("provision spring service done");
+
+        // provision spring app
+        AppResourceProperties properties = new AppResourceProperties();
+        properties.withHttpsOnly(true);
+        properties.withPublicProperty(true);
+
+        AppResourceInner appResourceInner = new AppResourceInner();
+        appResourceInner.withProperties(properties);
+
+        appPlatformManager.serviceClient().getApps().createOrUpdate(resourceGroupName, serviceName, appName, appResourceInner);
+        AppResourceInner appResourceInner1 = appPlatformManager.serviceClient().getApps().get(resourceGroupName, serviceName, appName);
+        log.info("provision spring app done");
+        return ResourceManagerUtils.getAppResourceInner(appResourceInner1);
     }
 
     /**
-     * Get upload source code result.
+     * Get upload url string.
      *
      * @param management OAuth2 authorization client after login
      * @param subscriptionId the subscription id
      * @param resourceGroupName the resource group name
      * @param serviceName the service name
      * @param appName the app name
-     * @return none: undone, otherwise the log file url
+     * @return upload url
      */
-    public String getUploadSourceCodeResult(OAuth2AuthorizedClient management, String subscriptionId,
-                                            String resourceGroupName,
-                                            String serviceName,
-                                            String appName) {
-        AzureResourceManager azureResourceManager = getAzureResourceManager(management, subscriptionId);
-        SpringService service = azureResourceManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
-        String result = service.apps().getByName(appName).getActiveDeployment().getLogFileUrl();
-        return result == null ? STATUS_UPLOAD : STATUS_SUCCEED;
+    public ResourceUploadDefinition getUploadUrl(OAuth2AuthorizedClient management, String subscriptionId,
+                                String resourceGroupName,
+                                String serviceName,
+                                String appName){
+        AppPlatformManager appPlatformManager = getAppPlatformManager(management, subscriptionId);
+        ResourceUploadDefinition uploadUrl = appPlatformManager.serviceClient().getApps().getResourceUploadUrlAsync(
+            resourceGroupName, serviceName, appName).block();
+        log.info("get upload url done");
+        return uploadUrl;
+    }
+
+    /**
+     * Upload file.
+     *
+     * @param management OAuth2 authorization client after login
+     * @param subscriptionId the subscription id
+     * @param url the url
+     * @param branchName the branch name
+     * @param uploadUrl the upload url
+     */
+    public void uploadFile(OAuth2AuthorizedClient management, String subscriptionId, String uploadUrl,
+                             String url,
+                             String branchName){
+        System.out.println("uploadUrl: " + uploadUrl);
+        AppPlatformManager appPlatformManager = getAppPlatformManager(management, subscriptionId);
+        ShareFileAsyncClient fileClient = new ShareFileClientBuilder()
+            .endpoint(uploadUrl)
+            .httpClient(appPlatformManager.httpPipeline().getHttpClient())
+            .buildFileAsyncClient();
+        String pathName = getRepositoryPath(url, branchName);
+        try {
+            File gzFile = createTarGzFile(new File(pathName));
+            fileClient.create(gzFile.length())
+                      .flatMap(fileInfo -> fileClient.uploadFromFile(gzFile.getAbsolutePath()))
+                      .block();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        log.info("upload file done");
+    }
+
+    /**
+     * Deploy source code to Azure Spring App instance.
+     *
+     * @param management OAuth2 authorization client after login
+     * @param subscriptionId the subscription id
+     * @param resourceGroupName the resource group name
+     * @param serviceName the service name
+     * @param appName the app name
+     * @param javaVersion the java version
+     */
+    public void deploySourceCodeToSpringApps(OAuth2AuthorizedClient management, String subscriptionId,
+                                             String resourceGroupName,
+                                             String serviceName,
+                                             String appName,
+                                             String regionName,
+                                             String module, String javaVersion, String cpu,
+                                             String memory,
+                                             Integer instanceCount, String relativePath) {
+        log.info("Start deploy.....");
+        AppPlatformManager appPlatformManager = getAppPlatformManager(management, subscriptionId);
+        ServiceResourceInner serviceResourceInner = new ServiceResourceInner()
+            .withLocation(regionName)
+            .withSku(new Sku().withName("S0"));
+
+        // deploy app
+        DeploymentResourceInner resourceInner = new DeploymentResourceInner()
+            .withSku(
+                new Sku()
+                    .withName(serviceResourceInner.sku().name())
+                    .withCapacity(instanceCount)); // instance count
+        resourceInner.withProperties(new DeploymentResourceProperties());
+
+        SourceUploadedUserSourceInfo sourceInfo = new SourceUploadedUserSourceInfo();
+        sourceInfo.withRuntimeVersion(javaVersion);
+        sourceInfo.withRelativePath(relativePath);
+        if (!Objects.equals(module, "null")) {
+            sourceInfo.withArtifactSelector(module); // withTargetModule
+        }
+        resourceInner.properties()
+                     .withActive(true)
+                     .withSource(sourceInfo)
+                     .withDeploymentSettings(
+                         new DeploymentSettings()
+                             .withResourceRequests(new ResourceRequests().withCpu(cpu).withMemory(memory)));
+        appPlatformManager.serviceClient().getDeployments().createOrUpdate(resourceGroupName, serviceName, appName,
+            DEFAULT_DEPLOYMENT_NAME, resourceInner);
+        log.info("Deploy app done");
     }
 
     /**
@@ -241,14 +341,20 @@ public class AzureDeployService {
      */
     public String getBuildLogs(OAuth2AuthorizedClient management, String subscriptionId,
                                String resourceGroupName,
-                               String serviceName, String appName, String status) {
+                               String serviceName, String appName) {
         AzureResourceManager azureResourceManager = getAzureResourceManager(management, subscriptionId);
         SpringService service = azureResourceManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
-        String buildLog = getLogByFileUrl(service.apps().getByName(appName).getActiveDeployment().getLogFileUrl());
-        if (STATUS_FAILED.equals(status)) {
-             service.apps().deleteByName(appName);
-         }
-        return buildLog;
+        SpringAppDeployment springAppDeployment = service.apps().getByName(appName).getActiveDeployment();
+        if(Objects.isNull(springAppDeployment) || Objects.isNull(springAppDeployment.getLogFileUrl())) {
+            return null;
+        }
+        String buildLogs = null;
+        try {
+            buildLogs = getLogByFileUrl(springAppDeployment.getLogFileUrl());
+        }catch (Exception e){
+            log.error(e.getMessage());
+        }
+        return buildLogs;
     }
 
     /**
@@ -265,20 +371,20 @@ public class AzureDeployService {
                                      String resourceGroupName,
                                      String serviceName, String appName, String status) {
         AzureResourceManager azureResourceManager = getAzureResourceManager(management, subscriptionId);
-        SpringService service = azureResourceManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
-        String endpoint = getLogStreamingEndpoint(service, appName);
+        SpringService springService = azureResourceManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
+        String endpoint = getLogStreamingEndpoint(springService, appName);
         if (Objects.isNull(endpoint)) {
             return null;
         }
         HttpsURLConnection connection = null;
         URL url;
         try {
-            if(STATUS_FAILED.equals(status)) {
+            if(!STATUS_SUCCEED.equals(status)) {
                 url = new URL(String.format("%s?tailLines=%s&follow=%s", endpoint, 1000, true));
             } else {
                 url = new URL(String.format("%s?tailLines=%s", endpoint, 1000));
             }
-            final String password = service.apps().getByName(appName).parent().listTestKeys().primaryKey();
+            final String password = springService.apps().getByName(appName).parent().listTestKeys().primaryKey();
             final String userPass = "primary:" + password;
             final String basicAuth = "Basic " + new String(Base64.getEncoder().encode(userPass.getBytes()));
             connection = (HttpsURLConnection) url.openConnection();
@@ -287,8 +393,8 @@ public class AzureDeployService {
             connection.setUseCaches(false);
             connection.setDoOutput(true);
             byte[] getData = connection.getInputStream().readAllBytes();
-            if(STATUS_FAILED.equals(status)) {
-                service.apps().deleteByName(appName);
+            if(!STATUS_SUCCEED.equals(status)) {
+                springService.apps().deleteByName(appName);
             }
             return new String(getData);
         } catch (Exception e) {
@@ -306,6 +412,31 @@ public class AzureDeployService {
     }
 
     /**
+     * Check build source status.
+     *
+     * @param management OAuth2 authorization client after login
+     * @param subscriptionId the subscription id
+     * @param resourceGroupName the resource group name
+     * @param serviceName the service name
+     * @param appName the app name
+     * @return failed: Failed, null:  build source done
+     */
+    public String checkBuildSourceStatus(OAuth2AuthorizedClient management, String subscriptionId,
+                                         String resourceGroupName,
+                                         String serviceName, String appName) {
+        AzureResourceManager azureResourceManager = getAzureResourceManager(management, subscriptionId);
+        SpringService springService = azureResourceManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
+        String status = null;
+        SpringAppDeployment springAppDeployment = springService.apps().getByName(appName).getActiveDeployment();
+        //            build failed
+        if (Objects.isNull(springAppDeployment.instances())) {
+            springService.apps().deleteByName(appName);
+            status = STATUS_FAILED;
+        }
+        return status;
+    }
+
+    /**
      * Check deploy status.
      *
      * @param management OAuth2 authorization client after login
@@ -319,48 +450,23 @@ public class AzureDeployService {
                                     String resourceGroupName,
                                     String serviceName, String appName) {
         AzureResourceManager azureResourceManager = getAzureResourceManager(management, subscriptionId);
-        SpringService springService = azureResourceManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
+        SpringService springService = azureResourceManager.springServices().getByResourceGroup(resourceGroupName,
+            serviceName);
         String status = null;
-        List<DeploymentInstance> deploymentInstances = springService.apps().getByName(appName).getActiveDeployment().instances();
+        SpringAppDeployment springAppDeployment = springService.apps().getByName(appName).getActiveDeployment();
+        String appStatus = springAppDeployment.innerModel().properties().provisioningState().toString();
+
+        List<DeploymentInstance> deploymentInstances = springAppDeployment.instances();
         deploymentInstances = deploymentInstances.stream().sorted(Comparator.comparing(DeploymentInstance::startTime)).collect(Collectors.toList());
         String instanceStatus = deploymentInstances.get(deploymentInstances.size() - 1).status();
-        String appStatus = springService.apps().getByName(appName).getActiveDeployment().innerModel().properties().provisioningState().toString();
-        if (STATUS_FAILED.equals(instanceStatus) || STATUS_FAILED.equals(appStatus)) {
-            status = STATUS_FAILED;
-        } else if (STATUS_SUCCEED.equals(appStatus) && STATUS_RUNNING.equals(instanceStatus)) {
+
+        System.out.println("appStatus: " + appStatus);
+        System.out.println("instanceStatus: " + instanceStatus);
+        //            build succeed, but deploy failed
+        if (STATUS_SUCCEED.equals(appStatus) && "Running".equals(instanceStatus)) {
             status = STATUS_SUCCEED;
-        } else if (STATUS_STARTING.equals(instanceStatus)) {
-            status = STATUS_STARTING;
         }
         return status;
-    }
-
-    /**
-     * Deploy source code to Azure Spring App instance.
-     *
-     * @param management OAuth2 authorization client after login
-     * @param subscriptionId the subscription id
-     * @param resourceGroupName the resource group name
-     * @param serviceName the service name
-     * @param appName the app name
-     * @param javaVersion the java version
-     * @param url the repository url
-     * @param branchName the branch name
-     */
-    public void deploySourceCodeToSpringApps(OAuth2AuthorizedClient management, String subscriptionId,
-                                             String resourceGroupName,
-                                             String serviceName,
-                                             String appName,
-                                             String module, String javaVersion, Integer cpu,
-                                             Integer memory,
-                                             Integer instanceCount, String url, String branchName) throws IOException {
-        module = Objects.equals(module, "null") ? null : module;
-        String pathName = getRepositoryPath(url, branchName);
-        RuntimeVersion runtimeVersion = getJavaVersion(javaVersion);
-        File sourceCode = createTarGzFile(new File(pathName));
-        AzureResourceManager azureResourceManager = getAzureResourceManager(management, subscriptionId);
-        deployToSpringApp(azureResourceManager, resourceGroupName, serviceName, appName, module, runtimeVersion,
-                sourceCode, cpu, memory, instanceCount);
     }
 
     private String getLogByFileUrl(String strUrl) {
@@ -465,76 +571,29 @@ public class AzureDeployService {
         }
     }
 
-    private void createResourceGroup(AzureResourceManager azureResourceManager, String rgName, Region region) {
-        log.info("Creating resource group {}", rgName);
-        azureResourceManager.resourceGroups().define(rgName)
-                            .withRegion(region)
-                            .create();
-        log.info("Created resource group {}", rgName);
-    }
-
-    private void createASA(AzureResourceManager azureResourceManager, String rgName, String serviceName,
-                           Region region) {
-        log.info("Creating Azure Spring Apps {} in resource group {}", serviceName, rgName);
-        SpringService service = azureResourceManager.springServices().define(serviceName)
-                                                    .withRegion(region)
-                                                    .withExistingResourceGroup(rgName)
-                                                    .create();
-        ResourceManagerUtils.print(service);
-        log.info("Created Azure Spring Apps {} ", service.name());
-    }
-
-    private void deployToSpringApp(AzureResourceManager azureResourceManager, String rgName, String serviceName,
-                                   String appName, String module, RuntimeVersion jdkVersion,
-                                   File file, Integer cpu, Integer memory, Integer instanceCount) {
-        SpringService service = azureResourceManager.springServices().getByResourceGroup(rgName, serviceName);
-        service.apps().getByName(appName)
-               .getActiveDeployment()
-               .update()
-               .withCpu(cpu)
-               .withMemory(memory)
-               .withInstance(instanceCount)
-               .withRuntime(jdkVersion)
-               .apply();
-        log.info("--------Update deployment done.-----------");
-        if (module == null) {
-            log.info("Deploying source code with single module.");
-            service.apps().define(appName)
-                   .defineActiveDeployment(DEFAULT_DEPLOYMENT_NAME)
-                   .withSourceCodeTarGzFile(file)
-                   .withSingleModule()
-                   .withRuntime(jdkVersion)
-                   .attach()
-                   .create();
-        } else {
-            log.info("Deploying source code with target module {}.", module);
-            service.apps().define(appName)
-                   .defineActiveDeployment(DEFAULT_DEPLOYMENT_NAME)
-                   .withSourceCodeTarGzFile(file)
-                   .withTargetModule(module)
-                   .withRuntime(jdkVersion)
-                   .attach()
-                   .create();
-        }
-        log.info("Successfully deploy source code.");
-    }
-
-    private RuntimeVersion getJavaVersion(String javaVersion) {
-        RuntimeVersion runtimeVersion = new RuntimeVersion();
-        switch (javaVersion) {
-            case "17" -> runtimeVersion = RuntimeVersion.JAVA_17;
-            case "11" -> runtimeVersion = RuntimeVersion.JAVA_11;
-            case "8" -> runtimeVersion = RuntimeVersion.JAVA_8;
-        }
-        return runtimeVersion;
-    }
-
     private AzureResourceManager getAzureResourceManager(OAuth2AuthorizedClient management, String subscriptionId) {
         if (subscriptionId == null) {
             return ResourceManagerUtils.getResourceManager(management.getAccessToken().getTokenValue());
         } else {
             return ResourceManagerUtils.getResourceManager(management.getAccessToken().getTokenValue(), subscriptionId);
         }
+    }
+
+    private static TokenCredential toTokenCredential(String accessToken) {
+        return request -> Mono.just(new AccessToken(accessToken, OffsetDateTime.MAX));
+    }
+
+    private AppPlatformManager getAppPlatformManager(OAuth2AuthorizedClient management, String subscriptionId){
+               final TokenCredential credential = toTokenCredential(management.getAccessToken().getTokenValue());
+//        TokenRequestContext request = new TokenRequestContext().addScopes("https://management.azure.com/.default");
+//        TokenCredential tokenCredential = new DefaultAzureCredentialBuilder().build();
+//        AccessToken token = tokenCredential.getToken(request).retry(3L).blockOptional().orElseThrow(() -> new RuntimeException("Couldn't retrieve JWT"));
+//        final TokenCredential credential = toTokenCredential(token.getToken());
+        final AzureProfile azureProfile = new AzureProfile(AzureEnvironment.AZURE);
+        AzureResourceManager authenticated = AzureResourceManager.authenticate(credential, azureProfile).withSubscription(subscriptionId);
+        String tenantId = authenticated.tenants().list().iterator().next().tenantId();
+        final AzureProfile profile = new AzureProfile(tenantId, subscriptionId, AzureEnvironment.AZURE);
+        return AppPlatformManager.authenticate(credential, profile);
     }
 
 }

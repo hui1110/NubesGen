@@ -6,11 +6,11 @@ import com.azure.core.http.policy.HttpLogDetailLevel;
 import com.azure.core.management.AzureEnvironment;
 import com.azure.core.management.profile.AzureProfile;
 import com.azure.resourcemanager.AzureResourceManager;
+import com.azure.resourcemanager.appplatform.fluent.models.AppResourceInner;
 import com.azure.resourcemanager.appplatform.models.ConfigServerProperties;
 import com.azure.resourcemanager.appplatform.models.ConfigServerState;
 import com.azure.resourcemanager.appplatform.models.MonitoringSettingProperties;
 import com.azure.resourcemanager.appplatform.models.MonitoringSettingState;
-import com.azure.resourcemanager.appplatform.models.SpringApp;
 import com.azure.resourcemanager.appplatform.models.SpringService;
 import reactor.core.publisher.Mono;
 
@@ -38,7 +38,7 @@ public class ResourceManagerUtils {
             .withSubscription(subscription);
     }
 
-    private static TokenCredential toTokenCredential(String accessToken) {
+    public static TokenCredential toTokenCredential(String accessToken) {
         return request -> Mono.just(new AccessToken(accessToken, OffsetDateTime.MAX));
     }
 
@@ -82,40 +82,34 @@ public class ResourceManagerUtils {
         System.out.println(info);
     }
 
-    /**
-     * Get spring app settings.
-     *
-     * @param springApp spring app instance
-     */
-    public static String getAppDetails(SpringApp springApp) {
+    public static String getAppResourceInner(AppResourceInner appResourceInner) {
         StringBuilder info = new StringBuilder("Spring Service app: ")
-            .append("\n\tId: ").append(springApp.id())
-            .append("\n\tName: ").append(springApp.name())
-            .append("\n\tPublic Endpoint: ").append(springApp.isPublic())
-            .append("\n\tUrl: ").append(springApp.url())
-            .append("\n\tHttps Only: ").append(springApp.isHttpsOnly())
-            .append("\n\tFully Qualified Domain Name: ").append(springApp.fqdn())
-            .append("\n\tActive Deployment Name: ").append(springApp.activeDeploymentName());
+            .append("\n\tId: ").append(appResourceInner.id())
+            .append("\n\tName: ").append(appResourceInner.name())
+            .append("\n\tPublic Endpoint: ").append(appResourceInner.properties().publicProperty())
+            .append("\n\tUrl: ").append(appResourceInner.properties().url())
+            .append("\n\tHttps Only: ").append(appResourceInner.properties().httpsOnly())
+            .append("\n\tFully Qualified Domain Name: ").append(appResourceInner.properties().fqdn())
+            .append("\n\tLocation: ").append(appResourceInner.location());
 
-        if (springApp.temporaryDisk() != null) {
+        if (appResourceInner.properties().temporaryDisk() != null) {
             info.append("\n\tTemporary Disk:")
-                .append("\n\t\tSize In GB: ").append(springApp.temporaryDisk().sizeInGB())
-                .append("\n\t\tMount Path: ").append(springApp.temporaryDisk().mountPath());
+                .append("\n\t\tSize In GB: ").append(appResourceInner.properties().temporaryDisk().sizeInGB())
+                .append("\n\t\tMount Path: ").append(appResourceInner.properties().temporaryDisk().mountPath());
         }
 
-        if (springApp.persistentDisk() != null) {
+        if (appResourceInner.properties().persistentDisk() != null) {
             info.append("\n\tPersistent Disk:")
-                .append("\n\t\tSize In GB: ").append(springApp.persistentDisk().sizeInGB())
-                .append("\n\t\tMount Path: ").append(springApp.persistentDisk().mountPath());
+                .append("\n\t\tSize In GB: ").append(appResourceInner.properties().persistentDisk().sizeInGB())
+                .append("\n\t\tMount Path: ").append(appResourceInner.properties().persistentDisk().mountPath());
         }
 
-        if (springApp.identity() != null) {
+        if (appResourceInner.identity() != null) {
             info.append("\n\tIdentity:")
-                .append("\n\t\tType: ").append(springApp.identity().type())
-                .append("\n\t\tPrincipal Id: ").append(springApp.identity().principalId())
-                .append("\n\t\tTenant Id: ").append(springApp.identity().tenantId());
+                .append("\n\t\tType: ").append(appResourceInner.identity().type())
+                .append("\n\t\tPrincipal Id: ").append(appResourceInner.identity().principalId())
+                .append("\n\t\tTenant Id: ").append(appResourceInner.identity().tenantId());
         }
-
         return info.toString();
     }
 
