@@ -25,7 +25,8 @@ public class ResourceManagerUtils {
             .configure()
             .withLogLevel(HttpLogDetailLevel.BASIC)
             .authenticate(credential, profile)
-            .withDefaultSubscription();
+//            .withDefaultSubscription();
+            .withSubscription("6c933f90-8115-4392-90f2-7077c9fa5dbd");
     }
 
     public static AzureResourceManager getResourceManager(String token, String subscription) {

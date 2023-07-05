@@ -35,9 +35,10 @@ img {
     width: 10%;
     vertical-align: middle;
 }
-a{
+a {
     color: black;
 }
+
 .deployment {
     width: 75%;
     margin: 3% auto 10px;
@@ -46,6 +47,10 @@ a{
 }
 .form-control {
     font-size: 14px;
+}
+.form-control:disabled{
+    background-color: #fff;
+
 }
 .filter-option-inner-inner {
     font-size: 14px;
@@ -58,9 +63,7 @@ a{
     font-size: 0.875rem;
     font-weight: 500;
 }
-.readonly {
-    border: none;
-}
+
 .row {
     padding-bottom: 1%;
     padding-left: 3%;
@@ -87,6 +90,19 @@ a{
     padding-right: 10px;
     margin-top: 1.5%;
 }
+
+.select-container .btn-light:not(:disabled):not(.disabled).active,
+.select-container .btn-light:not(:disabled):not(.disabled):active,
+.select-container .show>.btn-light.dropdown-toggle {
+    background-color: transparent;
+}
+
+.select-container .bootstrap-select .dropdown-toggle:focus,
+.select-container .bootstrap-select>select.mobile-device:focus+.dropdown-toggle {
+    outline: none !important;
+    background-color: transparent;
+}
+
 </style>
 <body>
 <div id="app">
@@ -96,12 +112,12 @@ a{
         <label class="back">Back to <a href="/">NubesGen.com</a></label>
     </div>
     <div class="deployment">
-        <form id="setting">
+        <form id="setting" class="select-container">
             <div class="mb-3 row">
                 <label class="col-sm-4 col-form-label">GitHub repository address</label>
                 <div class="col-sm-7">
                     <label>
-                        <input type="text" class="form-control readonly" v-model="url" readonly/>
+                        <input type="text" class="form-control" v-model="url" disabled/>
                     </label>
                 </div>
             </div>
@@ -196,7 +212,7 @@ a{
                 </label>
                 <div class="col-sm-7">
                     <label for="appName">
-                        <input type="text" class="form-control"
+                        <input type="text" class="form-control" :disabled="init"
                                v-model="appInstance.name" id="appName" name="appName"/>
                     </label>
                     <span id="appName_error" style="color: red"></span>
@@ -219,8 +235,8 @@ a{
                         </svg>
                     </label>
                     <label for="runtimePlatform">
-                        <input type="text" class="form-control readonly" id="runtimePlatform" name="runtimePlatform"
-                               v-model="appInstance.runtimePlatform" readonly/>
+                        <input type="text" class="form-control" id="runtimePlatform" name="runtimePlatform"
+                               v-model="appInstance.runtimePlatform" disabled/>
                     </label>
                     <span id="runtimePlatform_error" style="color: red"></span>
                 </div>
@@ -261,7 +277,7 @@ a{
         </form>
         <hr/>
         <div class="form-group">
-            <button class="btn btn-primary btn-sm btn-block" @click="deployCode()">Deploy</button>
+            <button class="btn btn-primary btn-sm btn-block" :disabled="init" @click="deployCode()">Deploy</button>
         </div>
     </div>
 </div>
@@ -287,6 +303,7 @@ a{
                 url: new URLSearchParams(location.search).get('url'),
                 branch: new URLSearchParams(location.search).get('branch'),
                 module: new URLSearchParams(location.search).get('module'),
+                init: true,
                 resourceGroupName: '',
                 subscriptionId: '',
                 region: '',
@@ -306,6 +323,7 @@ a{
                     .then(res => {
                         this.appInstance.runtimePlatform = res.data.version;
                         this.appInstance.name = res.data.name;
+                        this.init = false;
                     }).catch(error => {
                     this.appInstance.runtimePlatform = '';
                     toast.error(error.response.data, {
@@ -396,7 +414,7 @@ a{
                 this.appInstance.memory = this.appInstance.memory.replace(/\s+/g,"");
                 const appDetails = '&cpu=' + this.appInstance.cpu + '&memory=' + this.appInstance.memory + '&instanceCount=' + this.appInstance.instanceCount;
                 const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceInstanceName + '&javaVersion=' + this.appInstance.runtimePlatform + '&appName=' + this.appInstance.name + '&region=' + this.region + '&branchName=' + this.branch + '&module=' + this.module;
-                location.assign('/progress.html?' + url + appDetails);
+                location.assign('/progress1.html?' + url + appDetails);
             },
             validatorForm() {
                 $(document).ready(function () {
@@ -481,6 +499,7 @@ a{
             this.getAppNameAndJavaVersion();
             this.validatorForm();
             this.appInstance.runtimePlatform = 'loading...';
+            this.appInstance.name = 'loading...';
             this.appInstance.cpu = 1;
             this.appInstance.memory = '2 Gi';
             this.appInstance.instanceCount = 1;

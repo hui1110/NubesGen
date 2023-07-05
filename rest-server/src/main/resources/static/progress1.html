@@ -71,14 +71,16 @@ a{
     padding-bottom: 5px;
 }
 .log {
-    background-color: #E0E0E0;
+    background-color: white;
     height: 400px;
     overflow: auto;
-    padding: 10px;
+    padding: 15px;
 }
+
 .stages {
     padding-top: 10px;
 }
+
 .title {
     padding: 0.5%;
     background-color: white;
@@ -96,15 +98,12 @@ a{
     margin-top: 1.5%;
 }
 .endpoint{
-    width: 96%;
-    padding-left: 2%;
+    /*width: 96%;*/
+    padding-left: 5%;
     padding-top: 2%;
+    padding-bottom: 2%;
 }
-.portal{
-   width: 96%;
-   padding-left: 2%;
-   padding-bottom: 2%;
-}
+
 </style>
 <body>
 <div id="app">
@@ -150,11 +149,12 @@ a{
             </div>
         </div>
         <div class="form-group endpoint" v-show="showView === true">
-            <button class="btn btn-secondary btn-sm btn-block" @click="viewEndpoint()">Access the app</button>
+            <button class="btn btn-secondary btn-sm" style="width: 45%;margin-right: 3%;" @click="viewEndpoint()">Access the app</button>
+            <button class="btn btn-info btn-sm"  style="width: 45%" @click="viewOnPortal()">Manage the app</button>
         </div>
-        <div class="form-group portal" v-show="showView === true">
-            <button class="btn btn-info btn-sm btn-block" @click="viewOnPortal()">Manage the app</button>
-        </div>
+<!--        <div class="form-group portal" v-show="showView === true">-->
+<!--            <button class="btn btn-info btn-sm btn-block" @click="viewOnPortal()">Manage the app</button>-->
+<!--        </div>-->
     </div>
 </div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
@@ -181,12 +181,15 @@ a{
                 serviceName: new URLSearchParams(location.search).get('serviceName'),
                 appName: new URLSearchParams(location.search).get('appName'),
                 region: new URLSearchParams(location.search).get('region'),
-                deploymentResult: 'Deployment is in progress...',
+                cpu: new URLSearchParams(location.search).get('cpu'),
+                memory: new URLSearchParams(location.search).get('memory'),
+                instanceCount: new URLSearchParams(location.search).get('instanceCount'),
+                deploymentResult: 'Your deployment is in progress...',
                 showView: false,
+                appStatus: '',
                 result: '',
                 relativePath: '',
                 uploadUrl: '',
-                timerProvisionSource: null,
                 stages: [
                     {
                         key: 'provision',
@@ -241,31 +244,66 @@ a{
                     icon.classList.add('bi-chevron-right');
                 }
             },
-            provisionResource() {
-                this.stages[0].description = 'Creating app ' + this.appName + ' in service ' + this.serviceName + '...';
-                axios.get('/provisionResource/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName + '/' + this.region)
+            checkAppExist(){
+                this.stages[0].description = 'Check if app ' + this.appName + ' exists in ' + this.serviceName + '...';
+                axios.get('/checkAppExist/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
                     .then(res => {
-                        if (res.status === 200) {
+                        if(res.data === true){
+                            this.stages[0].description = 'App ' + this.appName + ' exists in service ' + this.serviceName + '.';
                             this.stages[0].status = 'success';
-                            this.stages[0].description = 'Created app ' + this.appName + ' in service ' + this.serviceName + '.';
-                            this.stages[0].log = res.data;
                             this.stages[1].status = 'loading';
                             this.stages[1].description = 'Uploading source code...';
                             this.getUploadUrl();
+                        } else {
+                            this.stages[0].description = 'App ' + this.appName + ' not exist.';
+                            const log = document.getElementById('pre-' + this.stages[0].id)
+                            log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating app ' + this.appName + '...' + '</p>';
+                            this.provisionResource(log);
                         }
                     }).catch(error => {
                     console.log(error);
+                })
+            },
+            provisionResource(log) {
+                axios.get('/provisionResource/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName + '/' + this.region)
+                    .then(res => {
+                        if (res.status === 200) {
+                            log.innerHTML = '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Created app ' + this.appName + '.' + '</p>' + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating default deployment with name: default.' + '</p>';
+                            this.createDeploymentForApp(log);
+                        }
+                    }).catch(error => {
                     this.stages[0].description = 'Create app ' + this.appName + ' in service ' + this.serviceName + ' failed.';
-                    this.stages[0].log = error.response.data;
+                    log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create app' + this.appName + 'failed.' + '</p>' + error.response.data;
                     this.stages[0].status = 'error';
-                    this.deploymentResult = 'Deployment failed';
+                    this.deploymentResult = 'Your deployment failed';
                     toast.error('Provision resource failed !', {
                         position: toast.POSITION.TOP_CENTER,
                         autoClose: 5000,
                         hideProgressBar: true
                     });
-                }).finally(() => {
-                    clearInterval(this.timerProvisionSource);
+                })
+            },
+            createDeploymentForApp(log){
+                axios.get('/createDeploymentForApp/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName + '/' + this.region + '/' + this.cpu + '/' + this.memory + '/' + this.instanceCount)
+                    .then(res => {
+                        if(res.status === 200 ){
+                            this.stages[0].status = 'success';
+                            this.stages[0].description = 'Created app ' + this.appName + ' in service ' + this.serviceName + '.';
+                            this.stages[1].status = 'loading';
+                            this.stages[1].description = 'Uploading source code...';
+                            log.innerHTML = '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Created app ' + this.appName + '.' + '</p>' + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Created default deployment with name: default.' + '</p>';
+                            this.getUploadUrl();
+                        }
+                    }).catch(error => {
+                    this.stages[0].description = 'Create app ' + this.appName + ' in service ' + this.serviceName + ' failed.';
+                    log.innerHTML = '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Created app ' + this.appName + '.' + '</p>' + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create default deployment with name: default failed.' + '</p>' + error.response.data;
+                    this.stages[0].status = 'error';
+                    this.deploymentResult = 'Your deployment failed';
+                    toast.error('Provision resource failed !', {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
                 })
             },
             getUploadUrl() {
@@ -280,11 +318,10 @@ a{
                             this.uploadFile(log);
                         }
                     }).catch(error => {
-                    console.log(error);
                     this.stages[1].status = 'error';
                     this.stages[1].description = 'Upload source code failed.';
                     log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Get upload url failed.' + '</p>' + error.response.data;
-                    this.deploymentResult = 'Deployment failed';
+                    this.deploymentResult = 'Your deployment failed';
                     toast.error('Upload source code failed !', {
                         position: toast.POSITION.TOP_CENTER,
                         autoClose: 5000,
@@ -316,7 +353,7 @@ a{
                     this.stages[1].status = 'error';
                     this.stages[1].description = 'Upload source code failed.';
                     log.innerHTML = uploadLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Upload file failed.' + '</p>' + error.response.data;
-                    this.deploymentResult = 'Deployment failed';
+                    this.deploymentResult = 'Your deployment failed';
                     toast.error('Upload source code failed !', {
                         position: toast.POSITION.TOP_CENTER,
                         autoClose: 5000,
@@ -328,9 +365,8 @@ a{
                 axios.get('/deploy' + this.url + '&relativePath=' + this.relativePath)
                     .then(()=> {
                         this.result = 'success';
-                    }).catch(error => {
+                    }).catch(() => {
                     this.result = 'failed';
-                    console.log(error)
                 }).finally(() => {
                     this.getBuildSourceResult();
                 })
@@ -346,11 +382,10 @@ a{
                             this.stages[3].description = 'Deploying in app ' + this.appName + '...';
                             this.getApplicationLog();
                         }
-                    }).catch(error => {
-                    console.log(error);
+                    }).catch(() => {
                     this.stages[2].status = 'error';
                     this.stages[2].description = 'Build source in app ' + this.appName + ' failed.';
-                    this.deploymentResult = 'Deployment failed';
+                    this.deploymentResult = 'Your deployment failed';
                     toast.error('Build source failed !', {
                         position: toast.POSITION.TOP_CENTER,
                         autoClose: 5000,
@@ -370,13 +405,13 @@ a{
                 })
             },
             getApplicationLog() {
-                axios.get('/getApplicationLog/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
+                axios.get('/getDeployResult/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
                     .then(res => {
                         if (res.status === 200) {
                             this.stages[3].status = 'success'
                             this.stages[3].description = 'Deployed in app ' + this.appName + '.';
                             this.showView = true;
-                            this.deploymentResult = 'Deployment completed';
+                            this.deploymentResult = 'Your deployment is complete';
                             toast.success('Deployment succeeded !', {
                                 position: toast.POSITION.TOP_CENTER,
                                 autoClose: 5000,
@@ -387,7 +422,7 @@ a{
                     }).catch(error => {
                     this.stages[3].status = 'error'
                     this.stages[3].description = 'Deploy in app ' + this.appName + ' failed.';
-                    this.deploymentResult = 'Deployment failed';
+                    this.deploymentResult = 'Your deployment failed';
                     this.logScrollButtom(this.stages[3].id, error.response.data);
                     toast.error('Deploy failed.', {
                         position: toast.POSITION.TOP_CENTER,
@@ -413,12 +448,7 @@ a{
             stringify: JSON.stringify,
         },
         mounted() {
-            this.provisionResource();
-            this.timerProvisionSource = setInterval(() => {
-                if (this.stages[0].status === 'loading') {
-                    this.getProvisionResourceLog();
-                }
-            },5000);
+            this.checkAppExist();
         },
     })
     app.mount('#app')
