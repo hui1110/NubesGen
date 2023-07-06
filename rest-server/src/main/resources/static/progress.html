@@ -78,6 +78,10 @@
         border: 1px solid #d6d8db;
     }
 
+    .log > pre:nth-child(2) {
+        overflow: unset;
+    }
+
     .stages {
         padding-top: 10px;
     }
@@ -451,7 +455,17 @@
             stringify: JSON.stringify,
         },
         mounted() {
-            this.checkAppExist();
+            // this.checkAppExist();
+
+            for (let i = 0; i < 100; i++) {
+                
+                let row = ''
+                for (let j = 0; j < 50; j++) {
+                    row += 'aaaaa'                    
+                }
+                this.stages[0].log += `${i} --- ${row}\n`
+            }
+            
         },
     })
     app.mount('#app')
