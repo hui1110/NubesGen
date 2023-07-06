@@ -455,17 +455,7 @@
             stringify: JSON.stringify,
         },
         mounted() {
-            // this.checkAppExist();
-
-            for (let i = 0; i < 100; i++) {
-                
-                let row = ''
-                for (let j = 0; j < 50; j++) {
-                    row += 'aaaaa'                    
-                }
-                this.stages[0].log += `${i} --- ${row}\n`
-            }
-            
+            this.checkAppExist();
         },
     })
     app.mount('#app')
