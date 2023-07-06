@@ -35,9 +35,10 @@ img {
     width: 10%;
     vertical-align: middle;
 }
-a{
+a {
     color: black;
 }
+
 .deployment {
     width: 75%;
     margin: 3% auto 10px;
@@ -46,6 +47,9 @@ a{
 }
 .form-control {
     font-size: 14px;
+}
+.form-control[readonly] {
+    background-color: white;
 }
 .filter-option-inner-inner {
     font-size: 14px;
@@ -58,9 +62,7 @@ a{
     font-size: 0.875rem;
     font-weight: 500;
 }
-.readonly {
-    border: none;
-}
+
 .row {
     padding-bottom: 1%;
     padding-left: 3%;
@@ -87,6 +89,28 @@ a{
     padding-right: 10px;
     margin-top: 1.5%;
 }
+
+.select-container .btn-light:not(:disabled):not(.disabled).active,
+.select-container .btn-light:not(:disabled):not(.disabled):active,
+.select-container .show>.btn-light.dropdown-toggle {
+    background-color: transparent;
+}
+
+.select-container .bootstrap-select .dropdown-toggle:focus,
+.select-container .bootstrap-select>select.mobile-device:focus+.dropdown-toggle {
+    outline: none !important;
+    background-color: transparent;
+}
+
+.select-container .btn-light:hover {
+    color: #212529;
+    background-color: transparent;
+}
+.select-container .btn-light {
+    background-color: transparent;
+    border-color: #dae0e5;
+}
+
 </style>
 <body>
 <div id="app">
@@ -96,12 +120,12 @@ a{
         <label class="back">Back to <a href="/">NubesGen.com</a></label>
     </div>
     <div class="deployment">
-        <form id="setting">
+        <form id="setting" class="select-container">
             <div class="mb-3 row">
                 <label class="col-sm-4 col-form-label">GitHub repository address</label>
                 <div class="col-sm-7">
                     <label>
-                        <input type="text" class="form-control readonly" v-model="url" readonly/>
+                        <input type="text" class="form-control" v-model="url" readonly/>
                     </label>
                 </div>
             </div>
@@ -164,7 +188,7 @@ a{
                 </div>
             </div>
             <div class="mb-3 row">
-                <label for="serviceInstance" class="col-sm-4 col-form-label">Service Instance<span
+                <label for="serviceInstance" class="col-sm-4 col-form-label">Service instance<span
                         class="required"> * </span></label>
                 <div class="col-sm-7">
                     <select title="Please select service instance" class="form-control selectpicker"
@@ -196,72 +220,16 @@ a{
                 </label>
                 <div class="col-sm-7">
                     <label for="appName">
-                        <input type="text" class="form-control"
+                        <input type="text" class="form-control" :disabled="init"
                                v-model="appInstance.name" id="appName" name="appName"/>
                     </label>
                     <span id="appName_error" style="color: red"></span>
                 </div>
             </div>
-            <div class="mb-3 row">
-                <label class="col-sm-4 col-form-label">Deployment settings</label>
-                <div class="col-sm-7">
-                    <label style="font-size: 14px;">Runtime platform:<span
-                            class="required"> * </span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14"
-                             height="14"
-                             fill="currentColor"
-                             class="bi bi-exclamation-circle" viewBox="0 0 16 16">
-                            <title>The java version of the running platform will be read from the
-                                java.version field in the project's
-                                pom.xml file.</title>
-                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                            <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
-                        </svg>
-                    </label>
-                    <label for="runtimePlatform">
-                        <input type="text" class="form-control readonly" id="runtimePlatform" name="runtimePlatform"
-                               v-model="appInstance.runtimePlatform" readonly/>
-                    </label>
-                    <span id="runtimePlatform_error" style="color: red"></span>
-                </div>
-            </div>
-            <div class="mb-3 row">
-                <label class="col-sm-4 col-form-label">Scale up</label>
-                <div class="col-sm-7">
-                    <label style="font-size: 14px;">vCPU<span class="required"> * </span></label>
-                    <label>
-                        <select class="form-control" v-model="appInstance.cpu">
-                            <option v-for="item in vCPUList" :key="item" :value="item">{{ item }}
-                            </option>
-                        </select>
-                    </label>
-
-                    <label style="font-size: 14px;">Memory(Gi)<span
-                            class="required"> * </span></label>
-                    <label>
-                        <select class="form-control" v-model="appInstance.memory">
-                            <option v-for="item in memoryList" :key="item" :value="item">{{ item }}
-                            </option>
-                        </select>
-                    </label>
-                </div>
-            </div>
-            <div class="mb-3 row">
-                <label class="col-sm-4 col-form-label">Instance count:<span
-                        class="required"> * </span></label>
-                <div class="col-sm-7">
-                    <label>
-                        <input type="number" class="form-control"
-                               v-model="appInstance.instanceCount" id="instanceCount"
-                               name="instanceCount"/>
-                    </label>
-                    <span id="instanceCount_error" style="color: red"></span>
-                </div>
-            </div>
         </form>
         <hr/>
-        <div class="form-group">
-            <button class="btn btn-primary btn-sm btn-block" @click="deployCode()">Deploy</button>
+        <div class="form-group" style="padding-top: 2%;">
+            <button class="btn btn-primary btn-sm btn-block" :disabled="init" @click="deployCode()">Deploy</button>
         </div>
     </div>
 </div>
@@ -287,6 +255,7 @@ a{
                 url: new URLSearchParams(location.search).get('url'),
                 branch: new URLSearchParams(location.search).get('branch'),
                 module: new URLSearchParams(location.search).get('module'),
+                init: true,
                 resourceGroupName: '',
                 subscriptionId: '',
                 region: '',
@@ -306,8 +275,8 @@ a{
                     .then(res => {
                         this.appInstance.runtimePlatform = res.data.version;
                         this.appInstance.name = res.data.name;
+                        this.init = false;
                     }).catch(error => {
-                    this.appInstance.runtimePlatform = '';
                     toast.error(error.response.data, {
                         position: toast.POSITION.TOP_CENTER,
                         autoClose: 5000,
@@ -444,32 +413,6 @@ a{
                                     }
                                 }
                             },
-                            runtimePlatform: {
-                                container: '#runtimePlatform_error',
-                                validators: {
-                                    notEmpty: {
-                                        message: 'Java version is not configured in pom.xml file'
-                                    },
-                                    callback: {
-                                        message: 'The value of runtimePlatform cannot be empty',
-                                        callback: function (value) {
-                                            return value !== 'loading...';
-                                        }
-                                    }
-                                }
-                            },
-                            instanceCount: {
-                                container: '#instanceCount_error',
-                                validators: {
-                                    notEmpty: {
-                                        message: 'Please type instance count'
-                                    },
-                                    regexp: {
-                                        regexp: /^(?:[1-9]\d?|[1234]\d{2}|500)$/,
-                                        message: 'The instance count is invalid. It can contain only numbers. The first character must be a number. The value must be between 1 and 500.'
-                                    }
-                                }
-                            },
                         }
                     });
                 });
@@ -481,6 +424,7 @@ a{
             this.getAppNameAndJavaVersion();
             this.validatorForm();
             this.appInstance.runtimePlatform = 'loading...';
+            this.appInstance.name = 'loading...';
             this.appInstance.cpu = 1;
             this.appInstance.memory = '2 Gi';
             this.appInstance.instanceCount = 1;
