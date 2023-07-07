@@ -89,9 +89,6 @@ public class AzureDeployController {
     @GetMapping("/provisionResource/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
     public @ResponseBody ResponseEntity<?> provisionResource(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
         try {
-            if(appName.equals("provision")){
-                throw new Exception("App name cannot be provision !");
-            }
             azureDeployService.provisionResource(management, subscriptionId, resourceGroupName, serviceName, appName);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
@@ -102,9 +99,6 @@ public class AzureDeployController {
     @GetMapping("/createDeploymentForApp/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}/{cpu}/{memory}/{instanceCount}")
     public @ResponseBody ResponseEntity<?> createDeploymentForApp(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName, @PathVariable String cpu, @PathVariable String memory, @PathVariable String instanceCount){
         try {
-            if(appName.equals("deploy")){
-                throw new Exception("App name cannot be deploy !");
-            }
             azureDeployService.createDeploymentForApp(management, subscriptionId, resourceGroupName, serviceName, appName, cpu, memory, instanceCount);
             return new ResponseEntity<>(HttpStatus.OK);
         }catch (Exception e){
