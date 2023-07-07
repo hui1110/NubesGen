@@ -16,94 +16,95 @@
     <script src="https://cdn.jsdelivr.net/npm/ansi_up@5.2.1/ansi_up.min.js"></script>
 </head>
 <style>
-    #app {
-        background-color: #005fff;
-        padding-bottom: 30px;
-    }
-    img {
-        width: 10%;
-        vertical-align: middle;
-        margin-top: -1%;
-    }
-    a{
-        color: black;
-    }
-    .loading {
-        width: 75%;
-        margin: 4% auto 4%;
-        background-color: white;
-    }
-    .icon-loading::before {
-        color: white;
-        font-size: 24px;
-        background-color: #3366FF;
-        border-radius: 50% 50%;
-        animation: spin 1s infinite;
-    }
-    .icon-success {
-        color: green;
-        font-size: 24px;
-    }
-    .icon-error::before {
-        color: red;
-        font-size: 24px;
-        vertical-align: 3px;
-    }
-    .inactive::before {
-        background-color: #E0E0E0;
-    }
-    .rotating {
-        animation: rotation 2s infinite linear;
-    }
-    @keyframes rotation {
-        from {
-            transform: rotate(0deg);
-        }
-
-        to {
-            transform: rotate(360deg);
-        }
-    }
-    .icon-container {
-        width: 24px;
-        height: 24px;
-        float: right;
-        padding-bottom: 5px;
-    }
-    .log {
-        background-color: #f8f9fa;
-        height: 400px;
-        overflow: auto;
-        padding: 15px;
-        border: 1px solid #d6d8db;
+#app {
+    background-color: #005fff;
+    padding-bottom: 30px;
+}
+img {
+    width: 10%;
+    vertical-align: middle;
+    margin-top: -1%;
+}
+a{
+    color: black;
+}
+.loading {
+    width: 75%;
+    margin: 4% auto 4%;
+    background-color: white;
+}
+.icon-loading::before {
+    color: white;
+    font-size: 24px;
+    background-color: #3366FF;
+    border-radius: 50% 50%;
+    animation: spin 1s infinite;
+}
+.icon-success {
+    color: green;
+    font-size: 24px;
+}
+.icon-error::before {
+    color: red;
+    font-size: 24px;
+    vertical-align: 3px;
+}
+.inactive::before {
+    background-color: #E0E0E0;
+}
+.rotating {
+    animation: rotation 2s infinite linear;
+}
+@keyframes rotation {
+    from {
+        transform: rotate(0deg);
     }
 
-    .stages {
-        padding-top: 10px;
+    to {
+        transform: rotate(360deg);
     }
+}
+.icon-container {
+    width: 24px;
+    height: 24px;
+    float: right;
+    padding-bottom: 5px;
+}
+.log {
+    background-color: #f8f9fa;
+    height: 400px;
+    overflow: auto;
+    padding: 15px;
+    border: 1px solid #d6d8db;
+}
+.log > pre:nth-child(2) {
+    overflow: unset;
+}
+.stages {
+    padding-top: 10px;
+}
 
-    .title {
-        padding: 0.5%;
-        background-color: white;
-    }
-    .launcher {
-        font-weight: 750;
-        display: inline-block;
-        margin-left: 20px;
-        margin-top: 1.5%;
-    }
-    .back {
-        font-weight: 650;
-        float: right;
-        padding-right: 10px;
-        margin-top: 1.5%;
-    }
-    .point{
-        padding-left: 5%;
-        padding-top: 2%;
-        padding-bottom: 2%;
-    }
-
+.title {
+    padding: 0.5%;
+    background-color: white;
+}
+.launcher {
+    font-weight: 750;
+    display: inline-block;
+    margin-left: 20px;
+    margin-top: 1.5%;
+}
+.back {
+    font-weight: 650;
+    float: right;
+    padding-right: 10px;
+    margin-top: 1.5%;
+}
+.point{
+    padding-left: 5%;
+    padding-top: 2%;
+    padding-bottom: 2%;
+}
 </style>
 <body>
 <div id="app">
@@ -186,6 +187,7 @@
                 result: '',
                 relativePath: '',
                 uploadUrl: '',
+                buildSourceLog: '',
                 stages: [
                     {
                         key: 'provision',
@@ -240,57 +242,51 @@
                     icon.classList.add('bi-chevron-right');
                 }
             },
-            expandErrorCollapse(itemKey, itemId){
-                const icon = document.getElementById(itemKey);
-                if (!icon.classList.contains('bi-chevron-down')) {
-                    icon.classList.remove('bi-chevron-right');
-                    icon.classList.add('bi-chevron-down');
-                    $('#' + itemId).collapse("toggle");
-                }
-            },
             checkAppExist(){
-                this.stages[0].description = 'Check if app ' + this.appName + ' exists in ' + this.serviceName + '...';
+                this.stages[0].description = 'Check whether app ' + this.appName + ' exists in ' + this.serviceName + '...';
                 axios.get('/checkAppExist/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
                     .then(res => {
-                        if(res.data === true){
-                            this.handleProgress(0, 'App ' + this.appName + ' exists in service ' + this.serviceName + '.', 'success');
+                        if(res.data){
+                            this.handleProgress(0, 'App ' + this.appName + ' already exists in service ' + this.serviceName + '.', 'success');
                             this.handleProgress(1, 'Uploading source code...', 'loading');
                             this.getUploadUrl();
                         } else {
-                            this.stages[0].description = 'App ' + this.appName + ' not exist.';
-                            const log = document.getElementById('pre-' + this.stages[0].id)
-                            log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating app ' + this.appName + '...' + '</p>';
-                            this.provisionResource(log);
+                            this.stages[0].description = 'App ' + this.appName + ' not exist, start creating';
+                            this.provisionResource();
                         }
                     }).catch(error => {
                     this.stages[0].log = error.response.data;
                     this.handleError(0, 'Create app ' + this.appName + ' in service ' + this.serviceName + ' failed.', 'Provision resource failed !');
                 })
             },
-            provisionResource(log) {
+            provisionResource() {
+                const log = document.getElementById('pre-' + this.stages[0].id)
+                log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating app ' + this.appName + '...' + '</p>';
                 axios.get('/provisionResource/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
                     .then(res => {
                         if (res.status === 200) {
-                            log.innerHTML = '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Created app ' + this.appName + '.' + '</p>' + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating default deployment with name: default.' + '</p>';
+                            log.innerHTML = '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create app ' + this.appName + ' successfully.' + '</p>';
                             this.createDeploymentForApp(log);
                         }
                     }).catch(error => {
-                    log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create app' + this.appName + ' failed.' + '</p>' + error.response.data;
+                    log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create ' + this.appName + 'failed.' + '</p>' + error.response.data;
                     this.handleError(0, 'Create app ' + this.appName + ' in service ' + this.serviceName + ' failed.', 'Provision resource failed !');
                     this.deleteApp();
                     })
             },
             createDeploymentForApp(log){
+                const provisionSourceLog = log.innerHTML;
+                log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating default deployment for app ' + this.appName + '...' + '</p>';
                 axios.get('/createDeploymentForApp/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName + '/' + this.cpu + '/' + this.memory + '/' + this.instanceCount)
                     .then(res => {
                         if(res.status === 200 ){
                             this.handleProgress(0, 'Created app ' + this.appName + ' in service ' + this.serviceName + '.', 'success');
                             this.handleProgress(1, 'Uploading source code...', 'loading');
-                            log.innerHTML = '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Created app ' + this.appName + '.' + '</p>' + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Created default deployment with name: default.' + '</p>';
+                            log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create default deployment for app ' + this.appName + ' successfully.' + '</p>';
                             this.getUploadUrl();
                         }
                     }).catch(error => {
-                    log.innerHTML = '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Created app ' + this.appName + '.' + '</p>' + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create default deployment with name: default failed.' + '</p>' + error.response.data;
+                    log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create default deployment for app ' + this.appName + ' failed.' + '</p>' + error.response.data;
                     this.handleError(0, 'Create app ' + this.appName + ' in service ' + this.serviceName + ' failed.', 'Provision resource failed !');
                     this.deleteApp();
                     })
@@ -313,8 +309,8 @@
                 })
             },
             uploadFile(log){
-                const uploadLog = log.innerHTML;
-                log.innerHTML = uploadLog + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Uploading file...' + '</p>';
+                const uploadUrlLog = log.innerHTML;
+                log.innerHTML = uploadUrlLog + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Uploading file...' + '</p>';
                 axios.post('/uploadFile',
                     {
                         'subscriptionId': this.subscriptionId,
@@ -324,13 +320,13 @@
                     })
                     .then(res => {
                         if (res.status === 200) {
-                            log.innerHTML = uploadLog + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Upload file successfully.' + '</p>';
+                            log.innerHTML = uploadUrlLog + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Upload file successfully.' + '</p>';
                             this.handleProgress(1, 'Upload source code is complete.', 'success');
                             this.handleProgress(2, 'Building source in app ' + this.appName + '...', 'loading');
                             this.deploySourceCode();
                         }
                     }).catch(error => {
-                    log.innerHTML = uploadLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Upload file failed.' + '</p>' + error.response.data;
+                    log.innerHTML = uploadUrlLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Upload file failed.' + '</p>' + error.response.data;
                     this.handleError(1, 'Upload source code failed.', 'Upload source code failed !');
                     this.deleteApp();
                 })
@@ -354,12 +350,13 @@
                 axios.get('/getBuildLogs/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
                     .then(res => {
                         if (res.status === 200 && this.stages[2].status === 'loading' && this.result === '') {
+                            this.logScrollButtom(this.stages[2].id, res.data);
                             this.getBuildLogs();
                         }
-                        this.logScrollButtom(this.stages[2].id, res.data);
+                        this.buildSourceLog = res.data;
                     }).catch(error => {
-                    this.stages[2].log = error.response.data;
                     this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
+                    this.logScrollButtom(this.stages[2].id, this.buildSourceLog + '\n' + '[31m' + error.response.data + '[0m');
                     this.deleteApp();
                 })
             },
@@ -374,13 +371,13 @@
                             this.handleProgress(3, 'Deploying in app ' + this.appName + '...', 'loading');
                             this.getDeployResult();
                         } else {
-                            this.logScrollButtom(this.stages[2].id, null);
                             this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
+                            this.logScrollButtom(this.stages[2].id, null);
                             this.deleteApp();
                         }
                     }).catch(error => {
-                    this.stages[2].log = error.response.data;
                     this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
+                    this.logScrollButtom(this.stages[2].id, this.buildSourceLog + '\n' + '[31m' + error.response.data + '[0m');
                     this.deleteApp();
                 })
             },
@@ -415,6 +412,14 @@
                     }).catch(error => {
                     console.log(error);
                 })
+            },
+            expandErrorCollapse(itemKey, itemId){
+                const icon = document.getElementById(itemKey);
+                if (!icon.classList.contains('bi-chevron-down')) {
+                    icon.classList.remove('bi-chevron-right');
+                    icon.classList.add('bi-chevron-down');
+                    $('#' + itemId).collapse("toggle");
+                }
             },
             handleProgress(num, description, status){
                 this.stages[num].description = description;
