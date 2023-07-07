@@ -72,7 +72,7 @@ a{
 }
 .log {
     background-color: #f8f9fa;
-    height: 400px;
+    /*height: 400px;*/
     overflow: auto;
     padding: 15px;
     border: 1px solid #d6d8db;
@@ -138,7 +138,7 @@ a{
                            :id="item.key" data-toggle="collapse" :data-target="'#'+item.id"></i>
                         <span class="ml-2">{{item.stageName}}</span>
                         <div class="collapse stages" :id="item.id">
-                            <div class="log" :id="'scroll-' + item.id">
+                            <div class="log" :id="'scroll-' + item.id" :style="{'height': item.key === 'provision' || item.key === 'upload' ? '200px': '400px'}">
                                 <pre :style="{'color': item.status === 'success' ? '#4e9a06': (item.status ==='error'? 'red' : '#9A7D0A'), 'font-size': '16px'}">{{item.description}}</pre>
                                 <pre :id="'pre-' + item.id">{{item.log}}</pre>
                             </div>
@@ -269,7 +269,7 @@ a{
                             this.createDeploymentForApp(log);
                         }
                     }).catch(error => {
-                    log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create ' + this.appName + 'failed.' + '</p>' + error.response.data;
+                    log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create app ' + this.appName + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
                     this.handleError(0, 'Create app ' + this.appName + ' in service ' + this.serviceName + ' failed.', 'Provision resource failed !');
                     this.deleteApp();
                     })
@@ -286,7 +286,7 @@ a{
                             this.getUploadUrl();
                         }
                     }).catch(error => {
-                    log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create default deployment for app ' + this.appName + ' failed.' + '</p>' + error.response.data;
+                    log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create default deployment for app ' + this.appName + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
                     this.handleError(0, 'Create app ' + this.appName + ' in service ' + this.serviceName + ' failed.', 'Provision resource failed !');
                     this.deleteApp();
                     })
@@ -303,7 +303,7 @@ a{
                             this.uploadFile(log);
                         }
                     }).catch(error => {
-                    log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Get the upload url failed.' + '</p>' + error.response.data;
+                    log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Get the upload url failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
                     this.handleError(1, 'Upload source code failed.', 'Upload source code failed !');
                     this.deleteApp();
                 })
@@ -326,7 +326,7 @@ a{
                             this.deploySourceCode();
                         }
                     }).catch(error => {
-                    log.innerHTML = uploadUrlLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Upload file failed.' + '</p>' + error.response.data;
+                    log.innerHTML = uploadUrlLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Upload file failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
                     this.handleError(1, 'Upload source code failed.', 'Upload source code failed !');
                     this.deleteApp();
                 })
