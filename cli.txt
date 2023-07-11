@@ -1,0 +1,128 @@
+The basic requirements for creating a button are that your app has a valid app.json file in its root directory, and that the app source code is hosted in a GitHub repository.
+
+:::tip
+Azure Button also works with repositories that have submodules. Azure Button gets the source code from GitHub and generates a tar.gz file. You can choose the submodule name to deploy.
+:::
+
+
+https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true
+
+
+
+//            azureResourceManager.resourceGroups().beginDeleteByName(rgName);
+//            log.info("Delete Resource Group: " + rgName);
+
+
+
+//            azureResourceManager.resourceGroups().beginDeleteByName(rgName);
+//            log.info("Delete Resource Group: " + rgName);
+//            String id = azureResourceManager.springServices().getByResourceGroup(rgName, serviceName).id();
+//            azureResourceManager.springServices().deleteById(id);
+//            log.info("Delete Azure Spring Apps: " + serviceName);
+
+
+//            e.printStackTrace();
+//            azureResourceManager.resourceGroups().beginDeleteByName(rgName);
+//            log.info("Delete Resource Group: " + rgName);
+//            String id = azureResourceManager.springServices().getByResourceGroup(rgName, serviceName).id();
+//            azureResourceManager.springServices().deleteById(id);
+//            log.info("Delete Azure Spring Apps [" + serviceName + "] and app [" + appName + "]");
+
+
+//        ServiceResourceInner serviceResourceInner = new ServiceResourceInner()
+//            .withLocation(region)
+//            .withSku(new Sku().withName("S0"));
+//        serviceResourceInner = appPlatformManager.serviceClient().getServices().createOrUpdate(resourceGroupName, serviceName, serviceResourceInner);
+
+
+
+
+https://graph.microsoft.com/User.ReadBasic.All
+
+
+https://management.azure.com/user_impersonation
+
+
+yonghui@fangjian0423gmail.onmicrosoft.com
+yyhh000000@
+
+
+hui@fangjian0423gmail.onmicrosoft.com
+
+com.yh.00.@@
+
+
+
+
+
+
+1. app name, runtime  , deploment type, add  description.
+
+2. Next step remove.
+
+
+
+1. update doc link
+2. update asa button title
+
+
+
+/getLogStreamingEndpoint/6c933f90-8115-4392-90f2-7077c9fa5dbd/yonghui-apps-rg/yonghui-dev-apps-asa/devappdemo
+
+
+
+provision resource
+upload source code
+build source
+deploy
+
+https://management.azure.com/subscriptions/6c933f90-8115-4392-90f2-7077c9fa5dbd/resourceGroups/yonghui-apps-rg/providers/Microsoft.AppPlatform/Spring/yonghui-dev-apps-asa/apps/devappdemo/deployments/default/getLogFileUrl?api-version=2023-05-01-preview
+
+
+
+https://yonghui-dev-apps-asa.azuremicroservices.io/proxy/logstream/subscriptions/6c933f90-8115-4392-90f2-7077c9fa5dbd/resourceGroups/yonghui-apps-rg/providers/Microsoft.AppPlatform/Spring/yonghui-dev-apps-asa/apps/devdemo?follow=true&tailLines=300&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47
+
+
+https://yonghui-dev-apps-asa.azuremicroservices.io/api/logstream/apps/{1}/instances/{2}
+
+
+
+https://e846c2cb52e84c15b7893d4e.blob.core.windows.net/a82db52420884866b8f33a7e53814eaa/logs/resources/e15856d9d063a2fc73203b926df4c9944e16efca6cf15922e6b4579fc1703267-2023061303-e5f5ebf9-c277-415b-bd5d-b2b8a2b1ad1c?sv=2021-08-06&se=2023-06-13T05%3A18%3A00Z&sr=b&sp=r&sig=fmAqHAwUdYYiRt7AHpiWUUX2jl%2BVpAyFM3N4UJKQjq4%3D
+
+
+https://https://asa-yonghui-deploy-dev-apps-devdemoapp.azuremicroservices.io/api/logstream/buildpods/devdemoapp-default-10-85f9fc598b-sh7jd/stages/build?follow=true
+
+
+az spring app logs --resource-group yonghui-deploy-dev-rg --service yonghui-deploy-dev-apps --name simpletodoweb --follow
+
+
+az spring app show-deploy-log  --resource-group yonghui-deploy-dev-rg --service yonghui-deploy-dev-apps --name simpletodoweb
+
+az spring app log tail --resource-group yonghui-dev-rg --service asa-yonghui-deploy-dev-apps --name devdemo222 --subscription 6c933f90-8115-4392-90f2-7077c9fa5dbd --lines 200
+
+az spring app deploy --resource-group asa-yonghui-dev-rg --service asa-yonghui-deploy-dev-apps --name devdemo --artifact-path target/nubesgen-0.16.1-SNAPSHOT.jar
+
+
+az spring app deploy --resource-group yonghui-apps-rg --service yonghui-dev-apps-asa --name devdemo --source-path . --target-module start-site
+
+
+az spring create --resource-group yonghui-rg --name asa-deploy-apps
+
+https://yonghui-deploy-dev-azure.azuremicroservices.io/login/oauth2/code/
+
+
+http://localhost:8888/login/oauth2/code/
+
+
+deploySdk?resourceGroupName=yonghui-deploy-dev-sdk-rg&serviceName=yonghui-deploy-dev-sdk-apps&appName=demoapp&url=https://github.com/hui1110/azure-spring-admin&branchName=main
+
+
+az spring app deploy -n nubesgen -s yonghui-deploy-dev-apps -g yonghui-dev-rg --artifact-path target/nubesgen-0.16.1-SNAPSHOT.jar --debug
+
+
+
+log  背景
+
+appName 处理
+
+log  滚动条
