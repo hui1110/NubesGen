@@ -1,0 +1,421 @@
+// var radioGroup = document.getElementsByClassName("group-radio");
+    // console.log('radio group', radioGroup)
+    // var hobby = ""; 
+    // for (let i = 0; i < radioGroup.length; i++) {
+    //   const radio = radioGroup[i];
+    //   console.log('radio', radio);
+    //   for (let j = 0; j < radio.childNodes.length; j++) {
+    //     const option = radio.childNodes[j]
+    //     console.log('option', option);
+    //     if (option.className.indexOf('checked') > -1) {
+    //       const value = option.innerText;
+    //       console.log('checked', value)
+    //     }
+    //     // if (hobbyNum[i].childNodes[j].className==="radio checked") {  
+    //     //   console.log("===")
+    //     // }
+    //   }
+      
+    // }
+
+    // console.log(hobby)
+	
+	
+	const projectProjectMetadataObject = {};
+
+    formProjectMetadataRadio.forEach((formProjectMetadataRadio) => {
+      const { type, labelName, outputParamName } = formProjectMetadataRadio;
+
+      if (type === fieldTypes.radio) {
+        // TODO: exception processings for null pointer errors
+        const radioGroup = Array.from(document.evaluate(`//label[text()='${labelName}']`, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.nextSibling.children);
+        radioGroup.forEach((radioElement) => {
+          if (radioElement.className.indexOf('checked') > -1) {
+            projectProjectMetadataObject[outputParamName] = radioElement.innerText;
+          }
+        });
+      } else if (type === fieldTypes.input) {
+        // TODO: input relevant procedure
+      }
+
+    });
+	
+
+
+ // const metaArgs = {
+      //   name: params['?name'] || params.name,
+      //   group: params['?groupId'] || params.groupId,
+      //   artifact: params['?artifactId'] || params.artifactId,
+      //   description: params['?description'] || params.description,
+      //   packaging: params['?packaging'] || params.packaging,
+      //   packageName: params['?packageName'] || params.packageName,
+      //   java: params['?jvmVersion'] || params.jvmVersion,
+      // }
+      //
+      // const project = params['?type'] || params.type;
+      // const language = params['?language'] || params.language;
+	  
+	  
+      //
+      //
+      // console.log(project)
+      // console.log(language)
+      //
+      // await update({ project: project })
+      // await update({ language: language })
+      // await dispatchInitializr({type: 'UPDATE', payload: metaArgs});
+      // dependencies.forEach(async (dependency) => {
+      //   await dispatchInitializr({ type: 'ADD_DEPENDENCY', payload: dependency });
+      // });
+      // await dispatchInitializr({ type: 'ADD_DEPENDENCY', payload:  })
+
+
+      setTimeout(()=>{
+        console.log(values);
+        // onExplore();
+      },6000);
+
+
+      // await dispatchInitializr({type: 'UPDATE', payload: metaArgs});
+      // dependencies.forEach(async (dependency) => {
+      //   await dispatchInitializr({ type: 'ADD_DEPENDENCY', payload: dependency });
+      // });
+      // await dispatchInitializr({ type: 'ADD_DEPENDENCY', payload:  })
+
+      // setTimeout(()=>{
+      //   console.log(values);
+      //   onExplore();
+      // },6000);
+	  
+	  
+	  position: relative;
+    min-height: 32px;
+    padding: 12px;
+    background: #fff;
+    color: #000;
+    box-shadow: 0 0 0 6px rgba(220,232,232,.3);
+    border: 1px solid #dce8e8;
+    border-left: 6px solid #222;
+    font-weight: 600;
+    cursor: default;
+	
+const zippedBlob = new Blob([arrayBuffer], { type: "application/zip" });
+
+  console.log(zippedBlob);
+
+  const zip = new JSZip();
+  zip.loadAsync(zippedBlob);
+
+  console.log(zip);
+
+  zip.folder(".azure").file("azure.txt", "Some content");
+  zip.file("scripts/index.html");
+
+  console.log(zip);
+
+  const finalZipBlob = await zip.generateAsync({ type: "blob" });
+  const blobUrl = URL.createObjectURL(finalZipBlob);
+
+  const artifactId = document.getElementById('input-artifact').getAttribute('value');
+  
+  
+  
+  
+  // const exploreProjectButton = document.getElementById("explore-project");
+// if (exploreProjectButton) {
+//   exploreProjectButton.addEventListener("click", () => {
+//     exploreProjectButton.onclick = null;
+//     const url = getFullUrl('explore');
+//     location.assign(url);
+//   }, false);
+// }
+
+
+{
+  "clientId": "1795e67b-0630-4517-9ac7-9fb194fef4dd",
+  "clientSecret": "VAN8Q~3Pxts19Chnn6wtrB2flTLQCC9AOCubfckf",
+  "subscriptionId": "799c12ba-353c-44a1-883d-84808ebb2216",
+  "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
+  "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+  "resourceManagerEndpointUrl": "https://management.azure.com/",
+  "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+  "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+  "galleryEndpointUrl": "https://gallery.azure.com/",
+  "managementEndpointUrl": "https://management.core.windows.net/"
+}
+
+client-id: fdb1b856-fe8b-420e-8079-fc0cd1ad7ea5
+client-secret: Urg8Q~T0QuW524CFycE9XUcxMwRSbznWOBP8xaAj
+
+
+az ad sp create-for-rbac --role contributor --scopes /subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP> --sdk-auth
+
+
+
+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
+
+
+			
+			
+			
+			
+			<!-- Vertically centered modal -->
+<div class="modal-dialog modal-dialog-centered">
+  ...
+</div>
+
+<!-- Vertically centered scrollable modal -->
+<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+  ...
+</div>
+
+
+1.PoC browser extension
+2.Import Github repo list
+3.Documentation of ASA Button
+4.Poc for deploy to Azure Spring APPS with ASA Button
+
+
+
+
+// this.$router.push({name:'progress',params:{setid:111222}});
+
+
+
+<!--                <span><a style="color: #0366d6; cursor: pointer;" data-toggle="modal" data-target="#createRgModal">Create new</a></span>-->
+
+
+
+ // newRg() {
+            //     this.flag = 1;
+            //     document.getElementById("SelectAsaInstance").disabled = true;
+            //     this.ASAInstance.region = "eastasia";
+            //     const  asaName = this.url.substring(this.url.lastIndexOf("/") + 1, this.url.length) + this.number + "apps";
+            //     this.ASAList.push({"name":"(New)" + asaName});
+            //     this.ASAName = "(New)" + asaName;
+            //
+            //     const rg = {"name":"(New)" + this.NewResourceGroupName};
+            //     this.ResourceGroup.push(rg)
+            //     this.resourceGroupName = "(New)" + this.NewResourceGroupName;
+            //
+            //     this.AppInstance.name = this.url.substring(this.url.lastIndexOf("/") + 1, this.url.length) + this.number;
+            //     this.AppInstance.runtimePlatform = "Java_17";
+            //     this.AppInstance.image = 'N/A';
+            //     this.AppInstance.cpu = 1;
+            //     this.AppInstance.memory = 1;
+            //     this.AppInstance.instanceCount = 1;
+            //     this.AppInstance.deploymentType = 'GitHub repo';
+            //
+            //     $('#createRgModal').modal('hide');
+            // },
+			
+			
+			
+			    <!-- Modal -->
+<!--    <div class="modal fade" id="createRgModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">-->
+<!--        <div class="modal-dialog" role="document">-->
+<!--            <div class="modal-content">-->
+<!--                <div class="modal-header">-->
+<!--                    <h5 class="modal-title" id="exampleModalLabel">New Resource group</h5>-->
+<!--                </div>-->
+<!--                <div class="modal-body">-->
+<!--                    <p> A resource group is a cnntainer that holds related resources for an Azure solution.</p>-->
+<!--                    <div class="form-group">-->
+<!--                        <label for="name">name:<span-->
+<!--                                style="color:red; display:inline-block;margin-right: 10px;margin-left: 5px;"> * </span></label>-->
+<!--                        <input type="text" class="form-control" id="name" v-model="NewResourceGroupName"-->
+<!--                               placeholder="Please type new Resource group name">-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div class="modal-footer">-->
+<!--                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>-->
+<!--                    <button type="button" class="btn btn-primary" @click="newRg()">OK</button>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+
+
+
+
+<!--            <div class="col-sm-6" style="margin-bottom: 20px;">-->
+<!--                <label class="label-div"-->
+<!--                       v-show="showUploadIcon === 'success' && showUpdateDeploymentIcon === 'success'">Deployment-->
+<!--                    is completed.</label>-->
+<!--                <label class="label-div"-->
+<!--                       v-show="showUploadIcon === 'execute' || showUpdateDeploymentIcon === 'execute'">Deployment-->
+<!--                    is in progress...</label>-->
+<!--                <label class="label-div"-->
+<!--                       v-show="showUploadIcon === 'error' || showUpdateDeploymentIcon === 'error'">Deployment-->
+<!--                    failed.</label>-->
+<!--                <label class="text-div">The operation may take a while.</label>-->
+<!--            </div>-->
+
+<!--            <div class="mb-3 row speed">-->
+<!--                <div class="icon-container rotating" v-show="showUploadIcon === 'execute'">-->
+<!--                    <i class="bi bi-arrow-repeat icon-loading"></i>-->
+<!--                </div>-->
+<!--                <div class="icon-container success" v-show="showUploadIcon === 'success'">-->
+<!--                    <i class="bi bi-check-circle-fill icon-success rotating"></i>-->
+<!--                </div>-->
+<!--                <div class="icon-container" v-show="showUploadIcon === 'error'">-->
+<!--                    <i class="bi bi-exclamation-circle-fill icon-error"></i>-->
+<!--                </div>-->
+<!--                <div class="col-sm-10">-->
+<!--                    <label class="text-div" v-show="showUploadIcon === 'execute'">Creating app-->
+<!--                        <code>{{ appName }}</code> and uploading source code...</label>-->
+<!--                    <label class="text-div" v-show="showUploadIcon === 'success'">Successfully-->
+<!--                        create app <code>{{ appName }}</code> and upload source code.</label>-->
+<!--                    <label class="text-div" v-show="showUploadIcon === 'error'">Failed to create app-->
+<!--                        <code>{{ appName }}</code> and upload source code.</label>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            <div class="mb-3 row speed">-->
+<!--                <div class="icon-container" v-show="showUpdateDeploymentIcon === 'wait'">-->
+<!--                    <i class="bi bi-arrow-repeat icon-loading inactive"></i>-->
+<!--                </div>-->
+<!--                <div class="icon-container rotating"-->
+<!--                     v-show="showUpdateDeploymentIcon === 'execute'">-->
+<!--                    <i class="bi bi-arrow-repeat icon-loading"></i>-->
+<!--                </div>-->
+<!--                <div class="icon-container success" v-show="showUpdateDeploymentIcon === 'success'">-->
+<!--                    <i class="bi bi-check-circle-fill icon-success rotating"></i>-->
+<!--                </div>-->
+<!--                <div class="icon-container" v-show="showUpdateDeploymentIcon === 'error'">-->
+<!--                    <i class="bi bi-exclamation-circle-fill icon-error"></i>-->
+<!--                </div>-->
+<!--                <div class="col-sm-10">-->
+<!--                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'wait'">Waiting to-->
+<!--                        update deployments in app <code>{{ appName }}</code>.</label>-->
+<!--                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'execute'">Updating-->
+<!--                        deployments in app <code>{{ appName }}</code>.</label>-->
+<!--                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'success'">Updated-->
+<!--                        deployment in app <code>{{ appName }}</code>.</label>-->
+<!--                    <label class="text-div" v-show="showUpdateDeploymentIcon === 'error'">Failed to-->
+<!--                        update deployment in app <code>{{ appName }}</code>.</label>-->
+<!--                </div>-->
+<!--            </div>-->
+
+
+## Create a service principal
+
+See this [article](https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#register-an-application-with-azure-ad-and-create-a-service-principal) to register an application with Azure AD and create a service principal, then [create a new application secret](https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#option-3-create-a-new-application-secret).
+ASA button needs to be authenticated and authorized by the service principal, use Azure resource manager to create an Azure Spring Apps app that deploys the source code. 
+
+## Set up account
+
+If you use an administrator account, you can start using the ASA button after logging in. If you do not want to use an administrator account, you can create a new account and grant access to the service principal to use the ASA button by following the steps below.
+
+:::tip
+The following steps need to be in the same tenant.
+:::
+
+1. See this [article](https://learn.microsoft.com/en-us/azure/active-directory/fundamentals/add-users-azure-active-directory#add-a-new-user) to create a new user.
+2. Grant permission.
+
+    - Select **Delegated permission** in **API permissions** of the service principal and add the following permissions:
+      - openid
+      - profile
+      - offline_access
+
+    - Select **Azure Service Management** in **API permissions** of the service principal and add the following permissions:
+      - user_impersonation
+     
+3. [Grant admin consent in App registrations](https://learn.microsoft.com/en-us/azure/active-directory/manage-apps/grant-admin-consent?pivots=portal#grant-admin-consent-in-app-registrations).
+4. [Assign a user as an administrator of an Azure subscription](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal#assign-a-user-as-an-administrator-of-an-azure-subscription).
+
+
+
+## 📑 Keep reading
+
+📓 [Deployment Integrations](https://azure.microsoft.com/solutions/integration-services).
+
+## ⚡ Feedback
+
+◀️ [Log in to submit feedback](https://github.com/).
+
+
+// this.AppInstance.name = this.url.substring(this.url.lastIndexOf("/") + 1, this.url.length) + this.number * 2;
+
+
+https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/799c12ba-353c-44a1-883d-84808ebb2216/resourceGroups/yonghui-rg/providers/Microsoft.AppPlatform/Spring/yonghui-deploy-dev-apps/apps/deploydemo
+
+
+72f988bf-86f1-41af-91ab-2d7cd011db47
+
+fdb1b856-fe8b-420e-8079-fc0cd1ad7ea5
+
+Urg8Q~T0QuW524CFycE9XUcxMwRSbznWOBP8xaAj
+
+
+
+token = eyJ0eXAiOiJKV1QiLCJub25jZSI6IlN6RjlGWG01d2lhbk54QUlUcjBTSmI2TDM4TGpadTJZcERacW9Zbl9RNVUiLCJhbGciOiJSUzI1NiIsIng1dCI6Ii1LSTNROW5OUjdiUm9meG1lWm9YcWJIWkdldyIsImtpZCI6Ii1LSTNROW5OUjdiUm9meG1lWm9YcWJIWkdldyJ9.eyJhdWQiOiJodHRwczovL2dyYXBoLm1pY3Jvc29mdC5jb20iLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC83MmY5ODhiZi04NmYxLTQxYWYtOTFhYi0yZDdjZDAxMWRiNDcvIiwiaWF0IjoxNjg0NzQ3MjIwLCJuYmYiOjE2ODQ3NDcyMjAsImV4cCI6MTY4NDc1MjMzNiwiYWNjdCI6MCwiYWNyIjoiMSIsImFjcnMiOlsidXJuOnVzZXI6cmVnaXN0ZXJzZWN1cml0eWluZm8iXSwiYWlvIjoiQVlRQWUvOFRBQUFBRVU4MTkveDN2WktXMW0wZDlDRWFNRGVvVmwycGszSGpreDBwYWVUOERjTExldThERWhZN1NaWURubkE2Y1pMZ25DVGo0a2ZPbm9FUW9FbWNla2JNMFRHRm1rUWZBUkE0bzRaU0dTSnVIOUkyZ3ZkRG9KWm5DZ0xBWkRVUmRIWGJRQThMcTZhR0ZHUTVBRnVUWjQwS3NVRkJ2OWRINTdMdzlSdWR3cVVzQkZnPSIsImFtciI6WyJyc2EiLCJtZmEiXSwiYXBwX2Rpc3BsYXluYW1lIjoiZGVwbG95YXBwIiwiYXBwaWQiOiI5NjZhMzM4My1mNDMyLTQ4MDAtOTU3MC04OWEwMWU3NzAwMjQiLCJhcHBpZGFjciI6IjEiLCJjb250cm9scyI6WyJhcHBfcmVzIl0sImNvbnRyb2xzX2F1ZHMiOlsiOTY2YTMzODMtZjQzMi00ODAwLTk1NzAtODlhMDFlNzcwMDI0IiwiMDAwMDAwMDMtMDAwMC0wMDAwLWMwMDAtMDAwMDAwMDAwMDAwIl0sImRldmljZWlkIjoiZjIyODdjMjQtMWQ4NS00MjlmLWI0MWUtMDdjZDAyYzFjMWRmIiwiZmFtaWx5X25hbWUiOiJZZSIsImdpdmVuX25hbWUiOiJZb25naHVpIiwiaWR0eXAiOiJ1c2VyIiwiaXBhZGRyIjoiMTY3LjIyMC4yMzIuMjM5IiwibmFtZSI6IllvbmdodWkgWWUgKENTSSBJbnRlcmZ1c2lvbiBJbmMpIiwib2lkIjoiNmY1ZGEyZDQtYmJmNC00MTk1LWFiOGUtZjA1NmM3ZTA0Y2UxIiwib25wcmVtX3NpZCI6IlMtMS01LTIxLTIxNDY3NzMwODUtOTAzMzYzMjg1LTcxOTM0NDcwNy0yOTAxOTY0IiwicGxhdGYiOiIzIiwicHVpZCI6IjEwMDMyMDAyN0E5NzYwRTgiLCJyaCI6IjAuQVJvQXY0ajVjdkdHcjBHUnF5MTgwQkhiUndNQUFBQUFBQUFBd0FBQUFBQUFBQUFhQU5vLiIsInNjcCI6Im9wZW5pZCBwcm9maWxlIFVzZXIuUmVhZEJhc2ljLkFsbCBlbWFpbCIsInNpZ25pbl9zdGF0ZSI6WyJkdmNfbW5nZCIsImR2Y19jbXAiLCJpbmtub3dubnR3ayIsImttc2kiXSwic3ViIjoiWG1YZERMdUU5dzJPR3J4WktocnV4T21KVFZ3SGV0Y0s1UEpaa0V0R3dKTSIsInRlbmFudF9yZWdpb25fc2NvcGUiOiJXVyIsInRpZCI6IjcyZjk4OGJmLTg2ZjEtNDFhZi05MWFiLTJkN2NkMDExZGI0NyIsInVuaXF1ZV9uYW1lIjoidi15ZXlvbmdodWlAbWljcm9zb2Z0LmNvbSIsInVwbiI6InYteWV5b25naHVpQG1pY3Jvc29mdC5jb20iLCJ1dGkiOiI4d0NvYzNvdWMwR2dIT05TdnB3NUFBIiwidmVyIjoiMS4wIiwid2lkcyI6WyJiNzlmYmY0ZC0zZWY5LTQ2ODktODE0My03NmIxOTRlODU1MDkiXSwieG1zX3N0Ijp7InN1YiI6IldpWW1RVE42VEhrSGhZWWRKazBweWU4aXVRcVd6Vl80Y1prWm9TbVdpc0EifSwieG1zX3RjZHQiOjEyODkyNDE1NDd9.hI1Q_nq0NyP7YBtlms4NLhMq0BjaKHj8_rQBl-pvmT2MNJS7yYLX4MfHwBrpxvKiq0sl6n0FtieomhsbFJrOaQOsGZ2d0Rv0hMVmLyY_KIZCT2B_dX8kV3Y2Q5lafIUmDGKkygEp4B-_iiVbHxJ6WtnYXKk-c5-Mus1Sf0hNDdKtNbFf4u2EyJ5s7twt5yMkeEBj7IjbylCA5QWRFdPOjdg7YplCi7NW3CVK0Dds_QcWeWoP1b-XR5DDM8G7M90OFO-h2MXOlqtZ5lICL2Pj7Z14y0kJ0EPV0rFTRG9BqvVvAW3A-61yZXfbHab0Jf_aYjJfdYtnKVUuz_SXS1yzhQ
+
+
+18b1ac44-2ac3-4801-a091-40c69a385a8c
+
+
+
+
+
+ly2017@sjtu.edu.cn
+
+Liuyi19950401
+
+
+#spring.security.oauth2.client.registration.management.redirect-uri=https://yonghui-deploy-dev-apps-webapp.azuremicroservices.io/login/oauth2/code/
+
+spring.security.oauth2.client.registration.management.scope[0]=https://graph.microsoft.com/.default
+
+
+
+
+
+
+TokenCredential tokenCredential = new DefaultAzureCredentialBuilder().build();
+TokenRequestContext request = new TokenRequestContext().addScopes("https://management.azure.com/.default");
+AccessToken token =
+	tokenCredential.getToken(request).retry(3L).blockOptional().orElseThrow(() -> new RuntimeException(
+		"Couldn't retrieve JWT"));
+if (subscriptionId == null) {
+	return ResourceManagerUtils.getResourceManager(token.getToken());
+} else {
+	return ResourceManagerUtils.getResourceManager(token.getToken(), subscriptionId);
+}
+
+
+
+
+     // mounted() {
+        //     this.provisionSourceTimer = setInterval(() => {
+        //         if (this.stages[0].status === 'loading') {
+        //             this.checkAppExists();
+        //         }
+        //     }, 3000);
+        //     this.getUploadSourceCodeTimer = setInterval(() => {
+        //         if (this.stages[1].status === 'loading') {
+        //             this.getUploadSourceCodeResult();
+        //         }
+        //     }, 3000);
+        //     this.getBuildSourceLogsTimer = setInterval(() => {
+        //         if (this.stages[2].status === 'loading') {
+        //             this.getBuildLogs();
+        //         }
+        //     }, 2000);
+        // },
+        // beforeDestroy() {
+        //     clearInterval(this.provisionSourceTimer);
+        //     clearInterval(this.getUploadSourceCodeTimer);
+        //     clearInterval(this.getBuildSourceLogsTimer);
+        // },
+		
+		
+http://localhost:8080/login/oauth2/code/
+
+
+
+
+az account set --subscription <name or id>
+		
+		
