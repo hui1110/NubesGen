@@ -138,7 +138,7 @@ a{
                            :id="item.key" data-toggle="collapse" :data-target="'#'+item.id"></i>
                         <span class="ml-2">{{item.stageName}}</span>
                         <div class="collapse stages" :id="item.id">
-                            <div class="log" :id="'scroll-' + item.id" :style="{'height': item.key === 'provision' || item.key === 'upload' ? '200px': '400px'}">
+                            <div class="log" :id="'scroll-' + item.id" :style="{'height': item.key === 'provision' || item.key === 'upload' ? '150px': '400px'}">
                                 <pre :style="{'color': item.status === 'success' ? '#4e9a06': (item.status ==='error'? 'red' : '#9A7D0A'), 'font-size': '16px'}">{{item.description}}</pre>
                                 <pre :id="'pre-' + item.id">{{item.log}}</pre>
                             </div>
@@ -248,6 +248,8 @@ a{
                     .then(res => {
                         if(res.data){
                             this.handleProgress(0, 'App ' + this.appName + ' already exists in service ' + this.serviceName + '.', 'success');
+                            const log = document.getElementById('pre-' + this.stages[0].id)
+                            log.innerHTML = '<p>' + '<i class="bi bi-caret-right" style="margin-right: 2%"></i>' + 'Skipped creating app ' + '<code style="color: blue">' + this.appName + '</code>' + '.' + '</p>' + '<p>' + '<i class="bi bi-caret-right" style="margin-right: 2%"></i>' + 'Skipped creating default deployment for app ' + '<code style="color: blue">' + this.appName + '</code>' + '.' + '</p>';
                             this.handleProgress(1, 'Uploading source code...', 'loading');
                             this.getUploadUrl();
                         } else {
@@ -261,32 +263,32 @@ a{
             },
             provisionResource() {
                 const log = document.getElementById('pre-' + this.stages[0].id)
-                log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating app ' + this.appName + '...' + '</p>';
+                log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating app ' + '<code style="color: blue">' + this.appName + '</code>' + '...' + '</p>';
                 axios.get('/provisionResource/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
                     .then(res => {
                         if (res.status === 200) {
-                            log.innerHTML = '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create app ' + this.appName + ' successfully.' + '</p>';
+                            log.innerHTML = '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create app ' + '<code style="color: blue">' + this.appName + '</code>' + ' successfully.' + '</p>';
                             this.createDeploymentForApp(log);
                         }
                     }).catch(error => {
-                    log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create app ' + this.appName + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
+                    log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create app ' + '<code style="color: blue">' + this.appName + '</code>' + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
                     this.handleError(0, 'Create app ' + this.appName + ' in service ' + this.serviceName + ' failed.', 'Provision resource failed !');
                     this.deleteApp();
                     })
             },
             createDeploymentForApp(log){
                 const provisionSourceLog = log.innerHTML;
-                log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating default deployment for app ' + this.appName + '...' + '</p>';
+                log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating default deployment for app ' + '<code style="color: blue">' + this.appName + '</code>' + '...' + '</p>';
                 axios.get('/createDeploymentForApp/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName + '/' + this.cpu + '/' + this.memory + '/' + this.instanceCount)
                     .then(res => {
                         if(res.status === 200 ){
                             this.handleProgress(0, 'Created app ' + this.appName + ' in service ' + this.serviceName + '.', 'success');
                             this.handleProgress(1, 'Uploading source code...', 'loading');
-                            log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create default deployment for app ' + this.appName + ' successfully.' + '</p>';
+                            log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create default deployment for app ' + '<code style="color: blue">' + this.appName + '</code>' + ' successfully.' + '</p>';
                             this.getUploadUrl();
                         }
                     }).catch(error => {
-                    log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create default deployment for app ' + this.appName + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
+                    log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create default deployment for app ' + '<code style="color: blue">' + this.appName + '</code>' + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
                     this.handleError(0, 'Create app ' + this.appName + ' in service ' + this.serviceName + ' failed.', 'Provision resource failed !');
                     this.deleteApp();
                     })
@@ -399,7 +401,9 @@ a{
                             this.deleteApp();
                         }
                         this.logScrollButtom(this.stages[3].id, res.data);
+                        this.highlightLog(this.stages[3].id);
                     }).catch(error => {
+                    console.log(error);
                     this.stages[3].log = error.response.data;
                     this.handleError(3, 'Your deployment of app ' + this.appName + ' failed.', 'Deploy failed !');
                     this.deleteApp();
@@ -444,6 +448,26 @@ a{
                 }
                 const logScroll = document.getElementById('scroll-' + logId);
                 logScroll.scrollTop = logScroll.scrollHeight;
+            },
+            highlightLog(id){
+                let log = document.getElementById('pre-' + id);
+                let text = log.innerHTML.replace(/(\d+)/img, "<span style='color:blue;'>$&</span>");
+                if (text.indexOf('INFO') !== -1) {
+                    text = text.replaceAll('INFO', "<span style='color: green'>" + 'INFO' + '</span>');
+                }
+                if (text.indexOf('ERROR') !== -1){
+                    text = text.replaceAll('ERROR', "<span style='color: #E74C3C'>" + 'ERROR' + '</span>');
+                }
+                if (text.indexOf('DEBUG') !== -1){
+                    text = text.replaceAll('DEBUG', "<span style='color: #F4D03F'>" + 'DEBUG' + '</span>');
+                }
+                if (text.indexOf('WARN') !== -1){
+                    text = text.replaceAll('WARN', "<span style='color: #B7950B'>" + 'WARN' + '</span>');
+                }
+                if (text.indexOf('TRACE') !== -1){
+                    text = text.replaceAll('TRACE', "<span style='color: #F4D03F'>" + 'TRACE' + '</span>');
+                }
+                log.innerHTML = text;
             },
             viewEndpoint() {
                 const endpoint = 'https://' + this.serviceName + "-" + this.appName + '.azuremicroservices.io/';

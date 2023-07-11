@@ -1,13 +1,17 @@
 package io.github.nubesgen.service;
 
+import com.azure.core.credential.AccessToken;
 import com.azure.core.credential.TokenCredential;
+import com.azure.core.credential.TokenRequestContext;
 import com.azure.core.management.AzureEnvironment;
 import com.azure.core.management.Region;
 import com.azure.core.management.profile.AzureProfile;
+import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.resourcemanager.AzureResourceManager;
 import com.azure.resourcemanager.appplatform.AppPlatformManager;
 import com.azure.resourcemanager.appplatform.fluent.models.AppResourceInner;
 import com.azure.resourcemanager.appplatform.fluent.models.DeploymentResourceInner;
+import com.azure.resourcemanager.appplatform.fluent.models.ServiceResourceInner;
 import com.azure.resourcemanager.appplatform.models.AppResourceProperties;
 import com.azure.resourcemanager.appplatform.models.DeploymentInstance;
 import com.azure.resourcemanager.appplatform.models.DeploymentResourceProperties;
@@ -210,6 +214,14 @@ public class AzureDeployService {
         return true;
     }
 
+    private void createResourceGroup(AzureResourceManager azureResourceManager, String rgName, Region region) {
+        log.info("Creating resource group {}", rgName);
+        azureResourceManager.resourceGroups().define(rgName)
+                            .withRegion(region)
+                            .create();
+        log.info("Created resource group {}", rgName);
+    }
+
     /**
      * Provision resource.
      *
@@ -222,7 +234,16 @@ public class AzureDeployService {
     public void provisionResource(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName,
                                     String serviceName,
                                     String appName) {
+
+//        ServiceResourceInner serviceResourceInner = new ServiceResourceInner()
+//            .withLocation("eastus")
+//            .withSku(new Sku().withName("S0"));
         AppPlatformManager appPlatformManager = getAppPlatformManager(management, subscriptionId);
+//
+//        // provision spring service
+//        appPlatformManager.serviceClient().getServices().createOrUpdate(resourceGroupName, serviceName, serviceResourceInner);
+//        log.info("provision spring service done");
+
         // provision spring app
         AppResourceProperties properties = new AppResourceProperties();
         properties.withHttpsOnly(true);
@@ -620,15 +641,32 @@ public class AzureDeployService {
     }
 
     private AzureResourceManager getAzureResourceManager(OAuth2AuthorizedClient management, String subscriptionId) {
+//        if (subscriptionId == null) {
+//            return ResourceManagerUtils.getResourceManager(management.getAccessToken().getTokenValue());
+//        } else {
+//            return ResourceManagerUtils.getResourceManager(management.getAccessToken().getTokenValue(), subscriptionId);
+//        }
+        TokenCredential tokenCredential = new DefaultAzureCredentialBuilder().build();
+        TokenRequestContext request = new TokenRequestContext().addScopes("https://management.azure.com/.default");
+        AccessToken token =
+            tokenCredential.getToken(request).retry(3L).blockOptional().orElseThrow(() -> new RuntimeException(
+                "Couldn't retrieve JWT"));
         if (subscriptionId == null) {
-            return ResourceManagerUtils.getResourceManager(management.getAccessToken().getTokenValue());
+            return ResourceManagerUtils.getResourceManager(token.getToken());
         } else {
-            return ResourceManagerUtils.getResourceManager(management.getAccessToken().getTokenValue(), subscriptionId);
+            return ResourceManagerUtils.getResourceManager(token.getToken(), subscriptionId);
         }
     }
 
     private AppPlatformManager getAppPlatformManager(OAuth2AuthorizedClient management, String subscriptionId){
-        final TokenCredential credential = ResourceManagerUtils.toTokenCredential(management.getAccessToken().getTokenValue());
+//        final TokenCredential credential = ResourceManagerUtils.toTokenCredential(management.getAccessToken().getTokenValue());
+
+        TokenCredential tokenCredential = new DefaultAzureCredentialBuilder().build();
+        TokenRequestContext request = new TokenRequestContext().addScopes("https://management.azure.com/.default");
+        AccessToken token =
+            tokenCredential.getToken(request).retry(3L).blockOptional().orElseThrow(() -> new RuntimeException(
+                "Couldn't retrieve JWT"));
+        final TokenCredential credential = ResourceManagerUtils.toTokenCredential(token.getToken());
         final AzureProfile azureProfile = new AzureProfile(AzureEnvironment.AZURE);
         AzureResourceManager authenticated = AzureResourceManager.authenticate(credential, azureProfile).withSubscription(subscriptionId);
         String tenantId = authenticated.tenants().list().iterator().next().tenantId();
