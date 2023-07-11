@@ -1,0 +1,320 @@
+https://dev.azure.com/SpringOnAzure/Spring%20on%20Azure/_workitems/edit/1460
+https://dev.azure.com/SpringOnAzure/Spring%20on%20Azure/_workitems/edit/1461
+https://github.com/MicrosoftDocs/azure-dev-docs-pr/pull/4233
+
+
+curl -XGET http://localhost:8080/content/azure-blob.txt
+
+
+
+
+async function logJSONData(code) {
+  const redirectUri = 'http://localhost:8080/login/oauth2/code?';
+  const url = 'type=gradle-project&language=java&bootVersion=3.0.5&baseDir=demo&groupId=com.example&artifactId=demo&name=demo&description=Demo%20project%20for%20Spring%20Boot&packageName=com.example.demo&packaging=jar&javaVersion=17&architecture=none&gitServiceType=github&action=push&state=lgafmprv&code=' + code + '&fromSpringInitializr=push';
+  const response = await fetch(redirectUri + url);
+  const data = await response.json();
+  console.log(data);
+}
+
+
+
+
+ @RequestMapping("/deploySdk")
+    public void deploySdk(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam String url, @RequestParam String branchName) throws IOException {
+        azureDeployService.deploySdk(management, subscriptionId, resourceGroupName, serviceName, appName, url, branchName);
+    }
+
+
+
+ public void deploySdk(OAuth2AuthorizedClient management,
+        String subscriptionId,
+                          String resourceGroupName,
+                       String serviceName,
+                       String appName,
+                       String url,
+                       String branchName) throws IOException {
+//       final TokenCredential credential = toTokenCredential(management.getAccessToken().getTokenValue());
+
+        TokenRequestContext request = new TokenRequestContext().addScopes("https://management.azure.com/.default");
+        TokenCredential tokenCredential = new DefaultAzureCredentialBuilder().build();
+        AccessToken token = tokenCredential.getToken(request).retry(3L).blockOptional().orElseThrow(() -> new RuntimeException("Couldn't retrieve JWT"));
+        final TokenCredential credential = toTokenCredential(token.getToken());
+        final AzureProfile azureProfile = new AzureProfile(AzureEnvironment.AZURE);
+        AzureResourceManager authenticated = AzureResourceManager.authenticate(credential, azureProfile).withSubscription(subscriptionId);
+        String tenantId = authenticated.tenants().list().iterator().next().tenantId();
+
+        final AzureProfile profile = new AzureProfile(tenantId, subscriptionId, AzureEnvironment.AZURE);
+
+        AppPlatformManager appPlatformManager = AppPlatformManager.authenticate(credential, profile);
+
+        ServiceResourceInner serviceResourceInner = new ServiceResourceInner()
+            .withLocation("eastus")
+            .withSku(new Sku().withName("S0"));
+
+        // provision spring service
+        appPlatformManager.serviceClient().getServices().createOrUpdate(resourceGroupName, serviceName, serviceResourceInner);
+
+
+        System.out.println("provision spring service done");
+
+        // provision spring app
+        AppResourceProperties properties = new AppResourceProperties();
+        properties.withHttpsOnly(true);
+        properties.withPublicProperty(true);
+        AppResourceInner appResourceInner = new AppResourceInner();
+        appResourceInner.withProperties(properties);
+
+        appPlatformManager.serviceClient().getApps().createOrUpdate(resourceGroupName, serviceName, appName, appResourceInner);
+
+        System.out.println("provision spring app done");
+
+        // get upload url
+        ResourceUploadDefinition uploadUrl = appPlatformManager.serviceClient().getApps().getResourceUploadUrlAsync(
+            resourceGroupName, serviceName, appName).block();
+
+        System.out.println("get upload url done");
+
+        // upload file
+        assert uploadUrl != null;
+        ShareFileAsyncClient fileClient = new ShareFileClientBuilder()
+            .endpoint(uploadUrl.uploadUrl())
+            .httpClient(appPlatformManager.httpPipeline().getHttpClient())
+            .buildFileAsyncClient();
+
+        String pathName = getRepositoryPath(url, branchName);
+        File gzFile = createTarGzFile(new File(pathName));
+
+        fileClient.create(gzFile.length())
+                  .flatMap(fileInfo -> fileClient.uploadFromFile(gzFile.getAbsolutePath()))
+                  .block();
+
+        System.out.println("upload file done");
+
+        // deploy app
+        DeploymentResourceInner resourceInner = new DeploymentResourceInner()
+            .withSku(
+                new Sku()
+                    .withName(serviceResourceInner.sku().name())
+                    // instance count
+                    .withCapacity(1));
+        resourceInner.withProperties(new DeploymentResourceProperties());
+
+        SourceUploadedUserSourceInfo sourceInfo = new SourceUploadedUserSourceInfo();
+        System.out.println(uploadUrl + "============");
+        System.out.println(uploadUrl.relativePath() + "------------");
+        sourceInfo.withRuntimeVersion("Java_17");
+        sourceInfo.withRelativePath(uploadUrl.relativePath());
+//        sourceInfo.withArtifactSelector("gateway"); // withTargetModule
+
+        resourceInner.properties()
+                     .withActive(true)
+                     .withSource(sourceInfo)
+                     .withDeploymentSettings(
+                         new DeploymentSettings()
+                             .withResourceRequests(new ResourceRequests().withCpu("1").withMemory("2Gi"))
+                     );
+
+        appPlatformManager.serviceClient().getDeployments().createOrUpdate(resourceGroupName, serviceName, appName, DEFAULT_DEPLOYMENT_NAME, resourceInner);
+
+        System.out.println("deploy app done");
+
+    }
+	
+	
+	
+	  /**
+     * Get spring app settings.
+     *
+     * @param springApp spring app instance
+     */
+    public  void getAppDetails(SpringApp springApp) {
+        StringBuilder info = new StringBuilder("Spring Service app: ")
+            .append("\n\tId: ").append(springApp.id())
+            .append("\n\tName: ").append(springApp.name())
+            .append("\n\tPublic Endpoint: ").append(springApp.isPublic())
+            .append("\n\tUrl: ").append(springApp.url())
+            .append("\n\tHttps Only: ").append(springApp.isHttpsOnly())
+            .append("\n\tFully Qualified Domain Name: ").append(springApp.fqdn())
+            .append("\n\tActive Deployment Name: ").append(springApp.activeDeploymentName());
+
+        if (springApp.temporaryDisk() != null) {
+            info.append("\n\tTemporary Disk:")
+                .append("\n\t\tSize In GB: ").append(springApp.temporaryDisk().sizeInGB())
+                .append("\n\t\tMount Path: ").append(springApp.temporaryDisk().mountPath());
+        }
+
+        if (springApp.persistentDisk() != null) {
+            info.append("\n\tPersistent Disk:")
+                .append("\n\t\tSize In GB: ").append(springApp.persistentDisk().sizeInGB())
+                .append("\n\t\tMount Path: ").append(springApp.persistentDisk().mountPath());
+        }
+
+        if (springApp.identity() != null) {
+            info.append("\n\tIdentity:")
+                .append("\n\t\tType: ").append(springApp.identity().type())
+                .append("\n\t\tPrincipal Id: ").append(springApp.identity().principalId())
+                .append("\n\t\tTenant Id: ").append(springApp.identity().tenantId());
+        }
+        System.out.println(info);
+    }
+	
+	
+	
+	 private void createResourceGroup(AzureResourceManager azureResourceManager, String rgName, Region region) {
+        log.info("Creating resource group {}", rgName);
+        azureResourceManager.resourceGroups().define(rgName)
+                            .withRegion(region)
+                            .create();
+        log.info("Created resource group {}", rgName);
+    }
+	
+	
+	
+	
+	 /**
+     * Get upload source code result.
+     *
+     * @param management OAuth2 authorization client after login
+     * @param subscriptionId the subscription id
+     * @param resourceGroupName the resource group name
+     * @param serviceName the service name
+     * @param appName the app name
+     * @return none: undone, otherwise the log file url
+     */
+    public String getUploadSourceCodeResult(OAuth2AuthorizedClient management, String subscriptionId,
+                                            String resourceGroupName,
+                                            String serviceName,
+                                            String appName,
+                                            String url,
+                                            String branchName) {
+        AppPlatformManager appPlatformManager = getAppPlatformManager(management, subscriptionId);
+
+        // get upload url
+        ResourceUploadDefinition uploadUrl = appPlatformManager.serviceClient().getApps().getResourceUploadUrlAsync(
+            resourceGroupName, serviceName, appName).block();
+
+        log.info("get upload url done");
+
+        // upload file
+        assert uploadUrl != null;
+        ShareFileAsyncClient fileClient = new ShareFileClientBuilder()
+            .endpoint(uploadUrl.uploadUrl())
+            .httpClient(appPlatformManager.httpPipeline().getHttpClient())
+            .buildFileAsyncClient();
+        String pathName = getRepositoryPath(url, branchName);
+        try {
+            File gzFile = createTarGzFile(new File(pathName));
+            fileClient.create(gzFile.length())
+                      .flatMap(fileInfo -> fileClient.uploadFromFile(gzFile.getAbsolutePath()))
+                      .block();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        log.info("upload file done");
+        return uploadUrl.relativePath();
+    }
+	
+	
+	
+	
+	
+	 <div class="mb-3 row">
+                <label class="col-sm-4 col-form-label">Deployment settings</label>
+                <div class="col-sm-7">
+                    <label style="font-size: 14px;">Runtime platform:<span
+                            class="required"> * </span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14"
+                             height="14"
+                             fill="currentColor"
+                             class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                            <title>The java version of the running platform will be read from the
+                                java.version field in the project's
+                                pom.xml file.</title>
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                        </svg>
+                    </label>
+                    <label for="runtimePlatform">
+                        <input type="text" class="form-control" id="runtimePlatform" name="runtimePlatform"
+                               v-model="appInstance.runtimePlatform" disabled/>
+                    </label>
+                    <span id="runtimePlatform_error" style="color: red"></span>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label class="col-sm-4 col-form-label">Scale up</label>
+                <div class="col-sm-7">
+                    <label style="font-size: 14px;">vCPU<span class="required"> * </span></label>
+                    <label>
+                        <select class="form-control" v-model="appInstance.cpu">
+                            <option v-for="item in vCPUList" :key="item" :value="item">{{ item }}
+                            </option>
+                        </select>
+                    </label>
+
+                    <label style="font-size: 14px;">Memory(Gi)<span
+                            class="required"> * </span></label>
+                    <label>
+                        <select class="form-control" v-model="appInstance.memory">
+                            <option v-for="item in memoryList" :key="item" :value="item">{{ item }}
+                            </option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label class="col-sm-4 col-form-label">Instance count:<span
+                        class="required"> * </span></label>
+                <div class="col-sm-7">
+                    <label>
+                        <input type="number" class="form-control"
+                               v-model="appInstance.instanceCount" id="instanceCount"
+                               name="instanceCount"/>
+                    </label>
+                    <span id="instanceCount_error" style="color: red"></span>
+                </div>
+            </div>
+			
+			
+			
+			
+			
+			
+			 runtimePlatform: {
+                                container: '#runtimePlatform_error',
+                                validators: {
+                                    notEmpty: {
+                                        message: 'Java version is not configured in pom.xml file'
+                                    },
+                                    callback: {
+                                        message: 'The value of runtimePlatform cannot be empty',
+                                        callback: function (value) {
+                                            return value !== 'loading...';
+                                        }
+                                    }
+                                }
+                            },
+                            instanceCount: {
+                                container: '#instanceCount_error',
+                                validators: {
+                                    notEmpty: {
+                                        message: 'Please type instance count'
+                                    },
+                                    regexp: {
+                                        regexp: /^(?:[1-9]\d?|[1234]\d{2}|500)$/,
+                                        message: 'The instance count is invalid. It can contain only numbers. The first character must be a number. The value must be between 1 and 500.'
+                                    }
+                                }
+                            },
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
