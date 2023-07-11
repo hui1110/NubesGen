@@ -1,0 +1,219 @@
+ASA button:
+
+1. overview  先告诉用户功能, 细化， features
+
+2. benefit 调整， 添加
+
+3. how work 语句顺序， deployment setting 添加描述
+
+
+Quick start
+
+
+1. Title , 加 ‘ 
+
+2. Button svg  link => deployment setting, my github repo link
+
+3. Requirement 2 ,add set up accout then remove.
+
+4. Add deploy button 
+ 陈述句， 添加button到你的 readme。以下是实例
+ 
+ 
+5. remove  adoc
+
+6. new custom your asa button(branch , module) 
+
+
+
+1. link  to  asa button
+
+mext step
+
+
+remove  client
+
+version
+
+remove  test
+
+name  in .xml
+
+exclude application
+
+
+https://6b2c95ddfd904cc78368e098.file.core.windows.net/cea93d0d7ff9473a88b9402aa615f77d/resources/4054933975e1e6fc3d4235bab9e98a0d678dc22608c0601612355d9405797366-2023062910-d78f141d-f677-4f61-85f5-03bc0cc0b272?sv=2020-08-04
+
+
+
+
+
+  TokenCredential tokenCredential = new DefaultAzureCredentialBuilder().build();
+        TokenRequestContext request = new TokenRequestContext().addScopes("https://management.azure.com/.default");
+        AccessToken token =
+            tokenCredential.getToken(request).retry(3L).blockOptional().orElseThrow(() -> new RuntimeException(
+                "Couldn't retrieve JWT"));
+        if (subscriptionId == null) {
+            return ResourceManagerUtils.getResourceManager(token.getToken());
+        } else {
+            return ResourceManagerUtils.getResourceManager(token.getToken(), subscriptionId);
+        }
+		
+		
+		az spring app create --name demoapp --resource-group yonghui-dev-rg --service yonghui-deploy-dev-apps
+		
+		
+		
+		 /**
+     * Get project name and java version from pom.xml.
+     *
+     * @param url repository url
+     * @param branchName branch name
+     * @param module module name
+     * @return project name and java version
+     */
+    public synchronized ProjectInstance getNameAndJavaVersion(String url, String branchName, String module) {
+        module = Objects.equals(module, "null") ? null : module;
+        String pathName = getRepositoryPath(url, branchName);
+        assert pathName != null;
+        Model model;
+        if (module == null) {
+            try (FileInputStream fis = new FileInputStream(pathName.concat("/pom.xml"))) {
+                MavenXpp3Reader reader = new MavenXpp3Reader();
+                model = reader.read(fis);
+            } catch (Exception e) {
+                e.printStackTrace();
+                deleteRepositoryDirectory(new File(pathName));
+                throw new RuntimeException(e.getMessage());
+            }
+        } else {
+            try (FileInputStream fis = new FileInputStream(pathName.concat("/").concat(module.concat("/pom.xml")))) {
+                MavenXpp3Reader reader = new MavenXpp3Reader();
+                model = reader.read(fis);
+                if (model.getProperties().isEmpty() || !model.getProperties().containsKey("java.version")) {
+                    FileInputStream fisParent = new FileInputStream(pathName.concat("/pom.xml"));
+                    MavenXpp3Reader readerParent = new MavenXpp3Reader();
+                    Properties properties = readerParent.read(fisParent).getProperties();
+                    fisParent.close();
+                    if(!properties.isEmpty() && properties.containsKey("java.version")) {
+                        model.getProperties().put("java.version", properties.getProperty("java.version"));
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                deleteRepositoryDirectory(new File(pathName));
+                throw new RuntimeException(e.getMessage());
+            }
+        }
+        deleteRepositoryDirectory(new File(pathName));
+        ProjectInstance projectInstance = new ProjectInstance();
+//        Assert.isTrue(model.getName() != null, "Project name is not configured in pom.xml");
+//        Assert.isTrue(model.getProperties().containsKey("java.version"), "Java version is not configured in pom"
+//            + ".xml");
+        if(model.getName() != null) {
+            projectInstance.setName(model.getName().replaceAll(" ", "").toLowerCase());
+        }
+        model.getProperties().put("java.version", model.getProperties().getOrDefault("java.version", "11"));
+        projectInstance.setVersion("Java_".concat(String.valueOf(model.getProperties().get("java.version"))));
+        return projectInstance;
+    }
+
+
+
+
+//        ServiceResourceInner serviceResourceInner = new ServiceResourceInner()
+//            .withLocation(regionName)
+//            .withSku(new Sku().withName("S0"));
+//
+//        // provision spring service
+//        appPlatformManager.serviceClient().getServices().createOrUpdate(resourceGroupName, serviceName, serviceResourceInner);
+//        log.info("Provision spring service {} done", serviceName);
+
+
+
+
+
+ TokenRequestContext request = new TokenRequestContext().addScopes("https://management.azure.com/.default");
+        TokenCredential tokenCredential = new DefaultAzureCredentialBuilder().build();
+        AccessToken token = tokenCredential.getToken(request).retry(3L).blockOptional().orElseThrow(() -> new RuntimeException("Couldn't retrieve JWT"));
+        final TokenCredential credential = toTokenCredential(token.getToken());
+		
+		
+		
+		 .withSubscription("6c933f90-8115-4392-90f2-7077c9fa5dbd");
+		 
+		 
+		 
+		 
+		 
+		 
+		   /**
+     * Print spring service settings.
+     *
+     * @param springService spring service instance
+     */
+    public static void print(SpringService springService) {
+        StringBuilder info = new StringBuilder("Spring Service: ")
+            .append("\n\tId: ").append(springService.id())
+            .append("\n\tName: ").append(springService.name())
+            .append("\n\tResource Group: ").append(springService.resourceGroupName())
+            .append("\n\tRegion: ").append(springService.region())
+            .append("\n\tTags: ").append(springService.tags());
+
+        ConfigServerProperties serverProperties = springService.getServerProperties();
+        if (serverProperties != null && serverProperties.provisioningState() != null
+            && serverProperties.provisioningState().equals(ConfigServerState.SUCCEEDED) && serverProperties.configServer() != null) {
+            info.append("\n\tProperties: ");
+            if (serverProperties.configServer().gitProperty() != null) {
+                info.append("\n\t\tGit: ").append(serverProperties.configServer().gitProperty().uri());
+            }
+        }
+
+        if (springService.sku() != null) {
+            info.append("\n\tSku: ")
+                .append("\n\t\tName: ").append(springService.sku().name())
+                .append("\n\t\tTier: ").append(springService.sku().tier())
+                .append("\n\t\tCapacity: ").append(springService.sku().capacity());
+        }
+
+        MonitoringSettingProperties monitoringSettingProperties = springService.getMonitoringSetting();
+        if (monitoringSettingProperties != null && monitoringSettingProperties.provisioningState() != null
+            && monitoringSettingProperties.provisioningState().equals(MonitoringSettingState.SUCCEEDED)) {
+            info.append("\n\tTrace: ")
+                .append("\n\t\tEnabled: ").append(monitoringSettingProperties.traceEnabled())
+                .append("\n\t\tApp Insight Instrumentation Key: ").append(monitoringSettingProperties.appInsightsInstrumentationKey());
+        }
+
+        System.out.println(info);
+    }
+
+    public static String getAppResourceInner(AppResourceInner appResourceInner) {
+        StringBuilder info = new StringBuilder("Spring Service app: ")
+            .append("\n\tId: ").append(appResourceInner.id())
+            .append("\n\tName: ").append(appResourceInner.name())
+            .append("\n\tPublic Endpoint: ").append(appResourceInner.properties().publicProperty())
+            .append("\n\tUrl: ").append(appResourceInner.properties().url())
+            .append("\n\tHttps Only: ").append(appResourceInner.properties().httpsOnly())
+            .append("\n\tFully Qualified Domain Name: ").append(appResourceInner.properties().fqdn())
+            .append("\n\tLocation: ").append(appResourceInner.location());
+
+        if (appResourceInner.properties().temporaryDisk() != null) {
+            info.append("\n\tTemporary Disk:")
+                .append("\n\t\tSize In GB: ").append(appResourceInner.properties().temporaryDisk().sizeInGB())
+                .append("\n\t\tMount Path: ").append(appResourceInner.properties().temporaryDisk().mountPath());
+        }
+
+        if (appResourceInner.properties().persistentDisk() != null) {
+            info.append("\n\tPersistent Disk:")
+                .append("\n\t\tSize In GB: ").append(appResourceInner.properties().persistentDisk().sizeInGB())
+                .append("\n\t\tMount Path: ").append(appResourceInner.properties().persistentDisk().mountPath());
+        }
+
+        if (appResourceInner.identity() != null) {
+            info.append("\n\tIdentity:")
+                .append("\n\t\tType: ").append(appResourceInner.identity().type())
+                .append("\n\t\tPrincipal Id: ").append(appResourceInner.identity().principalId())
+                .append("\n\t\tTenant Id: ").append(appResourceInner.identity().tenantId());
+        }
+        return info.toString();
+    }
