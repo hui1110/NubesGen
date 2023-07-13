@@ -1,6 +1,8 @@
 package io.github.nubesgen.web;
 
 import com.azure.resourcemanager.appplatform.models.ResourceUploadDefinition;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.nubesgen.model.ProjectInstance;
 import io.github.nubesgen.model.RegionInstance;
 import io.github.nubesgen.model.ResourceGrooupInstance;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 public class AzureDeployController {
@@ -96,12 +99,22 @@ public class AzureDeployController {
         }
     }
 
-    @GetMapping("/createDeploymentForApp/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}/{cpu}/{memory}/{instanceCount}")
-    public @ResponseBody ResponseEntity<?> createDeploymentForApp(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName, @PathVariable String cpu, @PathVariable String memory, @PathVariable String instanceCount){
+    @PostMapping("/createDeploymentForApp")
+    public @ResponseBody ResponseEntity<?> createDeploymentForApp(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestBody Map<String, Object> map){
         try {
-            azureDeployService.createDeploymentForApp(management, subscriptionId, resourceGroupName, serviceName, appName, cpu, memory, instanceCount);
+            String subscriptionId = String.valueOf(map.get("subscriptionId"));
+            String resourceGroupName = String.valueOf(map.get("resourceGroupName"));
+            String serviceName = String.valueOf(map.get("serviceName"));
+            String appName = String.valueOf(map.get("appName"));
+            String cpu = String.valueOf(map.get("cpu"));
+            String memory = String.valueOf(map.get("memory"));
+            String instanceCount = String.valueOf(map.get("instanceCount"));
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, String> variablesMap = objectMapper.convertValue(map.get("variables"), new TypeReference<>() {});
+            azureDeployService.createDeploymentForApp(management, subscriptionId, resourceGroupName, serviceName, appName, cpu, memory, instanceCount, variablesMap);
             return new ResponseEntity<>(HttpStatus.OK);
         }catch (Exception e){
+            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

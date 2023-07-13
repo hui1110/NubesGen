@@ -72,7 +72,6 @@ a{
 }
 .log {
     background-color: #f8f9fa;
-    /*height: 400px;*/
     overflow: auto;
     padding: 15px;
     border: 1px solid #d6d8db;
@@ -104,6 +103,10 @@ a{
     padding-left: 5%;
     padding-top: 2%;
     padding-bottom: 2%;
+}
+.Toastify__toast-container {
+    width: 40%;
+    font-size: 14px;
 }
 </style>
 <body>
@@ -177,7 +180,6 @@ a{
                 serviceName: new URLSearchParams(location.search).get('serviceName'),
                 appName: new URLSearchParams(location.search).get('appName'),
                 javaVersion: new URLSearchParams(location.search).get('javaVersion'),
-                region: new URLSearchParams(location.search).get('region'),
                 cpu: new URLSearchParams(location.search).get('cpu'),
                 memory: new URLSearchParams(location.search).get('memory'),
                 instanceCount: new URLSearchParams(location.search).get('instanceCount'),
@@ -188,6 +190,7 @@ a{
                 relativePath: '',
                 uploadUrl: '',
                 buildSourceLog: '',
+                variables: {},
                 stages: [
                     {
                         key: 'provision',
@@ -243,6 +246,7 @@ a{
                 }
             },
             checkAppExist(){
+                this.expandCollapse(this.stages[0].key, this.stages[0].id);
                 this.stages[0].description = 'Check whether app ' + this.appName + ' exists in ' + this.serviceName + '...';
                 axios.get('/checkAppExist/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
                     .then(res => {
@@ -276,17 +280,25 @@ a{
                     this.deleteApp();
                     })
             },
-            createDeploymentForApp(log){
+            createDeploymentForApp(log) {
                 const provisionSourceLog = log.innerHTML;
                 log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating default deployment for app ' + '<code style="color: blue">' + this.appName + '</code>' + '...' + '</p>';
-                axios.get('/createDeploymentForApp/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName + '/' + this.cpu + '/' + this.memory + '/' + this.instanceCount)
-                    .then(res => {
-                        if(res.status === 200 ){
-                            this.handleProgress(0, 'Created app ' + this.appName + ' in service ' + this.serviceName + '.', 'success');
-                            this.handleProgress(1, 'Uploading source code...', 'loading');
-                            log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create default deployment for app ' + '<code style="color: blue">' + this.appName + '</code>' + ' successfully.' + '</p>';
-                            this.getUploadUrl();
-                        }
+                axios.post('/createDeploymentForApp', {
+                    'subscriptionId': this.subscriptionId,
+                    'resourceGroupName': this.resourceGroupName,
+                    'serviceName': this.serviceName,
+                    'appName': this.appName,
+                    'cpu': this.cpu,
+                    'memory': this.memory,
+                    'instanceCount': this.instanceCount,
+                    'variables': this.variables,
+                }).then(res => {
+                    if (res.status === 200) {
+                        this.handleProgress(0, 'Created app ' + this.appName + ' in service ' + this.serviceName + '.', 'success');
+                        this.handleProgress(1, 'Uploading source code...', 'loading');
+                        log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create default deployment for app ' + '<code style="color: blue">' + this.appName + '</code>' + ' successfully.' + '</p>';
+                        this.getUploadUrl();
+                    }
                     }).catch(error => {
                     log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create default deployment for app ' + '<code style="color: blue">' + this.appName + '</code>' + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
                     this.handleError(0, 'Create app ' + this.appName + ' in service ' + this.serviceName + ' failed.', 'Provision resource failed !');
@@ -294,6 +306,7 @@ a{
                     })
             },
             getUploadUrl() {
+                this.expandCollapse(this.stages[1].key, this.stages[1].id);
                 const log = document.getElementById('pre-' + this.stages[1].id)
                 log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Getting upload url...' + '</p>';
                 axios.get('/getUploadUrl/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
@@ -349,6 +362,7 @@ a{
                 this.getBuildLogs();
             },
             getBuildLogs() {
+                this.expandCollapse(this.stages[2].key, this.stages[2].id);
                 axios.get('/getBuildLogs/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
                     .then(res => {
                         if (res.status === 200 && this.stages[2].status === 'loading' && this.result === '') {
@@ -358,7 +372,7 @@ a{
                         this.buildSourceLog = res.data;
                     }).catch(error => {
                     this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
-                    this.logScrollButtom(this.stages[2].id, this.buildSourceLog + '\n' + '[31m' + error.response.data + '[0m');
+                    this.logScrollButtom(this.stages[2].id, this.buildSourceLog + '\n' + error.response.data);
                     this.deleteApp();
                 })
             },
@@ -379,11 +393,12 @@ a{
                         }
                     }).catch(error => {
                     this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
-                    this.logScrollButtom(this.stages[2].id, this.buildSourceLog + '\n' + '[31m' + error.response.data + '[0m');
+                    this.logScrollButtom(this.stages[2].id, this.buildSourceLog + '\n' + error.response.data);
                     this.deleteApp();
                 })
             },
             getDeployResult() {
+                this.expandCollapse(this.stages[3].key, this.stages[3].id);
                 axios.get('/getDeployResult/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
                     .then(res => {
                         if (res.status === 200) {
@@ -417,7 +432,7 @@ a{
                     console.log(error);
                 })
             },
-            expandErrorCollapse(itemKey, itemId){
+            expandCollapse(itemKey, itemId){
                 const icon = document.getElementById(itemKey);
                 if (!icon.classList.contains('bi-chevron-down')) {
                     icon.classList.remove('bi-chevron-right');
@@ -434,7 +449,7 @@ a{
                 this.stages[num].description = description;
                 this.deploymentProgress = 'Your deployment is failed';
                 this.deploymentResult = 'Please check the log and fix it.';
-                this.expandErrorCollapse(this.stages[num].key, this.stages[num].id);
+                this.expandCollapse(this.stages[num].key, this.stages[num].id);
                 toast.error(message, {
                     position: toast.POSITION.TOP_CENTER,
                     autoClose: 5000,

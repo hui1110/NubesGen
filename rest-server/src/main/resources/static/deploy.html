@@ -103,6 +103,15 @@ a {
     background-color: transparent;
     border-color: #dae0e5;
 }
+.Toastify__toast-container {
+    width: 40%;
+    font-size: 14px;
+}
+.variables{
+    width: 40%;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+}
 </style>
 <body>
 <div id="app">
@@ -187,8 +196,7 @@ a {
                             data-live-search="true"
                             data-placeholder="Please select Service Instance"
                             v-model="serviceInstanceName" id="serviceInstance"
-                            name="serviceInstance"
-                            @change="changeAppInstance(serviceInstanceName)">
+                            name="serviceInstance">
                         <option v-for="item in serviceInstanceList" :key="item.name"
                                 :value="item.name">
                             {{ item.name }}
@@ -218,6 +226,17 @@ a {
                     <span id="appName_error" style="color: red"></span>
                 </div>
             </div>
+
+            <div class="mb-3 row">
+                <label class="col-sm-4 col-form-label">Environment variables:</label>
+                <div class="col-sm-7">
+                    <label style="font-size: 14px;">
+                        <span style="padding-right: 2%">key:</span><input class="variables" type="text"/>
+                        <span style="padding-right: 2%; padding-left: 6%;">value:</span><input class="variables" type="text"/>
+                    </label>
+                </div>
+            </div>
+
         </form>
         <hr/>
         <div class="form-group" style="padding-top: 2%;">
@@ -250,7 +269,6 @@ a {
                 init: true,
                 resourceGroupName: '',
                 subscriptionId: '',
-                region: '',
                 serviceInstanceName: '',
                 javaVersion: '',
                 appInstance: {},
@@ -341,22 +359,23 @@ a {
                     $('.selectpicker').selectpicker('refresh');
                 })
             },
-            changeAppInstance(serviceInstanceName) {
-                // Get ASA region
-                for (const instance of this.serviceInstanceList) {
-                    if (instance.name === serviceInstanceName) {
-                        this.region = instance.region;
-                    }
-                }
-            },
             deployCode() {
                 const bootstrapValidator = $('#setting').data('bootstrapValidator').validate();
                 if (bootstrapValidator.isValid() === false) {
                     return;
                 }
-                this.appInstance.memory = this.appInstance.memory.replace(/\s+/g,"");
+                const tier = this.serviceInstanceList.find(item => item.name === this.serviceInstanceName).sku;
+                if ('StandardGen2' === tier || 'Basic' === tier) {
+                    toast.info('Azure Spring Apps tier Basic and Standard consumption & dedicated (preview) are not supported.', {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
+                    return;
+                }
+                this.appInstance.memory = this.appInstance.memory.replace(/\s+/g, "");
                 const appDetails = '&cpu=' + this.appInstance.cpu + '&memory=' + this.appInstance.memory + '&instanceCount=' + this.appInstance.instanceCount;
-                const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceInstanceName + '&javaVersion=' + this.appInstance.runtimePlatform + '&appName=' + this.appInstance.name + '&region=' + this.region + '&branchName=' + this.branch + '&module=' + this.module;
+                const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceInstanceName + '&javaVersion=' + this.appInstance.runtimePlatform + '&appName=' + this.appInstance.name + '&branchName=' + this.branch + '&module=' + this.module;
                 location.assign('/progress.html?' + url + appDetails);
             },
             validatorForm() {
