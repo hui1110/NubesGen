@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
 
-public class ResourceManagerUtils {
+public class AzureResourceManagerUtils {
 
     public static AzureResourceManager getResourceManager(String token) {
         final AzureProfile profile = new AzureProfile(AzureEnvironment.AZURE);
