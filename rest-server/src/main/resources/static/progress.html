@@ -154,6 +154,40 @@ a{
             <button class="btn btn-primary btn-sm" style="width: 45%;margin-right: 3%;" @click="viewEndpoint()">View the app (Public URL)<i class="bi bi-box-arrow-up-right" style="margin-left: 2%;"></i></button>
             <button class="btn btn-secondary btn-sm"  style="width: 45%" @click="viewOnPortal()">Manage your app on Azure Spring Apps  <i class="bi bi-box-arrow-up-right" style="margin-left: 2%;"></i></button>
         </div>
+
+        <div class="modal" tabindex="-1" id="progress-modal" data-backdrop="static">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+              <div class="modal-content">
+                <div class="modal-body">
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                  <p>Modal body text goes here.</p>
+                </div>
+              </div>
+            </div>
+          </div>
     </div>
 </div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
@@ -247,6 +281,10 @@ a{
             },
             checkAppExist(){
                 this.expandCollapse(this.stages[0].key, this.stages[0].id);
+
+                $('#progress-modal').modal('show');
+                // $('#progress-modal').modal('hide');
+
                 this.stages[0].description = 'Check whether app ' + this.appName + ' exists in ' + this.serviceName + '...';
                 axios.get('/checkAppExist/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
                     .then(res => {
