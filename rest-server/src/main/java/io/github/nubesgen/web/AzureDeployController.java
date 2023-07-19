@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @RestController
 public class AzureDeployController {
@@ -146,7 +145,7 @@ public class AzureDeployController {
     @GetMapping("/deploy")
     public @ResponseBody ResponseEntity<?> deployGithubRepoSourceCodeToASA(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String module, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam String javaVersion, @RequestParam String relativePath) {
         try {
-            azureDeployService.deploySourceCodeToSpringApps(management, subscriptionId, resourceGroupName,
+            azureDeployService.buildAndDeploySourceCodeStandard(management, subscriptionId, resourceGroupName,
                     serviceName, appName, module, javaVersion, relativePath);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
@@ -154,12 +153,13 @@ public class AzureDeployController {
         }
     }
 
-    @GetMapping("/getBuildLogs/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
-    public @ResponseBody ResponseEntity<?> getBuildLogs(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
+    @GetMapping("/getBuildLogs")
+    public @ResponseBody ResponseEntity<?> getBuildLogs(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam String stage) {
         try {
-            String buildLogs = azureDeployService.getBuildLogs(management, subscriptionId, resourceGroupName, serviceName, appName);
+            String buildLogs = azureDeployService.getBuildLogs(management, subscriptionId, resourceGroupName, serviceName, appName, stage);
             return new ResponseEntity<>(buildLogs, HttpStatus.OK);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -193,6 +193,38 @@ public class AzureDeployController {
         }
     }
 
+    @GetMapping("/enqueueBuildEnterprise")
+    public @ResponseBody ResponseEntity<?> enqueueBuildEnterprise(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam String relativePath, @RequestParam String region, @RequestParam String javaVersion, @RequestParam String module) {
+        try {
+            String res = azureDeployService.enqueueBuildEnterprise(management, subscriptionId, resourceGroupName, serviceName, appName, relativePath, region, javaVersion, module);
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/buildSourceEnterprise")
+    public @ResponseBody ResponseEntity<?> buildSourceEnterprise(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam String buildId) {
+        try {
+            String res = azureDeployService.buildSourceEnterprise(management, subscriptionId, resourceGroupName, serviceName, appName, buildId);
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/deployAppEnterprise")
+    public @ResponseBody ResponseEntity<?> deployAppEnterprise(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam String buildId){
+        try {
+            azureDeployService.deploySourceCodeEnterprise(management, subscriptionId, resourceGroupName, serviceName, appName, buildId);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @GetMapping("/deleteApp/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
     public @ResponseBody ResponseEntity<?> deleteApp(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName){
         try {
@@ -206,17 +238,6 @@ public class AzureDeployController {
     @GetMapping("/getRegionList")
     public List<RegionInstance> getRegionList() {
         return azureDeployService.getRegionList();
-    }
-
-    @GetMapping("/createEnterpriseApp/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
-    public @ResponseBody ResponseEntity<?> createEnterpriseApp(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
-        try {
-            azureDeployService.createEnterpriseApp(management, subscriptionId, resourceGroupName, serviceName, appName);
-            return new ResponseEntity<>(HttpStatus.OK);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 
 }

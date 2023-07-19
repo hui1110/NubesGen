@@ -15,12 +15,14 @@
           integrity="sha512-Mqfoc3Z3HrXDAkb9KWQklaedI9QNM01mqRaruK/LWtT3JU6BuxnbHg0MTqowzr2P8/Xdd0ITR0po3A4R5T0h2w=="
     crossorigin="anonymous" referrerpolicy="no-referrer"/>
     <link href="https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/dist/index.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
 </head>
 <style>
 #app {
-    background-color: #005fff;
+    background-image: linear-gradient(rgb(0,121, 212), rgb(60,42, 168));
     padding-bottom: 30px;
+    height: 100vh;
 }
 label {
     display: block;
@@ -33,14 +35,16 @@ img {
     width: 10%;
     vertical-align: middle;
 }
-a {
-    color: black;
+a,a:link,a:visited,a:hover,a:active{
+    text-decoration: none;
+    color:inherit;
 }
 .deployment {
     width: 75%;
-    margin: 3% auto 10px;
+    margin: 4% auto;
     padding: 30px;
     background-color: white;
+    border-radius: 8px;
 }
 .form-control {
     font-size: 14px;
@@ -103,10 +107,6 @@ a {
     background-color: transparent;
     border-color: #dae0e5;
 }
-.Toastify__toast-container {
-    width: 40%;
-    font-size: 14px;
-}
 .variables{
     width: 40%;
     border: 1px solid #ced4da;
@@ -118,7 +118,16 @@ a {
     <div class="title">
         <img src="img/nubesgen-logo.svg" alt="NubesGen logo">
         <label class="launcher">Azure Spring Apps Web Launcher</label>
-        <label class="back">Back to <a href="/">NubesGen.com</a></label>
+        <label class="back"><a href="/">Back to NubesGen.com
+            <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px"
+                 viewBox="0 0 100 100" width="15" height="15" class="icon outbound">
+                <path fill="currentColor"
+                      d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path>
+                <polygon fill="currentColor"
+                         points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon>
+            </svg>
+        </a>
+        </label>
     </div>
     <div class="deployment">
         <form id="setting" class="select-container">
@@ -227,20 +236,20 @@ a {
                 </div>
             </div>
 
-            <div class="mb-3 row">
-                <label class="col-sm-4 col-form-label">Environment variables:</label>
-                <div class="col-sm-7">
-                    <label style="font-size: 14px;">
-                        <span style="padding-right: 2%">key:</span><input class="variables" type="text"/>
-                        <span style="padding-right: 2%; padding-left: 6%;">value:</span><input class="variables" type="text"/>
-                    </label>
-                </div>
-            </div>
+<!--            <div class="mb-3 row">-->
+<!--                <label class="col-sm-4 col-form-label">Environment variables:</label>-->
+<!--                <div class="col-sm-7">-->
+<!--                    <label style="font-size: 14px;">-->
+<!--                        <span style="padding-right: 2%">key:</span><input class="variables" type="text"/>-->
+<!--                        <span style="padding-right: 2%; padding-left: 6%;">value:</span><input class="variables" type="text"/>-->
+<!--                    </label>-->
+<!--                </div>-->
+<!--            </div>-->
 
         </form>
         <hr/>
         <div class="form-group" style="padding-top: 2%;">
-            <button class="btn btn-primary btn-sm btn-block" :disabled="init" @click="deployCode()">Deploy</button>
+            <button class="btn btn-primary btn-sm btn-block" :disabled="init" @click="deployCode()" style="background-color: rgb(0,121, 212)">Deploy</button>
         </div>
     </div>
 </div>
@@ -275,6 +284,10 @@ a {
                 subscriptionList: [],
                 serviceInstanceList: [],
                 resourceGroupList: [],
+                variables: [
+                    {'spring.data.url': '1000'},
+                    {'spring.data.password': 'asfd01'}
+                ],
                 vCPUList: [0.5, 1, 2, 3, 4],
                 memoryList: ['512 Mi', '1 Gi', '2 Gi', '3 Gi', '4 Gi', '5 Gi', '6 Gi', '7 Gi', '8 Gi'],
             }
@@ -373,8 +386,9 @@ a {
                     });
                     return;
                 }
+                const region = this.serviceInstanceList.find(item => item.name === this.serviceInstanceName).region;
                 this.appInstance.memory = this.appInstance.memory.replace(/\s+/g, "");
-                const appDetails = '&cpu=' + this.appInstance.cpu + '&memory=' + this.appInstance.memory + '&instanceCount=' + this.appInstance.instanceCount;
+                const appDetails = '&cpu=' + this.appInstance.cpu + '&memory=' + this.appInstance.memory + '&instanceCount=' + this.appInstance.instanceCount + '&tier=' + tier + '&region=' + region + '&variables=' + encodeURIComponent(JSON.stringify(this.variables));
                 const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceInstanceName + '&javaVersion=' + this.appInstance.runtimePlatform + '&appName=' + this.appInstance.name + '&branchName=' + this.branch + '&module=' + this.module;
                 location.assign('/progress.html?' + url + appDetails);
             },

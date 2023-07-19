@@ -17,21 +17,24 @@
 </head>
 <style>
 #app {
-    background-color: #005fff;
-    padding-bottom: 30px;
+    background-image: linear-gradient(rgb(0,121, 212), rgb(60,42, 168));
+    height: 100vh;
+}
+label {
+    display: block;
+    vertical-align: middle;
 }
 img {
     width: 10%;
     vertical-align: middle;
-    margin-top: -1%;
 }
-a{
-    color: black;
+a,a:link,a:visited,a:hover,a:active{
+    text-decoration: none;
+    color:inherit;
 }
 .loading {
     width: 75%;
     margin: 4% auto 4%;
-    background-color: white;
 }
 .icon-loading::before {
     color: white;
@@ -96,17 +99,12 @@ a{
 .back {
     font-weight: 650;
     float: right;
-    padding-right: 10px;
     margin-top: 1.5%;
 }
 .point{
     padding-left: 5%;
     padding-top: 2%;
-    padding-bottom: 2%;
-}
-.Toastify__toast-container {
-    width: 40%;
-    font-size: 14px;
+    padding-bottom: 1%;
 }
 </style>
 <body>
@@ -114,10 +112,19 @@ a{
     <div class="title">
         <img src="img/nubesgen-logo.svg" alt="NubesGen logo">
         <label class="launcher">Azure Spring Apps Web Launcher</label>
-        <label class="back">Back to <a href="/">NubesGen.com</a></label>
+        <label class="back"><a href="/">Back to NubesGen.com
+            <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px"
+                 viewBox="0 0 100 100" width="15" height="15" class="icon outbound">
+                <path fill="currentColor"
+                      d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path>
+                <polygon fill="currentColor"
+                         points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon>
+            </svg>
+        </a>
+        </label>
     </div>
     <div class="loading">
-        <div class="card border-light">
+        <div class="card border-light" style="border-radius: 8px;">
             <div class="card-body">
                 <h6>{{deploymentProgress}}</h6>
                 <span style="font-size: 14px;">{{deploymentResult}}</span>
@@ -149,10 +156,10 @@ a{
                     </li>
                 </ul>
             </div>
-        </div>
-        <div class="form-group point" v-show="showView === true">
-            <button class="btn btn-primary btn-sm" style="width: 45%;margin-right: 3%;" @click="viewEndpoint()">View the app (Public URL)<i class="bi bi-box-arrow-up-right" style="margin-left: 2%;"></i></button>
-            <button class="btn btn-secondary btn-sm"  style="width: 45%" @click="viewOnPortal()">Manage your app on Azure Spring Apps  <i class="bi bi-box-arrow-up-right" style="margin-left: 2%;"></i></button>
+            <div class="form-group point" v-show="showView === true">
+                <button class="btn btn-primary btn-sm" style="width: 45%;margin-right: 3%;" @click="viewEndpoint()">View the app (Public URL)<i class="bi bi-box-arrow-up-right" style="margin-left: 2%;"></i></button>
+                <button class="btn btn-secondary btn-sm"  style="width: 45%" @click="viewOnPortal()">Manage your app on Azure Spring Apps  <i class="bi bi-box-arrow-up-right" style="margin-left: 2%;"></i></button>
+            </div>
         </div>
     </div>
 </div>
@@ -183,15 +190,17 @@ a{
                 cpu: new URLSearchParams(location.search).get('cpu'),
                 memory: new URLSearchParams(location.search).get('memory'),
                 instanceCount: new URLSearchParams(location.search).get('instanceCount'),
-                params: new URLSearchParams(location.search).get('params'),
+                tier: new URLSearchParams(location.search).get('tier'),
+                region: new URLSearchParams(location.search).get('region'),
+                variables: new URLSearchParams(location.search).get('variables'),
                 deploymentProgress: 'Your deployment is in progress...',
                 deploymentResult: 'This operation may take a while.',
                 showView: false,
                 result: '',
                 relativePath: '',
                 uploadUrl: '',
-                buildSourceLog: '',
-                variables: {},
+                buildSourceLogStandard: '',
+                buildSourceLogEnterprise: '',
                 stages: [
                     {
                         key: 'provision',
@@ -233,6 +242,8 @@ a{
                     escapeXML: false, // default value
                     stream: false // default value
                 }),
+                enterpriseStages: ['prepare', 'analyze', 'detect', 'restore', 'build', 'export', 'completion'],
+                enterpriseStagesIndex: 0,
             }
         },
         methods: {
@@ -339,7 +350,12 @@ a{
                             log.innerHTML = uploadUrlLog + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Upload file successfully.' + '</p>';
                             this.handleProgress(1, 'Upload source code is complete.', 'success');
                             this.handleProgress(2, 'Building source in app ' + this.appName + '...', 'loading');
-                            this.deploySourceCode();
+                            if(this.tier === 'Standard'){
+                                this.deploySourceCode();
+                            }else {
+                                this.enqueueBuildForEnterpriseTier();
+                            }
+
                         }
                     }).catch(error => {
                     log.innerHTML = uploadUrlLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Upload file failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
@@ -348,6 +364,7 @@ a{
                 })
             },
             deploySourceCode() {
+                this.expandCollapse(this.stages[2].key, this.stages[2].id);
                 axios.get('/deploy' + '?module=' + this.module + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceName + '&appName=' + this.appName + '&javaVersion=' + this.javaVersion + '&relativePath=' + this.relativePath)
                     .then(res=> {
                         if(res.status){
@@ -360,20 +377,19 @@ a{
                 }).finally(() => {
                     this.getBuildSourceResult();
                 })
-                this.getBuildLogs();
+                this.getBuildLogStandard();
             },
-            getBuildLogs() {
-                this.expandCollapse(this.stages[2].key, this.stages[2].id);
-                axios.get('/getBuildLogs/' + this.subscriptionId + '/' + this.resourceGroupName + '/' + this.serviceName + '/' + this.appName)
+            getBuildLogStandard() {
+                axios.get('/getBuildLogs?' + 'subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceName + '&appName=' + this.appName + '&stage=' + '')
                     .then(res => {
                         if (res.status === 200 && this.stages[2].status === 'loading' && this.result === '') {
                             this.logScrollButtom(this.stages[2].id, res.data);
-                            this.getBuildLogs();
+                            this.getBuildLogStandard();
                         }
-                        this.buildSourceLog = res.data;
+                        this.buildSourceLogStandard = res.data;
                     }).catch(error => {
                     this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
-                    this.logScrollButtom(this.stages[2].id, this.buildSourceLog + '\n' + error.response.data);
+                    this.logScrollButtom(this.stages[2].id, this.buildSourceLogStandard + '\n' + error.response.data);
                     this.deleteApp();
                 })
             },
@@ -394,7 +410,7 @@ a{
                         }
                     }).catch(error => {
                     this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
-                    this.logScrollButtom(this.stages[2].id, this.buildSourceLog + '\n' + error.response.data);
+                    this.logScrollButtom(this.stages[2].id, this.buildSourceLogStandard + '\n' + error.response.data);
                     this.deleteApp();
                 })
             },
@@ -419,10 +435,71 @@ a{
                         this.logScrollButtom(this.stages[3].id, res.data);
                         this.highlightLog(this.stages[3].id);
                     }).catch(error => {
-                    console.log(error);
                     this.stages[3].log = error.response.data;
                     this.handleError(3, 'Your deployment of app ' + this.appName + ' failed.', 'Deploy failed !');
                     this.deleteApp();
+                })
+            },
+            enqueueBuildForEnterpriseTier(){
+                this.expandCollapse(this.stages[2].key, this.stages[2].id);
+                const javaVersion = this.javaVersion.substring(this.javaVersion.indexOf("_") + 1);
+                axios.get('/enqueueBuildEnterprise' + '?region=' + this.region + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceName + '&appName=' + this.appName + '&relativePath=' + this.relativePath + '&javaVersion=' + javaVersion + '&module=' + this.module)
+                    .then(res=> {
+                        if(res.status === 200){
+                            this.buildSourceCodeForEnterpriseTier(res.data);
+                        }
+                    }).catch(error => {
+                    this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
+                    this.logScrollButtom(this.stages[2].id, error.response.data);
+                    this.deleteApp();
+                })
+            },
+            buildSourceCodeForEnterpriseTier(buildId){
+                axios.get('/buildSourceEnterprise' + '?subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceName + '&appName=' + this.appName + '&buildId=' + buildId)
+                    .then(res=> {
+                        if(res.data !== 'Failed'){
+                            this.handleProgress(2, 'Build source in app ' + this.appName + ' succeed.', 'success');
+                            this.handleProgress(3, 'Deploying in app ' + this.appName + '...', 'loading');
+                            this.deploySourceCodeForEnterprise(buildId);
+                        }else {
+                            this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
+                            this.logScrollButtom(this.stages[2].id, null);
+                            this.deleteApp();
+                        }
+                    }).catch(error => {
+                    this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
+                    this.logScrollButtom(this.stages[2].id, this.buildSourceLogEnterprise + '\n' + error.response.data);
+                    this.deleteApp();
+                })
+                this.getBuildLogEnterprise();
+            },
+            getBuildLogEnterprise() {
+                if(this.enterpriseStagesIndex > this.enterpriseStages.length - 1){
+                    return;
+                }
+                axios.get('/getBuildLogs?' + 'subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceName + '&appName=' + this.appName + '&stage=' + this.enterpriseStages[this.enterpriseStagesIndex])
+                    .then(res => {
+                        if(res.data !== 'Queuing'){
+                            this.buildSourceLogEnterprise += res.data;
+                            this.enterpriseStagesIndex++;
+                            this.logScrollButtom(this.stages[2].id, this.buildSourceLogEnterprise);
+                        }
+                        this.getBuildLogEnterprise();
+                    }).catch(error => {
+                    this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
+                    this.logScrollButtom(this.stages[2].id, this.buildSourceLogEnterprise + '\n' + error.response.data);
+                    this.deleteApp();
+                })
+            },
+            deploySourceCodeForEnterprise(buildId){
+                this.expandCollapse(this.stages[3].key, this.stages[3].id);
+                axios.get('/deployAppEnterprise' + '?buildId=' + buildId + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceName + '&appName=' + this.appName)
+                    .then(()=> {
+
+                    }).catch(error => {
+                    console.log(error);
+                }).finally(() => {
+                    this.getDeployResult();
                 })
             },
             deleteApp(){
@@ -496,6 +573,7 @@ a{
             stringify: JSON.stringify,
         },
         mounted() {
+            console.log(this.variables)
             this.checkAppExist();
             $('.collapse').on('shown.bs.collapse', function (evt) {
                 evt.currentTarget.parentElement.scrollIntoView();
