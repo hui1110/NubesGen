@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<head>
+    <title>方法一 依靠正则表达式修改</title>
+</head>
+<body>
+<pre id="pre-deployment" style="background-color: #f8f9fa">BUILD_IN_EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=https://yonghui-deploy-dev-apps.svc.azuremicroservices.io/eureka/eureka<br>BUILD_IN_SPRING_CLOUD_CONFIG_URI=https://yonghui-deploy-dev-apps.svc.azuremicroservices.io/config<br>BUILD_IN_SPRING_CLOUD_CONFIG_FAILFAST=true<br>Setting Active Processor Count to 4<br>Adding $JAVA_OPTS to $JAVA_TOOL_OPTIONS<br>Calculated JVM Memory Configuration: -XX:MaxDirectMemorySize=10M -Xmx1649155K -XX:MaxMetaspaceSize=140796K -XX:ReservedCodeCacheSize=240M -Xss1M (Total Memory: 2G, Thread Count: 50, Loaded Class Count: 22444, Headroom: 0%)<br>Enabling Java Native Memory Tracking<br>Adding 137 container CA certificates to JVM truststore<br>Spring Cloud Bindings Enabled<br>Picked up JAVA_TOOL_OPTIONS: -Djava.security.properties=/layers/paketo-buildpacks_microsoft-openjdk/java-security-properties/java-security.properties -XX:+ExitOnOutOfMemoryError -XX:ActiveProcessorCount=4 -javaagent:/app-insights/agents/applicationinsights-agent.jar -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0  -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.local.only=true -Dmanagement.endpoints.jmx.exposure.include=health,metrics -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dspring.jmx.enabled=true -Dserver.tomcat.mbeanregistry.enabled=true -Dfile.encoding=UTF8 -Deureka.client.service-url.defaultZone=https://yonghui-deploy-dev-apps.svc.azuremicroservices.io/eureka/eureka -DCONFIG_SERVER_URL=https://yonghui-deploy-dev-apps.svc.azuremicroservices.io/config -Dspring.cloud.config.uri=https://yonghui-deploy-dev-apps.svc.azuremicroservices.io/config -Dspring.cloud.config.fail-fast=true -XX:MaxDirectMemorySize=10M -Xmx1649155K -XX:MaxMetaspaceSize=140796K -XX:ReservedCodeCacheSize=240M -Xss1M -XX:+UnlockDiagnosticVMOptions -XX:NativeMemoryTracking=summary -XX:+PrintNMTStatistics -Dorg.springframework.cloud.bindings.boot.enable=true<br>OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended<br>2023-07-10 02:56:32.623Z INFO  c.m.applicationinsights.agent - Application Insights Java Agent 3.4.11 started successfully (PID 1, JVM running for 7.134 s)<br>2023-07-10 02:56:32.635Z INFO  c.m.applicationinsights.agent - Java version: 17.0.5, vendor: Microsoft, home: /layers/paketo-buildpacks_microsoft-openjdk/jdk<br><br>  .   ____          _            __ _ _<br> /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \<br>( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \<br> \\/  ___)| |_)| | | | | || (_| |  ) ) ) )<br>  '  |____| .__|_| |_|_| |_\__, | / / / /<br> =========|_|==============|___/=/_/_/_/<br> :: Spring Boot ::                (v3.0.4)<br><br>2023-07-10T02:56:37.617Z  INFO 1 --- [           main] s.ASAComponentSpringBootAdminApplication : Starting ASAComponentSpringBootAdminApplication v0.0.1-SNAPSHOT using Java 17.0.5 with PID 1 (/workspace/BOOT-INF/classes started by cnb in /workspace)<br>2023-07-10T02:56:37.709Z  INFO 1 --- [           main] s.ASAComponentSpringBootAdminApplication : No active profile set, falling back to 1 default profile: "default"<br>2023-07-10T02:56:46.418Z  WARN 1 --- [           main] ion$DefaultTemplateResolverConfiguration : Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)<br>2023-07-10T02:56:47.324Z  INFO 1 --- [           main] i.m.c.instrument.push.PushMeterRegistry  : publishing metrics for AzureMonitorMeterRegistry every 1m<br>2023-07-10T02:56:47.417Z  INFO 1 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint(s) beneath base path '/actuator'<br>2023-07-10T02:56:50.239Z  INFO 1 --- [           main] o.s.b.web.embedded.netty.NettyWebServer  : Netty started on port 1025<br>2023-07-10T02:56:50.332Z  INFO 1 --- [           main] s.ASAComponentSpringBootAdminApplication : Started ASAComponentSpringBootAdminApplication in 14.995 seconds (process running for 24.843)<br></pre>
+
+<script>
+
+
+    function  light (id) {
+        var oDiv = document.getElementById(id),
+            sText = oDiv.innerHTML.replace(/(\d+)/img, "<span style='color:blue;'>$&</span>");
+
+        if (sText.indexOf('INFO') !== -1) {
+            sText = sText.replaceAll('INFO', "<span style='color: #27AE60'>" + 'INFO' + '</span>');
+        }
+
+        if (sText.indexOf('ERROR') !== -1){
+            sText = sText.replaceAll('ERROR', "<span style='color: #E74C3C'>" + 'ERROR' + '</span>');
+        }
+
+        if (sText.indexOf('DEBUG') !== -1){
+            sText = sText.replaceAll('DEBUG', "<span style='color: #F4D03F'>" + 'DEBUG' + '</span>');
+        }
+
+        if (sText.indexOf('WARN') !== -1){
+            sText = sText.replaceAll('WARN', "<span style='color: #F4D03F'>" + 'WARN' + '</span>');
+        }
+
+        oDiv.innerHTML = sText;
+    }
+
+    light('pre-deployment');
+
+</script>
+
+
+</body>
+</html>
