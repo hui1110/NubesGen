@@ -13,32 +13,38 @@
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.3/css/bootstrapValidator.min.css"
           integrity="sha512-Mqfoc3Z3HrXDAkb9KWQklaedI9QNM01mqRaruK/LWtT3JU6BuxnbHg0MTqowzr2P8/Xdd0ITR0po3A4R5T0h2w=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"/>
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
     <link href="https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/dist/index.css" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
 </head>
 <style>
 #app {
-    background-image: linear-gradient(rgb(0,121, 212), rgb(60,42, 168));
+    background-image: linear-gradient(rgb(0, 121, 212), rgb(60, 42, 168));
     padding-bottom: 30px;
     height: 100vh;
 }
+
 label {
     display: block;
     vertical-align: middle;
 }
+
 svg {
     display: inline-block
 }
+
 img {
     width: 10%;
     vertical-align: middle;
 }
-a,a:link,a:visited,a:hover,a:active{
+
+a, a:link, a:visited, a:hover, a:active {
     text-decoration: none;
-    color:inherit;
+    color: inherit;
 }
+
 .deployment {
     width: 75%;
     margin: 4% auto;
@@ -46,68 +52,98 @@ a,a:link,a:visited,a:hover,a:active{
     background-color: white;
     border-radius: 8px;
 }
+
 .form-control {
     font-size: 14px;
 }
+
 .form-control[readonly] {
     background-color: white;
 }
+
 .filter-option-inner-inner {
     font-size: 14px;
 }
+
 .bs-placeholder {
     background-color: #fff;
     border: 1px solid #ced4da;
 }
+
 .col-sm-4 {
     font-size: 0.875rem;
     font-weight: 500;
 }
+
 .row {
     padding-bottom: 1%;
     padding-left: 3%;
 }
+
+.dropdown-menu {
+    font-size: 14px;
+}
+
+.btn-link {
+    font-size: 14px;
+    padding-left: 0;
+    padding-top: 0;
+}
+
+.form-control-sm {
+    height: calc(1em + 0.5rem + 1px);
+    padding: 0.25rem 0.5rem 0.5rem;
+}
+
 .required {
     color: red;
     display: inline-block;
     margin-right: 10px;
     margin-left: 5px;
 }
+
 .title {
     padding: 0.5%;
     background-color: white;
 }
+
 .launcher {
     font-weight: 750;
     display: inline-block;
     margin-left: 20px;
     margin-top: 1.5%;
 }
+
 .back {
     font-weight: 650;
     float: right;
     padding-right: 10px;
     margin-top: 1.5%;
 }
+
 .select-container .btn-light:not(:disabled):not(.disabled).active,
 .select-container .btn-light:not(:disabled):not(.disabled):active,
-.select-container .show>.btn-light.dropdown-toggle {
+.select-container .show > .btn-light.dropdown-toggle {
     background-color: transparent;
 }
+
 .select-container .bootstrap-select .dropdown-toggle:focus,
-.select-container .bootstrap-select>select.mobile-device:focus+.dropdown-toggle {
+.select-container .bootstrap-select > select.mobile-device:focus + .dropdown-toggle {
     outline: none !important;
     background-color: transparent;
 }
+
 .select-container .btn-light:hover {
     color: #212529;
     background-color: transparent;
 }
+
 .select-container .btn-light {
     background-color: transparent;
     border-color: #dae0e5;
 }
-.variables{
+
+.variables {
     width: 40%;
     border: 1px solid #ced4da;
     border-radius: 0.25rem;
@@ -215,7 +251,7 @@ a,a:link,a:visited,a:hover,a:active{
                 </div>
             </div>
             <div class="mb-3 row">
-                <label class="col-sm-4 col-form-label">App name:<span class="required"> * </span>
+                <label for="appName" class="col-sm-4 col-form-label">App name<span class="required"> * </span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="14"
                          height="14"
                          fill="currentColor"
@@ -236,20 +272,39 @@ a,a:link,a:visited,a:hover,a:active{
                 </div>
             </div>
 
-<!--            <div class="mb-3 row">-->
-<!--                <label class="col-sm-4 col-form-label">Environment variables:</label>-->
-<!--                <div class="col-sm-7">-->
-<!--                    <label style="font-size: 14px;">-->
-<!--                        <span style="padding-right: 2%">key:</span><input class="variables" type="text"/>-->
-<!--                        <span style="padding-right: 2%; padding-left: 6%;">value:</span><input class="variables" type="text"/>-->
-<!--                    </label>-->
-<!--                </div>-->
-<!--            </div>-->
-
+            <div class="mb-3 row">
+                <label class="col-sm-4 col-form-label">Environment variables</label>
+                <div class="col-sm-7">
+                    <button type="button" class="btn btn-link" @click.prevent="addItem">
+                        <i class="bi bi-plus-lg" style="margin-right: 5px;"></i>Add
+                    </button>
+                    <div class="form-row" v-for="(variable, index) in variables" :key="index"
+                         style="font-size: 14px; padding-bottom: 1%;">
+                        <div class="col-first d-flex align-items-center">
+                            key:
+                        </div>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control form-control-sm" title="Key" v-model="variable.key"/>
+                        </div>
+                        <div class="col-first d-flex align-items-center">
+                            value:
+                        </div>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control form-control-sm" title="Value"
+                                   v-model="variable.value"/>
+                        </div>
+                        <div class="col-first d-flex align-items-center">
+                            <i class="bi bi-trash3" @click.prevent="deleteItem(index)"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </form>
         <hr/>
         <div class="form-group" style="padding-top: 2%;">
-            <button class="btn btn-primary btn-sm btn-block" :disabled="init" @click="deployCode()" style="background-color: rgb(0,121, 212)">Deploy</button>
+            <button class="btn btn-primary btn-sm btn-block" :disabled="init" @click="deployCode()"
+                    style="background-color: rgb(0,121, 212)">Deploy
+            </button>
         </div>
     </div>
 </div>
@@ -269,6 +324,7 @@ a,a:link,a:visited,a:hover,a:active{
 </body>
 <script type="module">
     import {toast} from 'https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/+esm';
+
     const app = Vue.createApp({
         data() {
             return {
@@ -284,18 +340,26 @@ a,a:link,a:visited,a:hover,a:active{
                 subscriptionList: [],
                 serviceInstanceList: [],
                 resourceGroupList: [],
-                variables: [
-                    {'spring.data.url': '1000'},
-                    {'spring.data.password': 'asfd01'}
-                ],
+                variables: [],
                 vCPUList: [0.5, 1, 2, 3, 4],
                 memoryList: ['512 Mi', '1 Gi', '2 Gi', '3 Gi', '4 Gi', '5 Gi', '6 Gi', '7 Gi', '8 Gi'],
             }
         },
         methods: {
+            addItem() {
+                this.variables.push({key: '', value: ''});
+            },
+            deleteItem(index) {
+                this.variables.splice(index, 1);
+            },
             getAppNameAndJavaVersion() {
-                axios.get('/getAppNameAndJavaVersion' + '?url=' + this.url + '&branchName=' + this.branch + '&module=' + this.module)
-                    .then(res => {
+                axios.get('/getAppNameAndJavaVersion', {
+                    params: {
+                        'url': this.url,
+                        'branchName': this.branch,
+                        'module': this.module
+                    }
+                }).then(res => {
                         this.appInstance.runtimePlatform = res.data.version;
                         this.appInstance.name = res.data.name;
                         this.init = false;
@@ -330,8 +394,12 @@ a,a:link,a:visited,a:hover,a:active{
             },
             getResourceGroupListBySubscriptionId(subscriptionId) {
                 this.resourceGroupList = [];
-                axios.get('/getResourceGroupList/' + subscriptionId)
-                    .then(res => {
+                axios.get('/getResourceGroupList',
+                    {
+                        params: {
+                            'subscriptionId': subscriptionId
+                        }
+                    }).then(res => {
                         this.resourceGroupList = res.data;
                         if (this.resourceGroupList.length === 0) {
                             toast.info('Not found Resource group', {
@@ -352,17 +420,22 @@ a,a:link,a:visited,a:hover,a:active{
             },
             getServiceInstanceByResourceGroupName(resourceGroupName) {
                 this.serviceInstanceList = [];
-                axios.get('/getServiceInstanceList/' + this.subscriptionId + '/' + resourceGroupName)
-                    .then(res => {
-                        this.serviceInstanceList = res.data;
-                        if (this.serviceInstanceList.length === 0) {
-                            toast.info('Not found Service Instance', {
-                                position: toast.POSITION.TOP_CENTER,
-                                autoClose: 2000,
-                                hideProgressBar: true
-                            });
+                axios.get('/getServiceInstanceList',
+                    {
+                        params: {
+                            'subscriptionId': this.subscriptionId,
+                            'resourceGroupName': resourceGroupName,
                         }
-                    }).catch(error => {
+                    }).then(res => {
+                    this.serviceInstanceList = res.data;
+                    if (this.serviceInstanceList.length === 0) {
+                        toast.info('Not found Service Instance', {
+                            position: toast.POSITION.TOP_CENTER,
+                            autoClose: 2000,
+                            hideProgressBar: true
+                        });
+                    }
+                }).catch(error => {
                     toast.error(error.response.data, {
                         position: toast.POSITION.TOP_CENTER,
                         autoClose: 5000,
@@ -379,16 +452,26 @@ a,a:link,a:visited,a:hover,a:active{
                 }
                 const tier = this.serviceInstanceList.find(item => item.name === this.serviceInstanceName).sku;
                 if ('StandardGen2' === tier || 'Basic' === tier) {
-                    toast.info("Azure Spring Apps tier 'Basic' and 'Standard consumption & dedicated (preview)' are not supported.", {
+                    toast.warning("Azure Spring Apps tier 'Basic' and 'Standard consumption & dedicated (preview)' are not supported.", {
                         position: toast.POSITION.TOP_CENTER,
-                        autoClose: 5000,
+                        autoClose: 6000,
                         hideProgressBar: true
                     });
                     return;
                 }
+                let variablesObj = {};
+                if (this.variables.length > 0) {
+                    for (let i = 0; i < this.variables.length; i++) {
+                        if (this.variables[i].key !== '' && this.variables[i].value !== '') {
+                            variablesObj[this.variables[i].key] = this.variables[i].value;
+                        }
+                    }
+
+                }
+
                 const region = this.serviceInstanceList.find(item => item.name === this.serviceInstanceName).region;
                 this.appInstance.memory = this.appInstance.memory.replace(/\s+/g, "");
-                const appDetails = '&cpu=' + this.appInstance.cpu + '&memory=' + this.appInstance.memory + '&instanceCount=' + this.appInstance.instanceCount + '&tier=' + tier + '&region=' + region + '&variables=' + encodeURIComponent(JSON.stringify(this.variables));
+                const appDetails = '&cpu=' + this.appInstance.cpu + '&memory=' + this.appInstance.memory + '&instanceCount=' + this.appInstance.instanceCount + '&tier=' + tier + '&region=' + region + '&variables=' + encodeURIComponent(JSON.stringify(variablesObj));
                 const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceInstanceName + '&javaVersion=' + this.appInstance.runtimePlatform + '&appName=' + this.appInstance.name + '&branchName=' + this.branch + '&module=' + this.module;
                 location.assign('/progress.html?' + url + appDetails);
             },
