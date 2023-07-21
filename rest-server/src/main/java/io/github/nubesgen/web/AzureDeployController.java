@@ -35,9 +35,9 @@ public class AzureDeployController {
     }
 
     @GetMapping("/getAppNameAndJavaVersion")
-    public @ResponseBody ResponseEntity<?> getAppNameAndJavaVersion(@RequestParam String url,
-                                                                    @RequestParam String branchName,
-                                                                    @RequestParam String module) {
+    public @ResponseBody ResponseEntity<?> getAppNameAndJavaVersion(@RequestParam() String url,
+                                                                    @RequestParam(required=false) String branchName,
+                                                                    @RequestParam(required=false) String module) {
         try {
             ProjectInstance projectInstance = azureDeployService.getNameAndJavaVersion(url, branchName, module);
             return new ResponseEntity<>(projectInstance, HttpStatus.OK);
@@ -56,8 +56,8 @@ public class AzureDeployController {
         }
     }
 
-    @GetMapping("/getResourceGroupList/{subscriptionId}")
-    public @ResponseBody ResponseEntity<?> getResourceGroupList(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId) {
+    @GetMapping("/getResourceGroupList")
+    public @ResponseBody ResponseEntity<?> getResourceGroupList(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId) {
         try {
             List<ResourceGrooupInstance> resourceGroupInstances = azureDeployService.getResourceGroupList(management,
                 subscriptionId);
@@ -67,8 +67,8 @@ public class AzureDeployController {
         }
     }
 
-    @GetMapping("/getServiceInstanceList/{subscriptionId}/{resourceGroupName}")
-    public @ResponseBody ResponseEntity<?> getServiceInstanceList(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName) {
+    @GetMapping("/getServiceInstanceList")
+    public @ResponseBody ResponseEntity<?> getServiceInstanceList(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName) {
         try {
             List<ServiceInstance> asaInstanceList = azureDeployService.getServiceinstanceList(management, subscriptionId,
                 resourceGroupName);
@@ -78,8 +78,8 @@ public class AzureDeployController {
         }
     }
 
-    @GetMapping("/checkAppExist/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
-    public @ResponseBody ResponseEntity<?> checkAppExist(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName){
+    @GetMapping("/checkAppExist")
+    public @ResponseBody ResponseEntity<?> checkAppExist(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName){
         try {
             boolean res = azureDeployService.checkAppExist(management, subscriptionId, resourceGroupName, serviceName, appName);
             return new ResponseEntity<>(res, HttpStatus.OK);
@@ -88,8 +88,8 @@ public class AzureDeployController {
         }
     }
 
-    @GetMapping("/provisionResource/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
-    public @ResponseBody ResponseEntity<?> provisionResource(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
+    @GetMapping("/provisionResource")
+    public @ResponseBody ResponseEntity<?> provisionResource(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName) {
         try {
             azureDeployService.provisionResource(management, subscriptionId, resourceGroupName, serviceName, appName);
             return new ResponseEntity<>(HttpStatus.OK);
@@ -109,17 +109,16 @@ public class AzureDeployController {
             String memory = String.valueOf(map.get("memory"));
             String instanceCount = String.valueOf(map.get("instanceCount"));
             ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, String> variablesMap = objectMapper.convertValue(map.get("variables"), new TypeReference<>() {});
+            Map<String, String> variablesMap = objectMapper.readValue(map.get("variables").toString(), new TypeReference<>() {});
             azureDeployService.createDeploymentForApp(management, subscriptionId, resourceGroupName, serviceName, appName, cpu, memory, instanceCount, variablesMap);
             return new ResponseEntity<>(HttpStatus.OK);
         }catch (Exception e){
-            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @GetMapping("/getUploadUrl/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
-    public @ResponseBody ResponseEntity<?> getUploadUrl(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName){
+    @GetMapping("/getUploadUrl")
+    public @ResponseBody ResponseEntity<?> getUploadUrl(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName){
         try {
             ResourceUploadDefinition res = azureDeployService.getUploadUrl(management, subscriptionId, resourceGroupName, serviceName, appName);
             return new ResponseEntity<>(res, HttpStatus.OK);
@@ -154,7 +153,7 @@ public class AzureDeployController {
     }
 
     @GetMapping("/getBuildLogs")
-    public @ResponseBody ResponseEntity<?> getBuildLogs(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam String stage) {
+    public @ResponseBody ResponseEntity<?> getBuildLogs(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam(required = false) String stage) {
         try {
             String buildLogs = azureDeployService.getBuildLogs(management, subscriptionId, resourceGroupName, serviceName, appName, stage);
             return new ResponseEntity<>(buildLogs, HttpStatus.OK);
@@ -164,8 +163,8 @@ public class AzureDeployController {
         }
     }
 
-    @GetMapping("/getBuildSourceResult/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
-    public @ResponseBody ResponseEntity<?> getBuildSourceResult(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
+    @GetMapping("/getBuildSourceResult")
+    public @ResponseBody ResponseEntity<?> getBuildSourceResult(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName) {
         try {
             String status = azureDeployService.checkBuildSourceStatus(management, subscriptionId, resourceGroupName, serviceName, appName);
             if ("Failed".equals(status)) {
@@ -178,8 +177,8 @@ public class AzureDeployController {
         }
     }
 
-    @GetMapping("/getDeployResult/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
-    public @ResponseBody ResponseEntity<?> getDeployResult(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName) {
+    @GetMapping("/getDeployResult")
+    public @ResponseBody ResponseEntity<?> getDeployResult(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName) {
         try {
             String status = azureDeployService.checkDeployStatus(management, subscriptionId, resourceGroupName, serviceName, appName);
             String res = azureDeployService.getApplicationLogs(management, subscriptionId, resourceGroupName, serviceName, appName, status);
@@ -225,8 +224,8 @@ public class AzureDeployController {
         }
     }
 
-    @GetMapping("/deleteApp/{subscriptionId}/{resourceGroupName}/{serviceName}/{appName}")
-    public @ResponseBody ResponseEntity<?> deleteApp(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @PathVariable String subscriptionId, @PathVariable String resourceGroupName, @PathVariable String serviceName, @PathVariable String appName){
+    @GetMapping("/deleteApp")
+    public @ResponseBody ResponseEntity<?> deleteApp(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName){
         try {
             azureDeployService.deleteApp(management, subscriptionId, resourceGroupName, serviceName, appName);
             return new ResponseEntity<>(HttpStatus.OK);

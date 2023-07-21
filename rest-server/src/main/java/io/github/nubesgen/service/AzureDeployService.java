@@ -17,6 +17,7 @@ import com.azure.resourcemanager.appplatform.fluent.models.DeploymentResourceInn
 import com.azure.resourcemanager.appplatform.fluent.models.ServiceResourceInner;
 import com.azure.resourcemanager.appplatform.models.AppResourceProperties;
 import com.azure.resourcemanager.appplatform.models.BuildProperties;
+import com.azure.resourcemanager.appplatform.models.BuildProvisioningState;
 import com.azure.resourcemanager.appplatform.models.BuildResultProvisioningState;
 import com.azure.resourcemanager.appplatform.models.BuildResultUserSourceInfo;
 import com.azure.resourcemanager.appplatform.models.BuildServiceAgentPoolProperties;
@@ -236,9 +237,34 @@ public class AzureDeployService {
                                   String serviceName,
                                   String appName) {
         AppPlatformManager appPlatformManager = getAppPlatformManager(management, subscriptionId);
-        String tier = appPlatformManager.springServices().getByResourceGroup(resourceGroupName, serviceName).sku().tier();
+        Region region = Region.US_EAST;
+        String tier = "Standard";
+        try{
+            appPlatformManager.resourceManager().resourceGroups().getByName(resourceGroupName);
+            log.info("Resource group {} already exists.", resourceGroupName);
+        }catch (Exception e) {
+            log.info("Resource group {} does not exist.", resourceGroupName);
+            // provision resource group
+            appPlatformManager.resourceManager().resourceGroups().define(resourceGroupName).withRegion(region).create();
+            log.info("Resource group {} created.", resourceGroupName);
+        }
 
-        if (Objects.equals(tier, "Enterprise")) {
+        try{
+            appPlatformManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
+            log.info("Spring service {} already exists.", serviceName);
+        }catch (Exception e) {
+            log.info("Spring service {} does not exist.", serviceName);
+            // provision spring service
+            ServiceResourceInner serviceResourceInner = new ServiceResourceInner()
+                    .withLocation(region.toString())
+                    .withSku(new Sku().withName(tier.equals("Standard") ? "S0" : "E0")); // S0
+            appPlatformManager.serviceClient().getServices().createOrUpdate(resourceGroupName, serviceName, serviceResourceInner);
+            log.info("Spring service {} created.", serviceName);
+        }
+
+        String serviceTier = appPlatformManager.springServices().getByResourceGroup(resourceGroupName, serviceName).sku().tier();
+
+        if (Objects.equals(serviceTier, "Enterprise")) {
             appPlatformManager.serviceClient().getBuildServiceAgentPools()
                     .updatePut(
                             resourceGroupName,
@@ -546,13 +572,37 @@ public class AzureDeployService {
                 buildLogs = getLogByUrl(springAppDeployment.getLogFileUrl(), null);
             } else {
                 BuildInner buildInner = appPlatformManager.serviceClient().getBuildServices().getBuild(resourceGroupName, serviceName, DEFAULT_DEPLOYMENT_NAME, appName);
-                if(buildInner.properties().provisioningState().toString().equals(BuildResultProvisioningState.QUEUING.toString())) {
-                  return BuildResultProvisioningState.QUEUING.toString();
-                }
                 final String endpoint = springService.apps().getByName(appName).parent().listTestKeys().primaryTestEndpoint();
                 final String logEndpoint = String.format("%s/api/logstream/buildpods/%s.%s-build-%s-build-pod/stages/%s?follow=true", endpoint.replace(".test", ""), DEFAULT_DEPLOYMENT_NAME, appName, ResourceUtils.nameFromResourceId(buildInner.properties().triggeredBuildResult().id()), stage);
                 final String basicAuth = getAuthorizationCode(springService, appName);
                 buildLogs = getLogByUrl(logEndpoint, basicAuth);
+
+                BuildResultInner buildResult = appPlatformManager.serviceClient().getBuildServices()
+                        .getBuildResult(
+                                resourceGroupName,
+                                serviceName,
+                                DEFAULT_DEPLOYMENT_NAME,
+                                appName,
+                                ResourceUtils.nameFromResourceId(buildInner.properties().triggeredBuildResult().id()));
+                BuildResultProvisioningState buildState = buildResult.properties().provisioningState();
+                //              wait for build log
+                while ((buildState == BuildResultProvisioningState.QUEUING || buildState == BuildResultProvisioningState.BUILDING) && (buildLogs == null || buildLogs.isEmpty())){
+                    System.out.println("Waiting for build log...");
+                    System.out.println("buildState: " + buildState);
+                    System.out.println("buildLogs: " + buildLogs);
+                    buildLogs = getLogByUrl(logEndpoint, basicAuth);
+                    buildResult = appPlatformManager.serviceClient().getBuildServices()
+                            .getBuildResult(
+                                    resourceGroupName,
+                                    serviceName,
+                                    DEFAULT_DEPLOYMENT_NAME,
+                                    appName,
+                                    ResourceUtils.nameFromResourceId(buildInner.properties().triggeredBuildResult().id()));
+                    buildState = buildResult.properties().provisioningState();
+                    System.out.println("buildState2: " + buildState);
+                    System.out.println((buildState == BuildResultProvisioningState.QUEUING || buildState == BuildResultProvisioningState.BUILDING) && (buildLogs == null || buildLogs.isEmpty()));
+                    ResourceManagerUtils.sleep(Duration.ofSeconds(2));
+                }
             }
         } catch (Exception e) {
             log.error("Get build log failed, error: " + e.getMessage());
