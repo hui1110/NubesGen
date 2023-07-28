@@ -473,6 +473,16 @@ a, a:link, a:visited, a:hover, a:active {
             openPopover(){
                 console.log('openPopover')
                 $('.popoverTab').popover('show');
+                $('#add-resource-group-popover-confirm').on('click', () => {
+                    const newValue = $('#email').val();
+                    if (newValue) {
+                        //TODO: your logic to submit the new value.
+                        this.closePopover();
+                    }
+                });
+                $('#add-resource-group-popover-cancel').on('click', () => {
+                    this.closePopover();
+                });
             },
             closePopover(){
                 console.log('closePopover')
@@ -700,7 +710,7 @@ a, a:link, a:visited, a:hover, a:active {
                 html: true,
                 sanitize: false,
                 trigger: 'manual',
-                content: '<div id="popover-form" style="font-size: 14px;"><p>A resource group is a container that holds related resource for an Azure solution.</p><div class="form-group"><label>Name<span class="required"> * </span></label><input id="email" type="email" placeholder="Enter resource group name" v-model="newResourceGroupName" class="form-control"/></div><button style="width: 30%;" type="button" class="btn btn-primary btn-sm ok" @click="closePopover()">OK</button><button style="width: 30%;" type="button" class="btn btn-secondary btn-sm cancel">Cancel</button></div>'
+                content: '<div id="popover-form" style="font-size: 14px;"><p>A resource group is a container that holds related resource for an Azure solution.</p><div class="form-group"><label>Name<span class="required"> * </span></label><input id="email" type="email" placeholder="Enter resource group name" v-model="newResourceGroupName" class="form-control"/></div><button style="width: 30%;" type="button" class="btn btn-primary btn-sm ok" id="add-resource-group-popover-confirm">OK</button><button style="width: 30%;" type="button" class="btn btn-secondary btn-sm cancel" id="add-resource-group-popover-cancel">Cancel</button></div>'
             });
         },
     })
