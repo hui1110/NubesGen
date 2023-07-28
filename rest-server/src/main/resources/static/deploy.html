@@ -185,14 +185,6 @@ a, a:link, a:visited, a:hover, a:active {
     </div>
     <div class="deployment">
         <form id="setting" class="select-container">
-            <div class="mb-3 row">
-                <label class="col-sm-4 col-form-label">GitHub repository address</label>
-                <div class="col-sm-7">
-                    <label>
-                        <input type="text" class="form-control" v-model="url" readonly/>
-                    </label>
-                </div>
-            </div>
 
             <div class="mb-3 row">
                 <label class="col-sm-4 col-form-label">Subscription<span
@@ -249,54 +241,67 @@ a, a:link, a:visited, a:hover, a:active {
                                 {{ item.name }}
                             </option>
                         </select>
-                        <button type="button" class="btn btn-link popoverTab" data-toggle="popover" @click="openPopover()">Create new</button>
-                        <span id="resourceGroup_error" style="color: red"></span>
+                        <span style="display: flex;"><button type="button" class="btn btn-link popoverTab" data-toggle="popover" @click="openPopover()">Create new</button></span>
+                        <span id="resourceGroup_error" style="color: red;display: flex;"></span>
                     </label>
                 </div>
             </div>
 
             <div class="mb-3 row" style="font-weight: normal; font-size: 14px;">
-                <label class="col-sm-4 col-form-label">
+                <label class="col-sm-4 col-form-label">Service instance type<span
+                        class="required"> * </span>
                 </label>
                 <div class="col-sm-7">
-                    <div class="form-check form-check-inline">
+                    <div class="form-check" style="padding-bottom: 1%;">
                         <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1"
                                @change="selectServiceInstance(this)" checked>
                         <label class="form-check-label" for="flexRadioDefault1">
-                            Select service instance
+                            Use existing one
                         </label>
                     </div>
-                    <div class="form-check form-check-inline">
+                    <div class="form-check">
                         <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2"
                                @change="newServiceInstance(this)">
                         <label class="form-check-label" for="flexRadioDefault2">
-                            Create new service instance
+                            Create a new one
                         </label>
                     </div>
                 </div>
             </div>
 
-            <div class="mb-3 row" v-show="flag === 'create'">
+            <div class="mb-3 row">
                 <label for="newServiceInstanceName" class="col-sm-4 col-form-label">Service instance<span class="required"> * </span>
                 </label>
                 <div class="col-sm-7">
-                    <label for="newServiceInstanceName">
+                    <label for="newServiceInstanceName" v-show="flag === 'create'">
                         <input type="text" class="form-control" placeholder="Please type service instance name"
                                v-model="newServiceInstanceName" id="newServiceInstanceName" name="newServiceInstanceName"/>
+                    </label>
+                    <label for="serviceInstance" v-show="flag === 'select'">
+                        <select title="Please select service instance" class="form-control selectpicker"
+                                data-live-search="true"
+                                data-placeholder="Please select Service Instance"
+                                v-model="serviceInstanceName" id="serviceInstance"
+                                name="serviceInstance">
+                            <option v-for="item in serviceInstanceList" :key="item.name"
+                                    :value="item.name">
+                                {{ item.name }}
+                            </option>
+                        </select>
                     </label>
                     <span id="newServiceInstanceName_error" style="color: red"></span>
                 </div>
             </div>
 
-            <div class="mb-3 row" v-show="flag === 'create'">
+            <div class="mb-3 row">
                 <label class="col-sm-4 col-form-label">Region<span
                         class="required"> * </span>
                 </label>
                 <div class="col-sm-7">
                     <label for="region">
-                        <select title="Please select region" class="form-control selectpicker"
+                        <select  title="Please select region" class="form-control selectpicker"
                                 data-live-search="true" v-model="region" id="region"
-                                name="region">
+                                name="region" disabled>
                             <option v-for="item in regionList" :value="item.name">
                                 {{item.label}}
                             </option>
@@ -306,21 +311,23 @@ a, a:link, a:visited, a:hover, a:active {
                 </div>
             </div>
 
-            <div class="mb-3 row" style="font-size: 14px;" v-show="flag === 'create'">
+            <div class="mb-3 row" style="font-size: 14px;">
                 <label class="col-sm-4 col-form-label">Hosting options and plans<span
                         class="required"> * </span>
                 </label>
                 <div class="col-sm-7">
                     <div class="form-check" style="margin-bottom: 2%;">
                         <input class="form-check-input" type="radio" name="plan" id="Standard"
-                               @change="getPlanValue('Standard')" checked>
+                               @change="getPlanValue('Standard')" checked :disabled="flag === 'select'">
                         <label class="form-check-label" for="Standard">
-                            Standard
+                            Standard consumption & dedicated - General purpose production workloads
+                            Hybrid plan that offers pay-as-you-go and resource-based pricing in one comprehensive model.
+                            Hosted in Azure Container Apps environments and designed to seamlessly interact with other apps running in the same environment with simplified networking and unified observability.
                         </label>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="plan" id="Enterprise"
-                               @change="getPlanValue('Enterprise')">
+                               @change="getPlanValue('Enterprise')" :disabled="flag === 'select'">
                         <label class="form-check-label" for="Enterprise">
                             Enterprise
                         </label>
@@ -328,23 +335,32 @@ a, a:link, a:visited, a:hover, a:active {
                 </div>
             </div>
 
-            <div class="mb-3 row" v-show="flag === 'select'">
-                <label for="serviceInstance" class="col-sm-4 col-form-label">Service instance<span
-                        class="required"> * </span></label>
+<!--            <div class="mb-3 row" v-show="flag === 'select'">-->
+<!--                <label for="serviceInstance" class="col-sm-4 col-form-label">Service instance<span-->
+<!--                        class="required"> * </span></label>-->
+<!--                <div class="col-sm-7">-->
+<!--                    <label for="serviceInstance">-->
+<!--                    <select title="Please select service instance" class="form-control selectpicker"-->
+<!--                            data-live-search="true"-->
+<!--                            data-placeholder="Please select Service Instance"-->
+<!--                            v-model="serviceInstanceName" id="serviceInstance"-->
+<!--                            name="serviceInstance">-->
+<!--                        <option v-for="item in serviceInstanceList" :key="item.name"-->
+<!--                                :value="item.name">-->
+<!--                            {{ item.name }}-->
+<!--                        </option>-->
+<!--                    </select>-->
+<!--                    </label>-->
+<!--                    <span id="serviceInstance_error" style="color: red"></span>-->
+<!--                </div>-->
+<!--            </div>-->
+
+            <div class="mb-3 row">
+                <label class="col-sm-4 col-form-label">GitHub repository address<span class="required"> * </span></label>
                 <div class="col-sm-7">
-                    <label for="serviceInstance">
-                    <select title="Please select service instance" class="form-control selectpicker"
-                            data-live-search="true"
-                            data-placeholder="Please select Service Instance"
-                            v-model="serviceInstanceName" id="serviceInstance"
-                            name="serviceInstance">
-                        <option v-for="item in serviceInstanceList" :key="item.name"
-                                :value="item.name">
-                            {{ item.name }}
-                        </option>
-                    </select>
+                    <label>
+                        <input type="text" class="form-control" v-model="url" readonly/>
                     </label>
-                    <span id="serviceInstance_error" style="color: red"></span>
                 </div>
             </div>
 
@@ -431,9 +447,9 @@ a, a:link, a:visited, a:hover, a:active {
                 init: true,
                 flag: 'select',
                 newServiceInstanceName: '',
-                plan: '',
+                plan: 'Standard',
                 resourceGroupName: '',
-                newResourceGroupName: '',
+                newResourceGroupName: 'yonghui-rg-dev',
                 subscriptionId: '',
                 serviceInstanceName: '',
                 javaVersion: '',
@@ -460,12 +476,16 @@ a, a:link, a:visited, a:hover, a:active {
                     radio.checked = true;
                 }
                 this.flag = 'select';
+                console.log(document.getElementById('region'))
+                document.getElementById('region').children[1].disabled = true;
             },
             newServiceInstance(radio){
                 if ( radio.checked !== true) {
                     radio.checked = true;
                 }
                 this.flag = 'create';
+                console.log(document.getElementById('region'))
+                document.getElementById('region').children[1].disabled = false;
             },
             getPlanValue(item){
                 this.plan = item;
@@ -508,6 +528,7 @@ a, a:link, a:visited, a:hover, a:active {
                                 hideProgressBar: true
                             });
                         }
+                        this.region = 'eastus';
                     }).catch(error => {
                     toast.error(error.response.data, {
                         position: toast.POSITION.TOP_CENTER,
@@ -593,19 +614,39 @@ a, a:link, a:visited, a:hover, a:active {
                 })
             },
             deployCode() {
-                const bootstrapValidator = $('#setting').data('bootstrapValidator').validate();
-                if (bootstrapValidator.isValid() === false) {
-                    return;
+
+                console.log(this.newResourceGroupName)
+                console.log(this.flag)
+                let tier;
+                if(this.flag === 'create'){
+
+                    const selectValidator = $('#setting').data('bootstrapValidator').validateField('subscription', 'newServiceInstanceName', 'appName');
+                    if (selectValidator.isValid() === false) {
+                        return;
+                    }
+
+                    this.resourceGroupName = this.newResourceGroupName;
+                    this.serviceInstanceName = this.newServiceInstanceName;
+                    tier = this.plan;
+                }else{
+                    const createValidator = $('#setting').data('bootstrapValidator').validateField('subscription');
+                    if (createValidator.isValid() === false) {
+                        return;
+                    }
+
+                    this.region = this.serviceInstanceList.find(item => item.name === this.serviceInstanceName).region;
+                    tier = this.serviceInstanceList.find(item => item.name === this.serviceInstanceName).sku;
+                    if ('StandardGen2' === tier || 'Basic' === tier) {
+                        toast.warning("Azure Spring Apps tier 'Basic' and 'Standard consumption & dedicated (preview)' are not supported.", {
+                            position: toast.POSITION.TOP_CENTER,
+                            autoClose: 6000,
+                            hideProgressBar: true
+                        });
+                        return;
+                    }
                 }
-                let tier = this.serviceInstanceList.find(item => item.name === this.serviceInstanceName).sku;
-                if ('StandardGen2' === tier || 'Basic' === tier) {
-                    toast.warning("Azure Spring Apps tier 'Basic' and 'Standard consumption & dedicated (preview)' are not supported.", {
-                        position: toast.POSITION.TOP_CENTER,
-                        autoClose: 6000,
-                        hideProgressBar: true
-                    });
-                    return;
-                }
+                console.log(tier)
+
                 let variablesObj = {};
                 if (this.variables.length > 0) {
                     for (let i = 0; i < this.variables.length; i++) {
@@ -615,24 +656,15 @@ a, a:link, a:visited, a:hover, a:active {
                     }
 
                 }
-
-
-                console.log(this.newResourceGroupName)
-                if(this.flag === 'create'){
-                    this.resourceGroupName = this.newresourceGroupName;
-                    this.serviceInstanceName = this.newServiceInstanceName;
-                    tier = this.plan;
-                }else{
-                    this.region = this.serviceInstanceList.find(item => item.name === this.serviceInstanceName).region;
-                }
-
                 this.appInstance.memory = this.appInstance.memory.replace(/\s+/g, "");
                 const appDetails = '&cpu=' + this.appInstance.cpu + '&memory=' + this.appInstance.memory + '&instanceCount=' + this.appInstance.instanceCount + '&tier=' + tier + '&region=' + this.region + '&variables=' + encodeURIComponent(JSON.stringify(variablesObj));
                 const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceInstanceName + '&javaVersion=' + this.appInstance.runtimePlatform + '&appName=' + this.appInstance.name + '&branchName=' + this.branch + '&module=' + this.module;
-                // location.assign('/progress.html?' + url + appDetails);
+                location.assign('/progress.html?' + url + appDetails);
             },
             validatorForm() {
-                $(document).ready(function () {
+                // $(document).ready(function () {
+                    console.log(this.flag)
+                    console.log(this.flag === 'select')
                     $("#setting").bootstrapValidator({
                         excluded: [':disabled', ':hidden'],
                         feedbackIcons: {
@@ -665,6 +697,18 @@ a, a:link, a:visited, a:hover, a:active {
                                     }
                                 }
                             },
+                            newServiceInstanceName: {
+                                container: '#newServiceInstanceName_error',
+                                validators: {
+                                    notEmpty: {
+                                        message: 'Please type service instance name'
+                                    },
+                                    regexp: {
+                                        regexp: /^[a-z][a-z0-9-]{3,31}$/,
+                                        message: 'The service instance name is invalid. It can contain only lowercase letters, numbers and hyphens. The first character must be a letter. The last character must be a letter or number. The value must be between 4 and 32 characters long.'
+                                    }
+                                }
+                            },
                             appName: {
                                 container: '#appName_error',
                                 validators: {
@@ -678,7 +722,7 @@ a, a:link, a:visited, a:hover, a:active {
                                 }
                             },
                         }
-                    });
+                    // });
                 });
             },
             stringify: JSON.stringify,

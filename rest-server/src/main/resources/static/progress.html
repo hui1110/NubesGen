@@ -314,7 +314,9 @@ pre{
                         'subscriptionId': this.subscriptionId,
                         'resourceGroupName': this.resourceGroupName,
                         'serviceName': this.serviceName,
-                        'appName': this.appName
+                        'appName': this.appName,
+                        'region': this.region,
+                        'skuName': this.tier,
                     }
                 }).then(res => {
                     if (res.status === 200) {
