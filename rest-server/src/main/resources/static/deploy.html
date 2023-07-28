@@ -23,7 +23,8 @@
 #app {
     background-image: linear-gradient(rgb(0, 121, 212), rgb(60, 42, 168));
     padding-bottom: 30px;
-    height: 100vh;
+    height: 100%;
+    overflow-y: auto;
 }
 
 label {
@@ -94,6 +95,23 @@ a, a:link, a:visited, a:hover, a:active {
     height: calc(1em + 0.5rem + 1px);
     padding: 0.25rem 0.5rem 0.5rem;
 }
+.btn-primary{
+    background-color: #1665DB;
+    margin-right: 2%;
+}
+.btn-primary:hover{
+    background-color: #0C4CAB;
+}
+.btn-secondary{
+    background: #FFFFFF;
+    color: black;
+    border: 1px solid #D1D1D1;
+}
+.btn-secondary:hover{
+    background: #F5F5F5;
+    color: black;
+    border: 1px solid #C7C7C7;
+}
 
 .required {
     color: red;
@@ -149,7 +167,7 @@ a, a:link, a:visited, a:hover, a:active {
     border-radius: 0.25rem;
 }
 </style>
-<body>
+<body style="height: 100vh;">
 <div id="app">
     <div class="title">
         <img src="img/nubesgen-logo.svg" alt="NubesGen logo">
@@ -175,6 +193,7 @@ a, a:link, a:visited, a:hover, a:active {
                     </label>
                 </div>
             </div>
+
             <div class="mb-3 row">
                 <label class="col-sm-4 col-form-label">Subscription<span
                         class="required"> * </span>
@@ -204,6 +223,7 @@ a, a:link, a:visited, a:hover, a:active {
                     <span id="subscription_error" style="color: red"></span>
                 </div>
             </div>
+
             <div class="mb-3 row">
                 <label class="col-sm-4 col-form-label">
                     Resource group<span class="required"> * </span>
@@ -229,14 +249,90 @@ a, a:link, a:visited, a:hover, a:active {
                                 {{ item.name }}
                             </option>
                         </select>
+                        <button type="button" class="btn btn-link popoverTab" data-toggle="popover" @click="openPopover()">Create new</button>
+                        <span id="resourceGroup_error" style="color: red"></span>
                     </label>
-                    <span id="resourceGroup_error" style="color: red"></span>
                 </div>
             </div>
-            <div class="mb-3 row">
+
+            <div class="mb-3 row" style="font-weight: normal; font-size: 14px;">
+                <label class="col-sm-4 col-form-label">
+                </label>
+                <div class="col-sm-7">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1"
+                               @change="selectServiceInstance(this)" checked>
+                        <label class="form-check-label" for="flexRadioDefault1">
+                            Select service instance
+                        </label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2"
+                               @change="newServiceInstance(this)">
+                        <label class="form-check-label" for="flexRadioDefault2">
+                            Create new service instance
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3 row" v-show="flag === 'create'">
+                <label for="newServiceInstanceName" class="col-sm-4 col-form-label">Service instance<span class="required"> * </span>
+                </label>
+                <div class="col-sm-7">
+                    <label for="newServiceInstanceName">
+                        <input type="text" class="form-control" placeholder="Please type service instance name"
+                               v-model="newServiceInstanceName" id="newServiceInstanceName" name="newServiceInstanceName"/>
+                    </label>
+                    <span id="newServiceInstanceName_error" style="color: red"></span>
+                </div>
+            </div>
+
+            <div class="mb-3 row" v-show="flag === 'create'">
+                <label class="col-sm-4 col-form-label">Region<span
+                        class="required"> * </span>
+                </label>
+                <div class="col-sm-7">
+                    <label for="region">
+                        <select title="Please select region" class="form-control selectpicker"
+                                data-live-search="true" v-model="region" id="region"
+                                name="region">
+                            <option v-for="item in regionList" :value="item.name">
+                                {{item.label}}
+                            </option>
+                        </select>
+                    </label>
+                    <span id="region_error" style="color: red"></span>
+                </div>
+            </div>
+
+            <div class="mb-3 row" style="font-size: 14px;" v-show="flag === 'create'">
+                <label class="col-sm-4 col-form-label">Hosting options and plans<span
+                        class="required"> * </span>
+                </label>
+                <div class="col-sm-7">
+                    <div class="form-check" style="margin-bottom: 2%;">
+                        <input class="form-check-input" type="radio" name="plan" id="Standard"
+                               @change="getPlanValue('Standard')" checked>
+                        <label class="form-check-label" for="Standard">
+                            Standard
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="plan" id="Enterprise"
+                               @change="getPlanValue('Enterprise')">
+                        <label class="form-check-label" for="Enterprise">
+                            Enterprise
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3 row" v-show="flag === 'select'">
                 <label for="serviceInstance" class="col-sm-4 col-form-label">Service instance<span
                         class="required"> * </span></label>
                 <div class="col-sm-7">
+                    <label for="serviceInstance">
                     <select title="Please select service instance" class="form-control selectpicker"
                             data-live-search="true"
                             data-placeholder="Please select Service Instance"
@@ -247,9 +343,11 @@ a, a:link, a:visited, a:hover, a:active {
                             {{ item.name }}
                         </option>
                     </select>
+                    </label>
                     <span id="serviceInstance_error" style="color: red"></span>
                 </div>
             </div>
+
             <div class="mb-3 row">
                 <label for="appName" class="col-sm-4 col-form-label">App name<span class="required"> * </span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="14"
@@ -324,7 +422,6 @@ a, a:link, a:visited, a:hover, a:active {
 </body>
 <script type="module">
     import {toast} from 'https://cdn.jsdelivr.net/npm/vue3-toastify@0.1.4/+esm';
-
     const app = Vue.createApp({
         data() {
             return {
@@ -332,10 +429,16 @@ a, a:link, a:visited, a:hover, a:active {
                 branch: new URLSearchParams(location.search).get('branch'),
                 module: new URLSearchParams(location.search).get('module'),
                 init: true,
+                flag: 'select',
+                newServiceInstanceName: '',
+                plan: '',
                 resourceGroupName: '',
+                newResourceGroupName: '',
                 subscriptionId: '',
                 serviceInstanceName: '',
                 javaVersion: '',
+                region: '',
+                regionList: [],
                 appInstance: {},
                 subscriptionList: [],
                 serviceInstanceList: [],
@@ -351,6 +454,29 @@ a, a:link, a:visited, a:hover, a:active {
             },
             deleteItem(index) {
                 this.variables.splice(index, 1);
+            },
+            selectServiceInstance(radio){
+                if ( radio.checked !== true) {
+                    radio.checked = true;
+                }
+                this.flag = 'select';
+            },
+            newServiceInstance(radio){
+                if ( radio.checked !== true) {
+                    radio.checked = true;
+                }
+                this.flag = 'create';
+            },
+            getPlanValue(item){
+                this.plan = item;
+            },
+            openPopover(){
+                console.log('openPopover')
+                $('.popoverTab').popover('show');
+            },
+            closePopover(){
+                console.log('closePopover')
+                $('.popoverTab').popover('hide');
             },
             getAppNameAndJavaVersion() {
                 axios.get('/getAppNameAndJavaVersion', {
@@ -369,6 +495,27 @@ a, a:link, a:visited, a:hover, a:active {
                         autoClose: 5000,
                         hideProgressBar: true
                     });
+                })
+            },
+            queryRegionList(){
+                axios.get('/getRegionList')
+                    .then(res => {
+                        this.regionList = res.data;
+                        if (this.regionList.length === 0) {
+                            toast.info('Not found region', {
+                                position: toast.POSITION.TOP_CENTER,
+                                autoClose: 2000,
+                                hideProgressBar: true
+                            });
+                        }
+                    }).catch(error => {
+                    toast.error(error.response.data, {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
+                }).finally(() => {
+                    $('.selectpicker').selectpicker('refresh');
                 })
             },
             querySubscriptionList() {
@@ -450,7 +597,7 @@ a, a:link, a:visited, a:hover, a:active {
                 if (bootstrapValidator.isValid() === false) {
                     return;
                 }
-                const tier = this.serviceInstanceList.find(item => item.name === this.serviceInstanceName).sku;
+                let tier = this.serviceInstanceList.find(item => item.name === this.serviceInstanceName).sku;
                 if ('StandardGen2' === tier || 'Basic' === tier) {
                     toast.warning("Azure Spring Apps tier 'Basic' and 'Standard consumption & dedicated (preview)' are not supported.", {
                         position: toast.POSITION.TOP_CENTER,
@@ -469,11 +616,20 @@ a, a:link, a:visited, a:hover, a:active {
 
                 }
 
-                const region = this.serviceInstanceList.find(item => item.name === this.serviceInstanceName).region;
+
+                console.log(this.newResourceGroupName)
+                if(this.flag === 'create'){
+                    this.resourceGroupName = this.newresourceGroupName;
+                    this.serviceInstanceName = this.newServiceInstanceName;
+                    tier = this.plan;
+                }else{
+                    this.region = this.serviceInstanceList.find(item => item.name === this.serviceInstanceName).region;
+                }
+
                 this.appInstance.memory = this.appInstance.memory.replace(/\s+/g, "");
-                const appDetails = '&cpu=' + this.appInstance.cpu + '&memory=' + this.appInstance.memory + '&instanceCount=' + this.appInstance.instanceCount + '&tier=' + tier + '&region=' + region + '&variables=' + encodeURIComponent(JSON.stringify(variablesObj));
+                const appDetails = '&cpu=' + this.appInstance.cpu + '&memory=' + this.appInstance.memory + '&instanceCount=' + this.appInstance.instanceCount + '&tier=' + tier + '&region=' + this.region + '&variables=' + encodeURIComponent(JSON.stringify(variablesObj));
                 const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceInstanceName + '&javaVersion=' + this.appInstance.runtimePlatform + '&appName=' + this.appInstance.name + '&branchName=' + this.branch + '&module=' + this.module;
-                location.assign('/progress.html?' + url + appDetails);
+                // location.assign('/progress.html?' + url + appDetails);
             },
             validatorForm() {
                 $(document).ready(function () {
@@ -528,8 +684,9 @@ a, a:link, a:visited, a:hover, a:active {
             stringify: JSON.stringify,
         },
         mounted() {
-            this.querySubscriptionList();
-            this.getAppNameAndJavaVersion();
+            // this.querySubscriptionList();
+            // this.getAppNameAndJavaVersion();
+            // this.queryRegionList();
             this.validatorForm();
             this.appInstance.runtimePlatform = 'loading...';
             this.appInstance.name = 'loading...';
@@ -538,6 +695,13 @@ a, a:link, a:visited, a:hover, a:active {
             this.appInstance.instanceCount = 1;
             this.appInstance.deploymentType = 'GitHub repository';
             $('.selectpicker').selectpicker();
+            $('[data-toggle="popover"]').popover({
+                placement: 'left',
+                html: true,
+                sanitize: false,
+                trigger: 'manual',
+                content: '<div id="popover-form" style="font-size: 14px;"><p>A resource group is a container that holds related resource for an Azure solution.</p><div class="form-group"><label>Name<span class="required"> * </span></label><input id="email" type="email" placeholder="Enter resource group name" v-model="newResourceGroupName" class="form-control"/></div><button style="width: 30%;" type="button" class="btn btn-primary btn-sm ok" @click="closePopover()">OK</button><button style="width: 30%;" type="button" class="btn btn-secondary btn-sm cancel">Cancel</button></div>'
+            });
         },
     })
     app.mount('#app')

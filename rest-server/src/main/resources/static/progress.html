@@ -101,12 +101,10 @@ pre{
     overflow: auto;
     padding: 15px;
     border: 1px solid #d6d8db;
+    margin: 15px;
 }
 .log > pre:nth-child(2) {
     overflow: unset;
-}
-.stages {
-    padding-top: 10px;
 }
 
 .title {
@@ -153,30 +151,30 @@ pre{
                 <span style="font-size: 14px;">{{deploymentResult}}</span>
             </div>
             <div class="card">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item" v-for="item in stages" :key="item.key">
+                <ul class="list-group list-group-flush" v-for="item in stages" :key="item.key">
+                    <li class="list-group-item">
                         <div class="icon-container" v-show="item.status === 'success'">
-                            <i class="bi bi-check-circle-fill icon-success"></i>
+                            <i class="bi bi-check-circle-fill icon-success d-flex align-items-center"></i>
                         </div>
                         <div class="icon-container rotating" v-show="item.status === 'loading'">
-                            <i class="bi bi-arrow-repeat icon-loading"></i>
+                            <i class="bi bi-arrow-repeat icon-loading d-flex align-items-center"></i>
                         </div>
                         <div class="icon-container" v-show="item.status === 'wait'">
-                            <i class="bi bi-arrow-repeat icon-loading inactive"></i>
+                            <i class="bi bi-arrow-repeat icon-loading inactive d-flex align-items-center"></i>
                         </div>
                         <div class="icon-container" v-show="item.status === 'error'">
-                            <i class="bi bi-exclamation-circle-fill icon-error"></i>
+                            <i class="bi bi-exclamation-circle-fill icon-error d-flex align-items-center"></i>
                         </div>
                         <i @click="handleListItemCollapse(item.key)" class="bi bi-chevron-right"
                            :id="item.key" data-toggle="collapse" :data-target="'#'+item.id"></i>
                         <span class="ml-2">{{item.stageName}}</span>
-                        <div class="collapse stages" :id="item.id">
-                            <div class="log" :id="'scroll-' + item.id" :style="{'height': item.key === 'provision' || item.key === 'upload' ? '150px': '400px'}">
-                                <pre :id="'description'+ item.id" :style="{'color': item.status === 'success' ? '#4e9a06': (item.status ==='error'? 'red' : '#9A7D0A')}">{{item.description}}</pre>
-                                <pre :id="'pre-' + item.id">{{item.log}}</pre>
-                            </div>
-                        </div>
                     </li>
+                    <div class="collapse" :id="item.id">
+                        <div class="log" :id="'scroll-' + item.id" :style="{'height': item.key === 'provision' || item.key === 'upload' ? '150px': '400px'}">
+                            <pre :id="'description'+ item.id" :style="{'color': item.status === 'success' ? '#4e9a06': (item.status ==='error'? 'red' : '#9A7D0A')}">{{item.description}}</pre>
+                            <pre :id="'pre-' + item.id">{{item.log}}</pre>
+                        </div>
+                    </div>
                 </ul>
             </div>
             <div class="form-group point" v-show="showView === true">
@@ -311,7 +309,7 @@ pre{
             provisionResource() {
                 const log = document.getElementById('pre-' + this.stages[0].id)
                 log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating app ' + '<code style="color: blue">' + this.appName + '</code>' + '...' + '</p>';
-                axios.get('/provisionResource', {
+                axios.get('/' + this.tier.toLowerCase() + '/provisionResource', {
                     params: {
                         'subscriptionId': this.subscriptionId,
                         'resourceGroupName': this.resourceGroupName,
@@ -409,7 +407,7 @@ pre{
             },
             deploySourceCode() {
                 this.expandCollapse(this.stages[2].key, this.stages[2].id);
-                axios.get('/deploy',
+                axios.get('/standard/deploy',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -434,7 +432,7 @@ pre{
                 this.getBuildLogStandard();
             },
             getBuildLogStandard() {
-                axios.get('/getBuildLogs',
+                axios.get('/standard/getBuildLogs',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -444,19 +442,21 @@ pre{
                         }
                     }).then(res => {
                     if (res.status === 200 && this.stages[2].status === 'loading' && this.result === '') {
-                        this.logScrollButtom(this.stages[2].id, res.data);
                         this.getBuildLogStandard();
                     }
                     this.buildSourceLogStandard = res.data;
                 }).catch(error => {
-                    this.logScrollButtom(this.stages[2].id, this.buildSourceLogStandard + '\n' + error.response.data);
+                    console.log(error);
+                    this.buildSourceLogStandard += error.response.data;
+                }).finally(() => {
+                    this.logScrollButtom(this.stages[2].id, this.buildSourceLogStandard);
                 })
             },
             getBuildSourceResult() {
                 if (this.stages[2].status === 'error') {
                     return;
                 }
-                axios.get('/getBuildSourceResult',
+                axios.get('/standard/getBuildSourceResult',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -482,40 +482,12 @@ pre{
             },
             getDeployResult() {
                 this.expandCollapse(this.stages[3].key, this.stages[3].id);
-                axios.get('/getDeployResult', {
-                    params: {
-                        'subscriptionId': this.subscriptionId,
-                        'resourceGroupName': this.resourceGroupName,
-                        'serviceName': this.serviceName,
-                        'appName': this.appName
-                    }
-                }).then(res => {
-                    if (res.status === 200) {
-                        this.handleProgress(3, 'Your deployment of app ' + this.appName + ' succeeded.', 'success');
-                        this.showView = true;
-                        this.deploymentResult = '';
-                        this.deploymentProgress = 'Your deployment is complete';
-                        toast.success('Deployment succeeded !', {
-                            position: toast.POSITION.TOP_CENTER,
-                            autoClose: 5000,
-                            hideProgressBar: true
-                        });
-                    } else {
-                        this.handleError(3, 'Your deployment of app ' + this.appName + ' failed.', 'Deploy failed !');
-                        this.deleteApp();
-                    }
-                    this.logScrollButtom(this.stages[3].id, res.data);
-                    this.highlightLog(this.stages[3].id);
-                }).catch(error => {
-                    this.stages[3].log = error.response.data;
-                    this.handleError(3, 'Your deployment of app ' + this.appName + ' failed.', 'Deploy failed !');
-                    this.deleteApp();
-                })
+                this.getDeployResultAndApplicationLogs();
             },
             enqueueBuildForEnterpriseTier() {
                 this.expandCollapse(this.stages[2].key, this.stages[2].id);
                 const javaVersion = this.javaVersion.substring(this.javaVersion.indexOf("_") + 1);
-                axios.get('/enqueueBuildEnterprise',
+                axios.get('/enterprise/enqueueBuild',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -538,7 +510,7 @@ pre{
                 })
             },
             buildSourceCodeForEnterpriseTier(buildId) {
-                axios.get('/buildSourceEnterprise',
+                axios.get('/enterprise/buildSourceCode',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -548,15 +520,7 @@ pre{
                             'buildId': buildId
                         }
                     }).then(res => {
-                    if (res.data !== 'Failed') {
-                        this.handleProgress(2, 'Build source in app ' + this.appName + ' succeed.', 'success');
-                        this.handleProgress(3, 'Deploying in app ' + this.appName + '...', 'loading');
-                        this.deploySourceCodeForEnterprise(buildId);
-                    } else {
-                        this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
-                        this.logScrollButtom(this.stages[2].id, null);
-                        this.deleteApp();
-                    }
+                    this.awaitGetBuildLogComplete(res.data, buildId);
                 }).catch(error => {
                     this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
                     this.logScrollButtom(this.stages[2].id, this.buildSourceLogEnterprise + '\n' + error.response.data);
@@ -568,7 +532,7 @@ pre{
                 if (this.enterpriseStagesIndex > this.enterpriseStages.length - 1) {
                     return;
                 }
-                axios.get('/getBuildLogs',
+                axios.get('/enterprise/getBuildLogs',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -586,9 +550,24 @@ pre{
                     this.logScrollButtom(this.stages[2].id, this.buildSourceLogEnterprise + '\n' + error.response.data);
                 })
             },
+            awaitGetBuildLogComplete(result, buildId){
+                if (this.enterpriseStagesIndex <= this.enterpriseStages.length - 1) {
+                    setTimeout(() => this.awaitGetBuildLogComplete(result,buildId), 3000)
+                    return;
+                }
+                if (result === 'Succeeded') {
+                    this.handleProgress(2, 'Build source in app ' + this.appName + ' succeed.', 'success');
+                    this.handleProgress(3, 'Deploying in app ' + this.appName + '...', 'loading');
+                    this.deploySourceCodeForEnterprise(buildId);
+                } else {
+                    this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
+                    this.logScrollButtom(this.stages[2].id, null);
+                    this.deleteApp();
+                }
+            },
             deploySourceCodeForEnterprise(buildId) {
                 this.expandCollapse(this.stages[3].key, this.stages[3].id);
-                axios.get('/deployAppEnterprise',
+                axios.get('/enterprise/deploy',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -601,7 +580,39 @@ pre{
                 }).catch(error => {
                     console.log(error);
                 }).finally(() => {
-                    this.getDeployResult();
+                    this.getDeployResultAndApplicationLogs();
+                })
+            },
+            getDeployResultAndApplicationLogs() {
+                axios.get('/getDeployResultAndApplicationLogs',
+                    {
+                        params: {
+                            'subscriptionId': this.subscriptionId,
+                            'resourceGroupName': this.resourceGroupName,
+                            'serviceName': this.serviceName,
+                            'appName': this.appName
+                        }
+                    }).then(res => {
+                    if (res.status === 200) {
+                        this.handleProgress(3, 'Your deployment of app ' + this.appName + ' succeeded.', 'success');
+                        this.showView = true;
+                        this.deploymentResult = '';
+                        this.deploymentProgress = 'Your deployment is complete';
+                        toast.success('Deployment succeeded !', {
+                            position: toast.POSITION.TOP_CENTER,
+                            autoClose: 5000,
+                            hideProgressBar: true
+                        });
+                    } else {
+                        this.handleError(3, 'Your deployment of app ' + this.appName + ' failed.', 'Deploy failed !');
+                        this.deleteApp();
+                    }
+                    this.logScrollButtom(this.stages[3].id, res.data);
+                    this.highlightLog(this.stages[3].id);
+                }).catch(error => {
+                    this.stages[3].log = error.response.data;
+                    this.handleError(3, 'Your deployment of app ' + this.appName + ' failed.', 'Deploy failed !');
+                    this.deleteApp();
                 })
             },
             deleteApp() {
@@ -615,7 +626,6 @@ pre{
                         }
                     })
                     .then(() => {
-                        console.log('Delete app succeed');
                     }).catch(error => {
                     console.log(error);
                 })
