@@ -97,6 +97,26 @@ public class ASACommonController {
         }
     }
 
+    @GetMapping("/provisionResourceGroup")
+    public @ResponseBody ResponseEntity<?> provisionResourceGroup(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String region){
+        try {
+            asaCommonService.provisionResourceGroup(management, subscriptionId, resourceGroupName, region);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/provisionSpringService")
+    public @ResponseBody ResponseEntity<?> provisionSpringService(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String region, @RequestParam String tier){
+        try {
+            asaCommonService.provisionSpringService(management, subscriptionId, resourceGroupName, serviceName, region, tier);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @PostMapping("/createDeploymentForApp")
     public @ResponseBody ResponseEntity<?> createDeploymentForApp(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestBody Map<String, Object> map) {
         try {

@@ -24,10 +24,10 @@ public class ASAEnterpriseTierController {
     }
 
 
-    @GetMapping("/provisionResource")
-    public @ResponseBody ResponseEntity<?> provisionResource(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam(required = false) String region, @RequestParam(required = false) String skuName) {
+    @GetMapping("/provisionSpringApp")
+    public @ResponseBody ResponseEntity<?> provisionSpringApp(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName) {
         try {
-            asaEnterpriseTierService.provisionResource(management, subscriptionId, resourceGroupName, serviceName, appName, region, skuName);
+            asaEnterpriseTierService.provisionSpringApp(management, subscriptionId, resourceGroupName, serviceName, appName);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

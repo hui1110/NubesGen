@@ -32,23 +32,18 @@ public class ASAEnterpriseTierService implements ASAService {
     private final Logger log = LoggerFactory.getLogger(ASAEnterpriseTierService.class);
     private static final String DEFAULT_DEPLOYMENT_NAME = "default";
 
-    public void provisionResource(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName, String serviceName, String appName, String region, String skuName) {
+    public void provisionSpringApp(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName, String serviceName, String appName) {
         AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
-        ASADeployUtils.provisionResourceGroup(appPlatformManager, resourceGroupName, region);
-        log.info("Provision resource group {} completed.", resourceGroupName);
-        ASADeployUtils.provisionSpringService(appPlatformManager, resourceGroupName, serviceName, region, skuName);
-        log.info("Provision spring service {} completed.", serviceName);
-
         appPlatformManager.serviceClient().getBuildServiceAgentPools()
                 .updatePut(
                         resourceGroupName,
                         serviceName,
-                        "default",
-                        "default",
+                        DEFAULT_DEPLOYMENT_NAME,
+                        DEFAULT_DEPLOYMENT_NAME,
                         new BuildServiceAgentPoolResourceInner()
                                 .withProperties(
                                         new BuildServiceAgentPoolProperties()
-                                                .withPoolSize(new BuildServiceAgentPoolSizeProperties().withName("S5")) // S1, S2, S3, S4, S5
+                                                .withPoolSize(new BuildServiceAgentPoolSizeProperties().withName("S1")) // S1, S2, S3, S4, S5
                                 )
                 );
         log.info("Initialize build service agent pool for enterprise tier.");

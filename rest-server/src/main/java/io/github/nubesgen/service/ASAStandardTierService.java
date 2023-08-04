@@ -32,15 +32,10 @@ public class ASAStandardTierService implements ASAService {
      * @param serviceName the service name
      * @param appName the app name
      */
-    public void provisionResource(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName,
+    public void provisionSpringApp(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName,
                                   String serviceName,
-                                  String appName, String region, String skuName) {
+                                  String appName) {
         AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
-        ASADeployUtils.provisionResourceGroup(appPlatformManager, resourceGroupName, region);
-        log.info("Provision resource group {} completed.", resourceGroupName);
-        ASADeployUtils.provisionSpringService(appPlatformManager, resourceGroupName, serviceName, region, skuName);
-        log.info("Provision spring service {} completed.", serviceName);
-
         AppResourceInner appResourceInner = ASADeployUtils.getAppResourceInner();
         appPlatformManager.serviceClient().getApps().createOrUpdate(resourceGroupName, serviceName, appName, appResourceInner);
         log.info("Provision spring app {} completed.", appName);
