@@ -170,8 +170,8 @@ pre{
                         <span class="ml-2">{{item.stageName}}</span>
                     </li>
                     <div class="collapse" :id="item.id">
-                        <div class="log" :id="'scroll-' + item.id" :style="{'height': item.key === 'provision' || item.key === 'upload' ? '150px': '400px'}">
-                            <pre :id="'description'+ item.id" :style="{'color': item.status === 'success' ? '#4e9a06': (item.status ==='error'? 'red' : '#9A7D0A')}">{{item.description}}</pre>
+                        <div class="log" :id="'scroll-' + item.id" :style="{'height': item.key === 'provision' || item.key === 'upload' ? (this.flag === 'create' && item.key === 'provision' ? '200px': '150px'): '400px'}">
+                            <pre :id="'description'+ item.id" :style="{'color': item.status === 'success' ? '#4e9a06': (item.status === 'error' ? 'red' : '#9A7D0A')}">{{item.description}}</pre>
                             <pre :id="'pre-' + item.id">{{item.log}}</pre>
                         </div>
                     </div>
@@ -214,6 +214,8 @@ pre{
                 tier: new URLSearchParams(location.search).get('tier'),
                 region: new URLSearchParams(location.search).get('region'),
                 variables: new URLSearchParams(location.search).get('variables'),
+                flag: new URLSearchParams(location.search).get('flag'),
+                code: new URLSearchParams(location.search).get('code'),
                 deploymentProgress: 'Your deployment is in progress...',
                 deploymentResult: 'This operation may take a while.',
                 showView: false,
@@ -299,32 +301,31 @@ pre{
                         this.getUploadUrl();
                     } else {
                         this.stages[0].description = 'App ' + this.appName + ' not exist, start creating';
-                        this.provisionResource();
+                        this.provisionSpringApp();
                     }
                 }).catch(error => {
                     this.stages[0].log = error.response.data;
                     this.handleError(0, 'Create app ' + this.appName + ' in service ' + this.serviceName + ' failed.', 'Provision resource failed !');
                 })
             },
-            provisionResource() {
+            provisionSpringApp() {
                 const log = document.getElementById('pre-' + this.stages[0].id)
-                log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating app ' + '<code style="color: blue">' + this.appName + '</code>' + '...' + '</p>';
-                axios.get('/' + this.tier.toLowerCase() + '/provisionResource', {
+                const logs = log.innerHTML;
+                log.innerHTML = logs + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating app ' + '<code style="color: blue">' + this.appName + '</code>' + '...' + '</p>';
+                axios.get('/' + this.tier.toLowerCase() + '/provisionSpringApp', {
                     params: {
                         'subscriptionId': this.subscriptionId,
                         'resourceGroupName': this.resourceGroupName,
                         'serviceName': this.serviceName,
-                        'appName': this.appName,
-                        'region': this.region,
-                        'skuName': this.tier,
+                        'appName': this.appName
                     }
                 }).then(res => {
                     if (res.status === 200) {
-                        log.innerHTML = '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create app ' + '<code style="color: blue">' + this.appName + '</code>' + ' successfully.' + '</p>';
+                        log.innerHTML = logs +  '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create app ' + '<code style="color: blue">' + this.appName + '</code>' + ' successfully.' + '</p>';
                         this.createDeploymentForApp(log);
                     }
                 }).catch(error => {
-                    log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create app ' + '<code style="color: blue">' + this.appName + '</code>' + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
+                    log.innerHTML = logs + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create app ' + '<code style="color: blue">' + this.appName + '</code>' + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
                     this.handleError(0, 'Create app ' + this.appName + ' in service ' + this.serviceName + ' failed.', 'Provision resource failed !');
                     this.deleteApp();
                 })
@@ -343,7 +344,7 @@ pre{
                     'variables': this.variables,
                 }).then(res => {
                     if (res.status === 200) {
-                        this.handleProgress(0, 'Created app ' + this.appName + ' in service ' + this.serviceName + '.', 'success');
+                        this.handleProgress(0, this.flag === 'select' ? 'Created app ' + this.appName + ' in service ' + this.serviceName + '.': 'Provision resource complete.', 'success');
                         this.handleProgress(1, 'Uploading source code...', 'loading');
                         log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create default deployment for app ' + '<code style="color: blue">' + this.appName + '</code>' + ' successfully.' + '</p>';
                         this.getUploadUrl();
@@ -692,10 +693,77 @@ pre{
                 const portalUrl = 'https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/' + this.subscriptionId + '/resourceGroups/' + this.resourceGroupName + '/providers/Microsoft.AppPlatform/Spring/' + this.serviceName + '/application_dashboard';
                 open(portalUrl);
             },
+            provisionResourceGroup(){
+                this.expandCollapse(this.stages[0].key, this.stages[0].id);
+                this.stages[0].description = 'Provisioning resource' + '...';
+                const log = document.getElementById('pre-' + this.stages[0].id)
+                log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating resource group ' + '<code style="color: blue">' + this.resourceGroupName + '</code>' + '...' + '</p>';
+                axios.get('/provisionResourceGroup',
+                    {
+                        params: {
+                            'subscriptionId': this.subscriptionId,
+                            'resourceGroupName': this.resourceGroupName,
+                            'region': this.region
+                        }
+                    }).then(res => {
+                    if (res.status === 200) {
+                        log.innerHTML = '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create resource group ' + '<code style="color: blue">' + this.resourceGroupName + '</code>' + ' successfully.' + '</p>';
+                        this.provisionSpringService(log);
+                    }
+                }).catch(error => {
+                    log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create resource group ' + '<code style="color: blue">' + this.resourceGroupName + '</code>' + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
+                    this.handleError(0, 'Your resource group ' + this.resourceGroupName + ' is failed to create.', 'Provision resource failed !');
+                })
+            },
+            provisionSpringService(log){
+                const logs = log.innerHTML;
+                log.innerHTML = logs + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating service ' + '<code style="color: blue">' + this.serviceName + '</code>' + '...' + '</p>';
+                axios.get('/provisionSpringService',
+                    {
+                        params: {
+                            'subscriptionId': this.subscriptionId,
+                            'resourceGroupName': this.resourceGroupName,
+                            'serviceName': this.serviceName,
+                            'region': this.region,
+                            'tier': this.tier
+                        }
+                    }).then(res => {
+                    if (res.status === 200) {
+                        log.innerHTML = logs + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create service ' + '<code style="color: blue">' + this.serviceName + '</code>' + ' successfully.' + '</p>';
+                        this.provisionSpringApp();
+                    }
+                }).catch(error => {
+                    log.innerHTML =logs +  '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create service ' + '<code style="color: blue">' + this.serviceName + '</code>' + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
+                    this.handleError(0, 'Your service ' + this.serviceName + ' is failed to create.', 'Provision resource failed !');
+                })
+            },
+
+            createRepo(){
+                axios.get('/github/createGitHubAction',
+                    {
+                        params: {
+                            'subscriptionId': this.subscriptionId,
+                            'serviceName': this.serviceName,
+                            'appName': this.appName,
+                            'authorizationCode': this.code,
+                            'url': this.gitUrl,
+                            'branchName': this.branch,
+                        }
+                    }).then(res => {
+                    console.log(res);
+                }).catch(error => {
+                    console.log(error);
+                })
+            },
             stringify: JSON.stringify,
         },
         mounted() {
-            this.checkAppExist();
+            // if(this.flag === 'select'){
+            //     this.checkAppExist();
+            // } else {
+            //     this.provisionResourceGroup();
+            // }
+            this.createRepo();
             $('.collapse').on('shown.bs.collapse', function (evt) {
                 evt.currentTarget.parentElement.scrollIntoView();
             });

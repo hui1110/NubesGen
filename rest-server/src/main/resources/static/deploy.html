@@ -46,12 +46,8 @@ a, a:link, a:visited, a:hover, a:active {
     color: inherit;
 }
 
-.deployment {
-    width: 75%;
-    margin: 4% auto;
-    padding: 30px;
-    background-color: white;
-    border-radius: 8px;
+.popover {
+    max-width: 550px;
 }
 
 .form-control {
@@ -59,7 +55,9 @@ a, a:link, a:visited, a:hover, a:active {
 }
 
 .form-control[readonly] {
-    background-color: white;
+    background-color: #F0F0F0;
+    border: 1px solid #D1D1D1;
+    box-shadow: none;
 }
 
 .filter-option-inner-inner {
@@ -105,15 +103,56 @@ a, a:link, a:visited, a:hover, a:active {
     background-color: #0C4CAB;
 }
 
-.btn-secondary {
+.btn-light {
     background: #FFFFFF;
     color: black;
     border: 1px solid #D1D1D1;
 }
-.btn-secondary:hover {
+.btn-light:hover {
     background: #F5F5F5;
     color: black;
     border: 1px solid #C7C7C7;
+}
+
+.btn-secondary{
+    margin-right: 2%;
+    background-color: #0079D4;
+    border-color: #007bff;
+}
+.btn-secondary:hover {
+    background-color: #0C4CAB;
+}
+
+.btn-secondary.disabled, .btn-secondary:disabled {
+    background-color: #F0F0F0;
+    border-color: #ced4da;
+    color: black;
+}
+
+.bootstrap-select.disabled, .bootstrap-select>.disabled {
+    background-color: #F0F0F0;
+    border-color: #ced4da;
+}
+
+.select-container .btn-light:not(:disabled):not(.disabled).active,
+.select-container .btn-light:not(:disabled):not(.disabled):active,
+.select-container .show > .btn-light.dropdown-toggle {
+    background-color: transparent;
+}
+
+.select-container .bootstrap-select .dropdown-toggle:focus,
+.select-container .bootstrap-select > select.mobile-device:focus + .dropdown-toggle {
+    outline: none !important;
+    background-color: transparent;
+}
+
+.select-container .btn-light:hover {
+    color: #212529;
+    background-color: transparent;
+}
+
+.select-container .btn-light {
+    border-color: #dae0e5;
 }
 
 .required {
@@ -142,38 +181,20 @@ a, a:link, a:visited, a:hover, a:active {
     margin-top: 1.5%;
 }
 
-.select-container .btn-light:not(:disabled):not(.disabled).active,
-.select-container .btn-light:not(:disabled):not(.disabled):active,
-.select-container .show > .btn-light.dropdown-toggle {
-    background-color: transparent;
-}
-
-.select-container .bootstrap-select .dropdown-toggle:focus,
-.select-container .bootstrap-select > select.mobile-device:focus + .dropdown-toggle {
-    outline: none !important;
-    background-color: transparent;
-}
-
-.select-container .btn-light:hover {
-    color: #212529;
-    background-color: transparent;
-}
-
-.select-container .btn-light {
-    background-color: transparent;
-    border-color: #dae0e5;
-}
-
 .variables {
     width: 40%;
     border: 1px solid #ced4da;
     border-radius: 0.25rem;
 }
 
-.readonly:focus {
-    border-color: #ced4da;
-    box-shadow: none;
+.deployment {
+    width: 75%;
+    margin: 4% auto;
+    padding: 30px;
+    background-color: white;
+    border-radius: 8px;
 }
+
 </style>
 <body style="height: 100vh;">
 <div id="app">
@@ -282,9 +303,9 @@ a, a:link, a:visited, a:hover, a:active {
                         class="required"> * </span>
                 </label>
                 <div class="col-sm-7">
-                    <label for="newServiceInstance" v-show="flag === 'create'">
+                    <label for="newServiceInstanceName" v-show="flag === 'create'">
                         <input type="text" class="form-control" placeholder="Please type service instance name"
-                               v-model="newServiceInstanceName" id="newServiceInstance" name="newServiceInstance"/>
+                               v-model="newServiceInstanceName" id="newServiceInstanceName" name="newServiceInstanceName"/>
                         <span id="newServiceInstanceName_error" style="color: red"></span>
                     </label>
                     <label for="serviceInstance" v-show="flag === 'select'">
@@ -311,7 +332,7 @@ a, a:link, a:visited, a:hover, a:active {
                     <label for="region" id="regionSelect">
                         <select title="Please select region" class="form-control selectpicker"
                                 data-live-search="true" v-model="region" id="region"
-                                name="region" disabled>
+                                name="region" :disabled="flag === 'select'" @change="setNewInstanceRegion(region)">
                             <option v-for="item in regionList" :value="item.name">
                                 {{item.label}}
                             </option>
@@ -325,17 +346,6 @@ a, a:link, a:visited, a:hover, a:active {
                         class="required"> * </span>
                 </label>
                 <div class="col-sm-7">
-                    <!--                    <div class="form-check" style="margin-bottom: 2%;">-->
-                    <!--                        <input class="form-check-input" type="radio" name="plan" id="Standard"-->
-                    <!--                               @change="getPlanValue('Standard')" checked :disabled="flag === 'select'">-->
-                    <!--                        <label class="form-check-label" for="Standard">-->
-                    <!--                            <a style="font-weight: 500;">Standard consumption & dedicated - General purpose production workloads</a><br>-->
-                    <!--                            <ul style="padding-inline-start:10px;">-->
-                    <!--                                <li>Hybrid plan that offers pay-as-you-go and resource-based pricing in one comprehensive model.</li>-->
-                    <!--                                <li>Hosted in Azure Container Apps environments and designed to seamlessly interact with other apps running in the same environment with simplified networking and unified observability.</li>-->
-                    <!--                            </ul>-->
-                    <!--                        </label>-->
-                    <!--                    </div>-->
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="plan" id="Standard"
                                @change="getPlanValue('Standard')" :disabled="flag === 'select'">
@@ -423,6 +433,17 @@ a, a:link, a:visited, a:hover, a:active {
                     </div>
                 </div>
             </div>
+
+            <div class="mb-3 row" style="font-weight: normal; font-size: 14px;">
+                <label class="col-sm-4 col-form-label">Setup Github action</label>
+                <div class="col-sm-7">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault">
+                        <label class="form-check-label" for="flexSwitchCheckDefault">Setup CI/CD pipeline for this repository</label>
+                    </div>
+                </div>
+            </div>
+
         </form>
         <hr/>
         <div class="form-group" style="padding-top: 2%;">
@@ -457,7 +478,7 @@ a, a:link, a:visited, a:hover, a:active {
                 init: true,
                 flag: 'select',
                 newServiceInstanceName: '',
-                plan: 'Standard',
+                plan: '',
                 tier: '',
                 resourceGroupName: '',
                 newResourceGroupName: '',
@@ -466,6 +487,8 @@ a, a:link, a:visited, a:hover, a:active {
                 javaVersion: '',
                 region: '',
                 existRegion: '',
+                newInstanceRegion: '',
+                existResourceGroup: '',
                 regionList: [],
                 appInstance: {},
                 subscriptionList: [],
@@ -498,6 +521,7 @@ a, a:link, a:visited, a:hover, a:active {
                     document.getElementById('Enterprise').checked = false;
                 }
                 this.region = this.existRegion;
+                this.resourceGroupName = this.existResourceGroup;
                 $('#setting').bootstrapValidator('resetForm', true);
             },
             newServiceInstance() {
@@ -505,8 +529,17 @@ a, a:link, a:visited, a:hover, a:active {
                 const createRadio = document.getElementById('flexRadioDefault2');
                 if (createRadio.checked !== true) {
                     createRadio.checked = true;
+                }
+                if(this.newInstanceRegion === '') {
                     this.region = 'eastus';
+                }else {
+                    this.region = this.newInstanceRegion;
+                }
+                if(this.plan === ''){
                     document.getElementById('Standard').checked = true;
+                    this.plan = 'Standard'
+                }else {
+                    document.getElementById(this.plan).checked = true;
                 }
                 document.getElementById('regionSelect').children[0].children[1].classList.remove('disabled');
                 $('#setting').bootstrapValidator('resetForm', true);
@@ -514,16 +547,45 @@ a, a:link, a:visited, a:hover, a:active {
             getPlanValue(item) {
                 this.plan = item;
             },
+            setNewInstanceRegion(region){
+                this.newInstanceRegion = region;
+            },
             openPopover() {
                 $('.popoverTab').popover('show');
+
+                let result = false;
+                $('#newResourceGroupName').on('input',() =>{
+                    const newValue = $('#newResourceGroupName').val();
+                    if (newValue.length === 0) {
+                        $('#checkNewResourceGroupNameError').text('Enter resource group name');
+                        result = false
+                    } else {
+                        const reg = /^[a-zA-Z0-9_]+((\.-?|-\.?)[a-zA-Z0-9_]+)*$/;
+                        if (reg.test(newValue) === false) {
+                            $('#checkNewResourceGroupNameError').text('Resource group names can only include alphanumeric, underscore, parentheses, hyphen, period (except at end), and Unicode characters that match the allowed characters.');
+                            result = false
+                        } else {
+                            $('#checkNewResourceGroupNameError').text('');
+                            result = true;
+                        }
+                    }
+
+                    if (newValue && result) {
+                        $('#add-resource-group-popover-confirm').prop('disabled', false);
+                    } else {
+                        $('#add-resource-group-popover-confirm').prop('disabled', true);
+                    }
+                })
+
                 $('#add-resource-group-popover-confirm').on('click', () => {
                     const newValue = $('#newResourceGroupName').val();
-                    if (newValue) {
+                    if (newValue && result) {
                         //TODO: your logic to submit the new value.
                         this.closePopover();
                         this.newResourceGroupName = newValue;
-                        this.resourceGroupList.unshift({'name': newValue});
-                        this.resourceGroupName = newValue;
+                        this.resourceGroupList.unshift({'name': '(New) ' + newValue});
+                        this.resourceGroupName = '(New) ' + newValue;
+                        this.$nextTick(function(){ $('.selectpicker').selectpicker('refresh'); });
                         this.newServiceInstance();
                     }
                 });
@@ -628,6 +690,11 @@ a, a:link, a:visited, a:hover, a:active {
                 })
             },
             getServiceInstanceByResourceGroupName(resourceGroupName) {
+                this.existResourceGroup = resourceGroupName;
+                const reg = /^\(New\)/;
+                if(reg.test(resourceGroupName) === true){
+                    return;
+                }
                 this.serviceInstanceList = [];
                 axios.get('/getServiceInstanceList',
                     {
@@ -655,24 +722,24 @@ a, a:link, a:visited, a:hover, a:active {
                 })
             },
             deployCode() {
-
-                console.log(this.newResourceGroupName)
-                console.log(this.flag)
                 let tier;
                 if (this.flag === 'create') {
-                    this.resourceGroupName = this.newResourceGroupName;
-                    this.serviceInstanceName = this.newServiceInstanceName;
                     const selectValidator = $('#setting').data('bootstrapValidator').validate();
                     if (selectValidator.isValid() === false) {
                         return;
                     }
+                    if(this.newResourceGroupName === ''){
+                        this.resourceGroupName = this.existResourceGroup;
+                    } else {
+                        this.resourceGroupName = this.newResourceGroupName;
+                    }
+                    this.serviceInstanceName = this.newServiceInstanceName;
                     tier = this.plan;
                 } else {
                     const createValidator = $('#setting').data('bootstrapValidator').validate();
                     if (createValidator.isValid() === false) {
                         return;
                     }
-
                     this.region = this.serviceInstanceList.find(item => item.name === this.serviceInstanceName).region;
                     tier = this.serviceInstanceList.find(item => item.name === this.serviceInstanceName).sku;
                     if ('StandardGen2' === tier || 'Basic' === tier) {
@@ -684,8 +751,6 @@ a, a:link, a:visited, a:hover, a:active {
                         return;
                     }
                 }
-                console.log(tier)
-
                 let variablesObj = {};
                 if (this.variables.length > 0) {
                     for (let i = 0; i < this.variables.length; i++) {
@@ -697,8 +762,17 @@ a, a:link, a:visited, a:hover, a:active {
                 }
                 this.appInstance.memory = this.appInstance.memory.replace(/\s+/g, "");
                 const appDetails = '&cpu=' + this.appInstance.cpu + '&memory=' + this.appInstance.memory + '&instanceCount=' + this.appInstance.instanceCount + '&tier=' + tier + '&region=' + this.region + '&variables=' + encodeURIComponent(JSON.stringify(variablesObj));
-                const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceInstanceName + '&javaVersion=' + this.appInstance.runtimePlatform + '&appName=' + this.appInstance.name + '&branchName=' + this.branch + '&module=' + this.module;
-                location.assign('/progress.html?' + url + appDetails);
+                const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceInstanceName + '&javaVersion=' + this.appInstance.runtimePlatform + '&appName=' + this.appInstance.name + '&branchName=' + this.branch + '&module=' + this.module + '&flag=' + this.flag;
+
+                const checkGithubAction = document.getElementById('flexSwitchCheckDefault');
+                if(checkGithubAction.checked === true){
+                    const encodeRedirectUrl = 'http://localhost:8080/progress.html?';
+                    location.assign('https://github.com/login/oauth/authorize?prompt=consent&client_id=27c83ffc0f8fd2a9859b&scope=repo%20workflow' + '&redirect_uri=' + encodeRedirectUrl + encodeURIComponent(url + appDetails + '&githubAction=true'));
+                } else {
+                    location.assign('/progress.html?' + url + appDetails);
+                }
+
+                // location.assign('/progress.html?' + url + appDetails);
             },
             validatorForm() {
                 $("#setting").bootstrapValidator({
@@ -721,7 +795,7 @@ a, a:link, a:visited, a:hover, a:active {
                             container: '#resourceGroup_error',
                             validators: {
                                 notEmpty: {
-                                    message: 'Please select Resource group'
+                                    message: 'Please select or create Resource group'
                                 }
                             }
                         },
@@ -733,7 +807,7 @@ a, a:link, a:visited, a:hover, a:active {
                                 }
                             }
                         },
-                        newServiceInstance: {
+                        newServiceInstanceName: {
                             container: '#newServiceInstanceName_error',
                             validators: {
                                 notEmpty: {
@@ -763,9 +837,9 @@ a, a:link, a:visited, a:hover, a:active {
             stringify: JSON.stringify,
         },
         mounted() {
-            // this.querySubscriptionList();
-            // this.getAppNameAndJavaVersion();
-            // this.queryRegionList();
+            this.querySubscriptionList();
+            this.getAppNameAndJavaVersion();
+            this.queryRegionList();
             this.validatorForm();
             this.appInstance.runtimePlatform = 'loading...';
             this.appInstance.name = 'loading...';
@@ -775,16 +849,16 @@ a, a:link, a:visited, a:hover, a:active {
             this.appInstance.deploymentType = 'GitHub repository';
             $('.selectpicker').selectpicker();
             $('[data-toggle="popover"]').popover({
-                placement: 'left',
+                placement: 'bottom',
                 html: true,
                 sanitize: false,
                 trigger: 'manual',
-                content: '<div id="popover-form" style="font-size: 14px;"><p>A resource group is a container that holds related resource for an Azure solution.</p><div class="form-group"><label>Name<span class="required"> * </span></label><input id="newResourceGroupName" type="text" placeholder="Enter resource group name" v-model="newResourceGroupName" class="form-control"/></div><button style="width: 30%;" type="button" class="btn btn-primary btn-sm ok" id="add-resource-group-popover-confirm" >OK</button><button style="width: 30%;" type="button" class="btn btn-secondary btn-sm cancel" id="add-resource-group-popover-cancel">Cancel</button></div>'
+                content: '<div id="popover-form" style="font-size: 14px;"><p>A resource group is a container that holds related resource for an Azure solution.</p><div class="form-group"><label>Name<span class="required"> * </span></label><input id="newResourceGroupName" name="newResourceGroupName" type="text" placeholder="Enter resource group name" v-model="newResourceGroupName" class="form-control"/><span id="checkNewResourceGroupNameError" style="color: red"></span></div><button style="width: 20%;margin-left: 55%;" type="button" class="btn btn-secondary btn-sm ok" id="add-resource-group-popover-confirm" disabled>OK</button><button style="width: 20%;" type="button" class="btn btn-light btn-sm cancel" id="add-resource-group-popover-cancel">Cancel</button></div>'
             });
         },
         updated: function () {
             $('.selectpicker').selectpicker('refresh');
-        }
+        },
     })
     app.mount('#app')
 </script>
