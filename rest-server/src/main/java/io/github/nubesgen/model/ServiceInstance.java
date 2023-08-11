@@ -9,8 +9,6 @@ public class ServiceInstance {
     private String id;
     private String name;
     private String sku;
-    public ServiceInstance() {
-    }
 
     public ServiceInstance(Region region, String resourceGroupName, String id, String name, String sku) {
         this.region = region;

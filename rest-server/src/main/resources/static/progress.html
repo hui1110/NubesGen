@@ -216,6 +216,7 @@ pre{
                 variables: new URLSearchParams(location.search).get('variables'),
                 flag: new URLSearchParams(location.search).get('flag'),
                 code: new URLSearchParams(location.search).get('code'),
+                githubAction: new URLSearchParams(location.search).get('githubAction'),
                 deploymentProgress: 'Your deployment is in progress...',
                 deploymentResult: 'This operation may take a while.',
                 showView: false,
@@ -420,6 +421,10 @@ pre{
                             'relativePath': this.relativePath,
                             'javaVersion': this.javaVersion,
                             'module': this.module,
+                            'githubAction': this.githubAction,
+                            'authorizationCode': this.code,
+                            'url': this.gitUrl,
+                            'branchName': this.branch,
                         }
                     }).then(res => {
                     if (res.status) {
@@ -441,7 +446,8 @@ pre{
                             'subscriptionId': this.subscriptionId,
                             'resourceGroupName': this.resourceGroupName,
                             'serviceName': this.serviceName,
-                            'appName': this.appName
+                            'appName': this.appName,
+                            'githubAction': this.githubAction
                         }
                     }).then(res => {
                     if (res.status === 200 && this.stages[2].status === 'loading' && this.result === '') {
@@ -474,12 +480,12 @@ pre{
                         this.getDeployResult();
                     } else {
                         this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
-                        this.logScrollButtom(this.stages[2].id, null);
+                        this.logScrollButtom(this.stages[2].id, '');
                         this.deleteApp();
                     }
                 }).catch(error => {
                     this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
-                    this.logScrollButtom(this.stages[2].id, this.buildSourceLogStandard + '\n' + error.response.data);
+                    this.logScrollButtom(this.stages[2].id, this.buildSourceLogStandard + '\n' + error.response.data === undefined ? '' : error.response.data);
                     this.deleteApp();
                 })
             },
@@ -530,6 +536,21 @@ pre{
                     this.deleteApp();
                 })
                 this.getBuildLogEnterprise();
+            },
+            deleteApp() {
+                axios.get('/deleteApp',
+                    {
+                        params: {
+                            'subscriptionId': this.subscriptionId,
+                            'resourceGroupName': this.resourceGroupName,
+                            'serviceName': this.serviceName,
+                            'appName': this.appName
+                        }
+                    })
+                    .then(() => {
+                    }).catch(error => {
+                    console.log(error);
+                })
             },
             getBuildLogEnterprise() {
                 if (this.enterpriseStagesIndex > this.enterpriseStages.length - 1) {
@@ -618,21 +639,6 @@ pre{
                     this.deleteApp();
                 })
             },
-            deleteApp() {
-                axios.get('/deleteApp',
-                    {
-                        params: {
-                            'subscriptionId': this.subscriptionId,
-                            'resourceGroupName': this.resourceGroupName,
-                            'serviceName': this.serviceName,
-                            'appName': this.appName
-                        }
-                    })
-                    .then(() => {
-                    }).catch(error => {
-                    console.log(error);
-                })
-            },
             expandCollapse(itemKey, itemId) {
                 const icon = document.getElementById(itemKey);
                 if (!icon.classList.contains('bi-chevron-down')) {
@@ -658,7 +664,7 @@ pre{
                 });
             },
             logScrollButtom(logId, data) {
-                if (data !== null) {
+                if (data.length > 0) {
                     const target = document.getElementById('pre-' + logId);
                     target.innerHTML = this.convert.toHtml(data)
                 }
@@ -737,33 +743,14 @@ pre{
                     this.handleError(0, 'Your service ' + this.serviceName + ' is failed to create.', 'Provision resource failed !');
                 })
             },
-
-            createRepo(){
-                axios.get('/github/createGitHubAction',
-                    {
-                        params: {
-                            'subscriptionId': this.subscriptionId,
-                            'serviceName': this.serviceName,
-                            'appName': this.appName,
-                            'authorizationCode': this.code,
-                            'url': this.gitUrl,
-                            'branchName': this.branch,
-                        }
-                    }).then(res => {
-                    console.log(res);
-                }).catch(error => {
-                    console.log(error);
-                })
-            },
             stringify: JSON.stringify,
         },
         mounted() {
-            // if(this.flag === 'select'){
-            //     this.checkAppExist();
-            // } else {
-            //     this.provisionResourceGroup();
-            // }
-            this.createRepo();
+            if(this.flag === 'select'){
+                this.checkAppExist();
+            } else {
+                this.provisionResourceGroup();
+            }
             $('.collapse').on('shown.bs.collapse', function (evt) {
                 evt.currentTarget.parentElement.scrollIntoView();
             });

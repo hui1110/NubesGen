@@ -5,9 +5,6 @@ public class SubscriptionInstance {
     private String id;
     private String name;
 
-    public SubscriptionInstance() {
-    }
-
     public SubscriptionInstance(String id, String name) {
         this.id = id;
         this.name = name;

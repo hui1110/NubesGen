@@ -1,10 +1,10 @@
 package io.github.nubesgen.model;
 
-public class ResourceGrooupInstance {
+public class ResourceGroupInstance {
 
     private String name;
 
-    public ResourceGrooupInstance(String name) {
+    public ResourceGroupInstance(String name) {
         this.name = name;
     }
 
