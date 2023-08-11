@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GitHub code</title>
+</head>
+<body>
+
+</body>
+<script>
+    window.onload = function () {
+        const timestamp = new URLSearchParams(location.search).get('timestamp')
+        localStorage.setItem(timestamp + '_githubCode', new URLSearchParams(location.search).get('code'));
+        window.close();
+    }
+</script>
+</html>

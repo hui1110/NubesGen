@@ -406,6 +406,17 @@ a, a:link, a:visited, a:hover, a:active {
                 </div>
             </div>
 
+            <div class="mb-3 row" style="font-weight: normal; font-size: 14px;">
+                <label class="col-sm-4 col-form-label">Setup GitHub action</label>
+                <div class="col-sm-7">
+                    <div class="form-check form-switch" style="display: inline-block;margin-right: 3%;">
+                        <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" @change="setupPipeline()">
+                        <label class="form-check-label" for="flexSwitchCheckDefault">Setup CI/CD pipeline</label>
+                    </div>
+                    <button id="connectGitHub" type="button" class="btn btn-primary btn-sm" style="line-height: 1;" @click="authGithub()" disabled>Connect GitHub</button>
+                </div>
+            </div>
+
             <div class="mb-3 row">
                 <label class="col-sm-4 col-form-label">Environment variables</label>
                 <div class="col-sm-7">
@@ -430,16 +441,6 @@ a, a:link, a:visited, a:hover, a:active {
                         <div class="col-first d-flex align-items-center">
                             <i class="bi bi-trash3" @click.prevent="deleteItem(index)"></i>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mb-3 row" style="font-weight: normal; font-size: 14px;">
-                <label class="col-sm-4 col-form-label">Setup Github action</label>
-                <div class="col-sm-7">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault">
-                        <label class="form-check-label" for="flexSwitchCheckDefault">Setup CI/CD pipeline for this repository</label>
                     </div>
                 </div>
             </div>
@@ -489,6 +490,7 @@ a, a:link, a:visited, a:hover, a:active {
                 existRegion: '',
                 newInstanceRegion: '',
                 existResourceGroup: '',
+                githubCode: '',
                 regionList: [],
                 appInstance: {},
                 subscriptionList: [],
@@ -500,6 +502,45 @@ a, a:link, a:visited, a:hover, a:active {
             }
         },
         methods: {
+            authGithub() {
+                const currentTimestamp = Date.parse(new Date());
+                window.addEventListener('storage', () => {
+                    const code = localStorage.getItem(currentTimestamp + "_githubCode");
+                    if (code) {
+                        this.githubCode = code;
+                        window.removeEventListener('storage', () => {
+                        });
+                        localStorage.removeItem(currentTimestamp + "_githubCode");
+                        const startIndex = this.url.split('/', 3).join('/').length;
+                        const endIndex = this.url.split('/', 4).join('/').length;
+                        const username = this.url.substring(startIndex + 1, endIndex);
+                        toast.success('User ' + username + ' authenticated !', {
+                            position: toast.POSITION.TOP_CENTER,
+                            autoClose: 3000,
+                            hideProgressBar: true
+                        });
+                    }
+                });
+                const htmlContent = '<!DOCTYPE html><html lang="en"><head><title>Authorize application</title></head ><body onload = "auth()"></body>' +
+                "<script>" +
+                    "function auth() {location.assign(" + "'https://github.com/login/oauth/authorize?prompt=consent&client_id=27c83ffc0f8fd2a9859b&scope=repo%20workflow&redirect_uri=http://localhost:8080/asa-github-code.html?timestamp=" + currentTimestamp + "'" + ")}" +
+                    "<" + "/script></html>"
+
+                 const winUrl = URL.createObjectURL(
+                    new Blob([htmlContent], {type: "text/html"})
+                );
+                var newWin = window.open(winUrl, 'Authorize application', 'height=700,width=700');
+                setTimeout(() => {
+                    newWin.close();
+                    window.removeEventListener('storage', () => {
+                    });
+                }, 20000);
+            },
+            setupPipeline() {
+                const item = document.getElementById("flexSwitchCheckDefault");
+                let pipeline = document.getElementById("connectGitHub");
+                pipeline.disabled = item.checked !== true;
+            },
             addItem() {
                 this.variables.push({key: '', value: ''});
             },
@@ -693,6 +734,7 @@ a, a:link, a:visited, a:hover, a:active {
                 this.existResourceGroup = resourceGroupName;
                 const reg = /^\(New\)/;
                 if(reg.test(resourceGroupName) === true){
+                    this.serviceInstanceList = [];
                     return;
                 }
                 this.serviceInstanceList = [];
@@ -751,6 +793,7 @@ a, a:link, a:visited, a:hover, a:active {
                         return;
                     }
                 }
+
                 let variablesObj = {};
                 if (this.variables.length > 0) {
                     for (let i = 0; i < this.variables.length; i++) {
@@ -760,19 +803,21 @@ a, a:link, a:visited, a:hover, a:active {
                     }
 
                 }
+
                 this.appInstance.memory = this.appInstance.memory.replace(/\s+/g, "");
                 const appDetails = '&cpu=' + this.appInstance.cpu + '&memory=' + this.appInstance.memory + '&instanceCount=' + this.appInstance.instanceCount + '&tier=' + tier + '&region=' + this.region + '&variables=' + encodeURIComponent(JSON.stringify(variablesObj));
-                const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceInstanceName + '&javaVersion=' + this.appInstance.runtimePlatform + '&appName=' + this.appInstance.name + '&branchName=' + this.branch + '&module=' + this.module + '&flag=' + this.flag;
+                const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceInstanceName + '&javaVersion=' + this.appInstance.runtimePlatform + '&appName=' + this.appInstance.name + '&branchName=' + this.branch + '&module=' + this.module + '&flag=' + this.flag + "&code=" + this.githubCode;
 
                 const checkGithubAction = document.getElementById('flexSwitchCheckDefault');
-                if(checkGithubAction.checked === true){
-                    const encodeRedirectUrl = 'http://localhost:8080/progress.html?';
-                    location.assign('https://github.com/login/oauth/authorize?prompt=consent&client_id=27c83ffc0f8fd2a9859b&scope=repo%20workflow' + '&redirect_uri=' + encodeRedirectUrl + encodeURIComponent(url + appDetails + '&githubAction=true'));
-                } else {
-                    location.assign('/progress.html?' + url + appDetails);
+                if(checkGithubAction.checked === true && this.githubCode === ''){
+                    toast.info("Please connect GitHub !.", {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 5000,
+                        hideProgressBar: true
+                    });
+                    return;
                 }
-
-                // location.assign('/progress.html?' + url + appDetails);
+                location.assign('/progress.html?' + url + appDetails + '&githubAction=' + checkGithubAction.checked);
             },
             validatorForm() {
                 $("#setting").bootstrapValidator({
@@ -837,6 +882,7 @@ a, a:link, a:visited, a:hover, a:active {
             stringify: JSON.stringify,
         },
         mounted() {
+            sessionStorage.setItem('flag', this.flag);
             this.querySubscriptionList();
             this.getAppNameAndJavaVersion();
             this.queryRegionList();
