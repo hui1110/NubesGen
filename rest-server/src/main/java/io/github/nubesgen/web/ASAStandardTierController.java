@@ -33,9 +33,9 @@ public class ASAStandardTierController {
     }
 
     @GetMapping("/getBuildLogs")
-    public @ResponseBody ResponseEntity<?> getBuildLogs(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName) {
+    public @ResponseBody ResponseEntity<?> getBuildLogs(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam String githubAction) {
         try {
-            String buildLogs = asaStandardTierService.getBuildLogs(management, subscriptionId, resourceGroupName, serviceName, appName, null);
+            String buildLogs = asaStandardTierService.getBuildLogs(management, subscriptionId, resourceGroupName, serviceName, appName, null, githubAction);
             return new ResponseEntity<>(buildLogs, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -43,10 +43,10 @@ public class ASAStandardTierController {
     }
 
     @GetMapping("/deploy")
-    public @ResponseBody ResponseEntity<?> deployGithubRepoSourceCodeToASA(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String module, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam String javaVersion, @RequestParam String relativePath) {
+    public @ResponseBody ResponseEntity<?> deployGithubRepoSourceCodeToASA(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String module, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam String javaVersion, @RequestParam String relativePath, @RequestParam String githubAction, @RequestParam(required = false) String authorizationCode, @RequestParam(required = false) String url, @RequestParam(required = false) String branchName) {
         try {
-            asaStandardTierService.buildAndDeploy(management, subscriptionId, resourceGroupName,
-                    serviceName, appName, module, javaVersion, relativePath);
+            asaStandardTierService.buildAndDeploySourceCode(management, subscriptionId, resourceGroupName,
+                    serviceName, appName, module, javaVersion, relativePath, githubAction, authorizationCode, url, branchName);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.ACCEPTED);

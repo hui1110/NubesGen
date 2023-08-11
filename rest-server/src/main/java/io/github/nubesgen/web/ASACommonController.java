@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.nubesgen.model.ProjectInstance;
 import io.github.nubesgen.model.RegionInstance;
-import io.github.nubesgen.model.ResourceGrooupInstance;
+import io.github.nubesgen.model.ResourceGroupInstance;
 import io.github.nubesgen.model.ServiceInstance;
 import io.github.nubesgen.model.SubscriptionInstance;
 import io.github.nubesgen.service.ASACommonService;
@@ -58,7 +58,7 @@ public class ASACommonController {
     @GetMapping("/getResourceGroupList")
     public @ResponseBody ResponseEntity<?> getResourceGroupList(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId) {
         try {
-            List<ResourceGrooupInstance> resourceGroupInstances = asaCommonService.getResourceGroupList(management,
+            List<ResourceGroupInstance> resourceGroupInstances = asaCommonService.getResourceGroupList(management,
                     subscriptionId);
             return new ResponseEntity<>(resourceGroupInstances, HttpStatus.OK);
         } catch (Exception e) {

@@ -35,9 +35,9 @@ public class ASAEnterpriseTierController {
     }
 
     @GetMapping("/getBuildLogs")
-    public @ResponseBody ResponseEntity<?> getBuildLogs(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam(required = false) String stage) {
+    public @ResponseBody ResponseEntity<?> getBuildLogs(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam(required = false) String stage, @RequestParam(required = false) String githubAction) {
         try {
-            String buildLogs = asaEnterpriseTierService.getBuildLogs(management, subscriptionId, resourceGroupName, serviceName, appName, stage);
+            String buildLogs = asaEnterpriseTierService.getBuildLogs(management, subscriptionId, resourceGroupName, serviceName, appName, stage, githubAction);
             return new ResponseEntity<>(buildLogs, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

@@ -20,7 +20,7 @@ import com.azure.storage.file.share.ShareFileAsyncClient;
 import com.azure.storage.file.share.ShareFileClientBuilder;
 import io.github.nubesgen.model.ProjectInstance;
 import io.github.nubesgen.model.RegionInstance;
-import io.github.nubesgen.model.ResourceGrooupInstance;
+import io.github.nubesgen.model.ResourceGroupInstance;
 import io.github.nubesgen.model.ServiceInstance;
 import io.github.nubesgen.model.SubscriptionInstance;
 import io.github.nubesgen.utils.ASADeployUtils;
@@ -29,8 +29,6 @@ import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.apache.tomcat.util.http.fileupload.FileUtils;
-import org.eclipse.jgit.api.Git;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -131,10 +129,10 @@ public class ASACommonService {
      * @param subscriptionId the subscription id
      * @return the resource group instance list
      */
-    public List<ResourceGrooupInstance> getResourceGroupList(OAuth2AuthorizedClient management, String subscriptionId) {
+    public List<ResourceGroupInstance> getResourceGroupList(OAuth2AuthorizedClient management, String subscriptionId) {
         AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
         return appPlatformManager.resourceManager().resourceGroups().list().stream().sorted(Comparator.comparing(ResourceGroup::name))
-                .map(resourceGroup -> new ResourceGrooupInstance(resourceGroup.name()))
+                .map(resourceGroup -> new ResourceGroupInstance(resourceGroup.name()))
                 .collect(Collectors.toList());
     }
 
@@ -182,7 +180,7 @@ public class ASACommonService {
      */
     public synchronized ProjectInstance getNameAndJavaVersion(String url, String branchName, String module) {
         module = Objects.equals(module, "null") ? null : module;
-        String pathName = downloadSourceCodeFromGitHub(url, branchName);
+        String pathName = ASADeployUtils.downloadSourceCodeFromGitHub(url, branchName);
         assert pathName != null;
         Model model;
         if (module == null) {
@@ -190,7 +188,7 @@ public class ASACommonService {
                 MavenXpp3Reader reader = new MavenXpp3Reader();
                 model = reader.read(fis);
             } catch (Exception e) {
-                deleteRepositoryDirectory(new File(pathName));
+                ASADeployUtils.deleteRepositoryDirectory(new File(pathName));
                 throw new RuntimeException(e.getMessage());
             }
         } else {
@@ -207,11 +205,11 @@ public class ASACommonService {
                     }
                 }
             } catch (Exception e) {
-                deleteRepositoryDirectory(new File(pathName));
+                ASADeployUtils.deleteRepositoryDirectory(new File(pathName));
                 throw new RuntimeException(e.getMessage());
             }
         }
-        deleteRepositoryDirectory(new File(pathName));
+        ASADeployUtils.deleteRepositoryDirectory(new File(pathName));
         ProjectInstance projectInstance = new ProjectInstance();
         if (model.getName() != null) {
             projectInstance.setName(model.getName().replaceAll(" ", "").toLowerCase());
@@ -332,7 +330,7 @@ public class ASACommonService {
                 .httpClient(appPlatformManager.httpPipeline().getHttpClient())
                 .buildFileAsyncClient();
         try {
-            String pathName = downloadSourceCodeFromGitHub(url, branchName);
+            String pathName = ASADeployUtils.downloadSourceCodeFromGitHub(url, branchName);
             File gzFile = createTarGzFile(new File(pathName));
             fileClient.create(gzFile.length())
                     .flatMap(fileInfo -> fileClient.uploadFromFile(gzFile.getAbsolutePath())).retry(2)
@@ -429,31 +427,6 @@ public class ASACommonService {
     }
 
     /**
-     * Download the source code from the git repository.
-     */
-    private static synchronized String downloadSourceCodeFromGitHub(String url, String branchName) {
-        String repositoryPath = url.substring(url.lastIndexOf("/") + 1);
-        deleteRepositoryDirectory(new File(repositoryPath));
-        branchName = Objects.equals(branchName, "null") ? null : branchName;
-        Git git = null;
-        String pathName = null;
-        try {
-            git = Git.cloneRepository()
-                    .setURI(url)
-                    .setBranch(branchName)
-                    .call();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (git != null) {
-                git.close();
-                pathName = git.getRepository().getWorkTree().toString();
-            }
-        }
-        return pathName;
-    }
-
-    /**
      * User source code to create tar.gz file.
      */
     private static synchronized File createTarGzFile(File sourceFolder) throws IOException {
@@ -480,23 +453,8 @@ public class ASACommonService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        deleteRepositoryDirectory(sourceFolder);
+        ASADeployUtils.deleteRepositoryDirectory(sourceFolder);
         return compressFile;
-    }
-
-    /**
-     * Delete the directory.
-     */
-    private static synchronized void deleteRepositoryDirectory(File directory) {
-        File tempGitDirectory;
-        try {
-            tempGitDirectory = new File(directory.toString());
-            if (tempGitDirectory.exists()) {
-                FileUtils.deleteDirectory(tempGitDirectory);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
 }

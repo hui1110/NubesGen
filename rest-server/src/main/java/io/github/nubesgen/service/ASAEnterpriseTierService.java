@@ -66,7 +66,7 @@ public class ASAEnterpriseTierService implements ASAService {
     @Override
     public String getBuildLogs(OAuth2AuthorizedClient management, String subscriptionId,
                                String resourceGroupName,
-                               String serviceName, String appName, String stage) {
+                               String serviceName, String appName, String stage, String githubAction) {
         String buildLogs = null;
         try {
             AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
