@@ -411,6 +411,19 @@ public class ASACommonService {
     }
 
     /**
+     * Check whether the workflow file exists.
+     *
+     * @param url the repository url
+     * @param branchName the branch name
+     * @return true if the workflow file exists, otherwise false
+     */
+    public boolean checkWorkFlowFile(String url, String branchName){
+        String pathName = ASADeployUtils.downloadSourceCodeFromGitHub(url, branchName);
+        File file = new File(pathName+ "/.github/workflows/" + "deploy-source-code-to-asa.yml");
+        return file.exists();
+    }
+
+    /**
      * get the application log streaming endpoint.
      */
     private static String getLogStreamingEndpoint(SpringService springService, String appName) {

@@ -19,8 +19,8 @@ import io.github.nubesgen.model.GitHubTokenResult;
 import io.github.nubesgen.model.GitWrapper;
 import io.github.nubesgen.utils.ASADeployUtils;
 import okhttp3.Request;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -31,7 +31,6 @@ import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -58,6 +57,7 @@ public final class ASAGitHubActionService {
     private static final String WORKFLOW_FILE_PATH = "deploy-source-code-to-asa.yml";
     private static final String GRAPH_SCOPE = "https://graph.microsoft.com/.default";
     private static final String FEDERATED_CREDENTIAL_ISSUE = "https://token.actions.githubusercontent.com";
+    private final Logger log = LoggerFactory.getLogger(ASAGitHubActionService.class);
 
     private final WebClient webClient;
 
@@ -65,124 +65,34 @@ public final class ASAGitHubActionService {
         this.webClient = webClient;
     }
 
-    public String getAccessToken(String authorizationCode) {
-        GitHubTokenResult result;
-        try {
-            Map<String, String> map = new HashMap<>();
-            map.put("client_id", "27c83ffc0f8fd2a9859b");
-            map.put("client_secret", "33761dd44924c97ee87a90aa238c12a5f0e20a29");
-            map.put("redirect_uri", "http://localhost:8080/asa-github-code.html");
-            map.put("code", authorizationCode);
-            result = webClient.post()
-                    .uri(ACCESS_TOKEN_PATH)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(BodyInserters.fromValue(map))
-                    .accept(MediaType.APPLICATION_JSON)
-                    .retrieve()
-                    .bodyToMono(GitHubTokenResult.class)
-                    .block();
-        } catch (RuntimeException ex) {
-            throw new RuntimeException("Error while authenticating", ex);
-        }
-        if (result == null || result.getAccessToken() == null) {
-            throw new RuntimeException("Error while authenticating");
-        }
-        return result.getAccessToken();
-    }
+    public String credentialCreation(OAuth2AuthorizedClient management, String subscriptionId, String appName, String url, String branchName) {
+        branchName = Objects.equals(branchName, "null") ? "main" : branchName;
+        Map<String, String> credentialMap = createServicePrincipal(management, subscriptionId, appName);
+        log.info("Service principal created successfully");
 
-    public String getUserName(String url) {
-        int beginIndex = StringUtils.ordinalIndexOf(url, "/", 3);
-        int endIndex = StringUtils.ordinalIndexOf(url, "/", 4);
-        return url.substring(beginIndex + 1, endIndex);
-    }
+        assignedRoleToServicePrincipal(management, subscriptionId, credentialMap.get("principalId"));
+        log.info("Role assigned to service principal successfully");
 
-    public boolean createWorkflowFile(String pathName, String branchName, String javaVersion, String module) throws IOException {
-        File path = new File(pathName);
-        Path project = path.toPath();
-        Path output = project.resolve(".github/workflows/" + WORKFLOW_FILE_PATH);
-
-        ClassPathResource resource = new ClassPathResource("workflows/" + WORKFLOW_FILE_PATH);
-        InputStream inputStream= resource.getInputStream();
-        String content = new String(FileCopyUtils.copyToByteArray(inputStream));
-
-        content = content.replace("${push-branches}", branchName).replace("${java-version}", javaVersion);
-        if (!Objects.equals(module, "null")) {
-            content = content.replace("${target-module}", module); // withTargetModule
-        } else {
-            content = content.replace("${target-module}", ""); // withoutTargetModule
-        }
-
-        if (!Files.exists(output)) {
-            Files.createDirectories(output.getParent());
-        } else {
-            File tempFile = new File(WORKFLOW_FILE_PATH);
-            FileUtils.writeStringToFile(tempFile, content, "UTF-8");
-            if(FileUtils.contentEqualsIgnoreEOL(tempFile, output.toFile(), "UTF-8")){
-                Files.delete(tempFile.toPath());
-                return false;
-            }
-            Files.delete(output);
-        }
-
-        Files.createFile(output);
-        FileCopyUtils.copy(resource.getInputStream(), Files.newOutputStream(output, StandardOpenOption.APPEND));
-        try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(output))) {
-            writer.write(content);
-        }
-        return true;
-    }
-
-    public GitHubRepositoryPublicKey getGitHubRepositoryPublicKey(String username, String pathName, String accessToken) {
-        return webClient
-                .get()
-                .uri(String.format(CREATE_REPO_SECRET_PATH, username, pathName, "public-key"))
-                .header("Authorization", "token " + accessToken)
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(GitHubRepositoryPublicKey.class)
-                .block();
-    }
-
-    public void pushSecretsToGitHub(OAuth2AuthorizedClient management, String subscriptionId, String serviceName, String appName, String username, String pathName, String accessToken, GitHubRepositoryPublicKey repositoryPublicKey, String clientId) throws SodiumException {
         String tenantId = ASADeployUtils.getTenantId(management, subscriptionId);
-        Map<String, String> map = new HashMap<>();
-        map.put("AZURE_SPRING_SERVICE_NAME", serviceName);
-        map.put("AZURE_SPRING_APP_NAME", appName);
-        map.put("AZURE_CLIENT_ID", clientId);
-        map.put("AZURE_TENANT_ID", tenantId);
-        map.put("AZURE_SUBSCRIPTION_ID", subscriptionId);
-
-        Map<String, String> secretMap = new HashMap<>();
-        secretMap.put("key_id", repositoryPublicKey.getKeyId());
-
-        for (Map.Entry<String, String> entry : map.entrySet()) {
-            secretMap.put("encrypted_value", encryptSecretValue(entry.getValue(), repositoryPublicKey.getKey()));
-            try {
-                webClient
-                        .put()
-                        .uri(String.format(CREATE_REPO_SECRET_PATH, username, pathName, entry.getKey()))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromValue(secretMap))
-                        .header("Authorization", "token " + accessToken)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .retrieve().toBodilessEntity().block();
-            } catch (Exception e) {
-                throw new RuntimeException("Error while pushing secrets to GitHub", e);
-            }
-        }
+        String username = ASADeployUtils.getUserName(url);
+        String pathName = ASADeployUtils.getPathName(url);
+        createFederatedCredential(management, appName, tenantId, credentialMap.get("objectId"), username, pathName, branchName);
+        log.info("Federated credential created successfully");
+        return credentialMap.get("clientId");
     }
 
-    public Map<String, String> createdServicePrincipal(OAuth2AuthorizedClient management, String tenantId, String subscriptionId, String appName) {
-        AzureResourceManager servicePrincipalOperationARM = ASADeployUtils.getServicePrincipalOperationARM(management, subscriptionId);
+    /**
+     * Create service principal.
+     *
+     * @param management The OAuth2AuthorizedClient.
+     * @param subscriptionId the subscription id.
+     * @param appName The app name.
+     * @return The map of service principal credential.
+     */
+    private Map<String, String> createServicePrincipal(OAuth2AuthorizedClient management, String subscriptionId, String appName) {
+        String tenantId = ASADeployUtils.getTenantId(management, subscriptionId);
         appName = "asa-button-".concat(appName);
         Map<String, String> map = new HashMap<>();
-        try {
-            if (!Objects.isNull(servicePrincipalOperationARM.accessManagement().servicePrincipals().getByName(appName))) {
-                return map;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         GraphServiceClient<Request> graphClient = getGraphClient(management, tenantId);
         try {
             Application application = new Application();
@@ -206,7 +116,14 @@ public final class ASAGitHubActionService {
         return map;
     }
 
-    public void assignedRoleToServicePrincipal(OAuth2AuthorizedClient management, String subscriptionId, String principalId) {
+    /**
+     * Assigned role to service principal.
+     *
+     * @param management The OAuth2AuthorizedClient.
+     * @param subscriptionId The subscription id.
+     * @param principalId The principal id.
+     */
+    private void assignedRoleToServicePrincipal(OAuth2AuthorizedClient management, String subscriptionId, String principalId) {
         final AzureResourceManager azureResourceManager = ASADeployUtils.getAzureResourceManager(management, subscriptionId);
         try {
             azureResourceManager
@@ -223,20 +140,18 @@ public final class ASAGitHubActionService {
         }
     }
 
-    public void pushWorkflowFile(String path, String url, String branchName, String username, String accessToken) {
-        try {
-            new GitWrapper()
-                    .gitInit(new File(path), branchName)
-                    .gitAdd()
-                    .gitCommit(username, "SpringIntegSupport@microsoft.com")
-                    .gitPush(url, username, accessToken)
-                    .gitClean();
-        } catch (Exception e) {
-            throw new RuntimeException("Error while pushing workflow file", e);
-        }
-    }
-
-    public void createFederatedCredential(OAuth2AuthorizedClient management, String appName, String tenantId, String objectId, String username, String pathName, String branchName) {
+    /**
+     * Create federated credential for service principal.
+     *
+     * @param management The OAuth2AuthorizedClient.
+     * @param appName The app name.
+     * @param tenantId The tenant id.
+     * @param objectId The object id.
+     * @param username The username.
+     * @param pathName The path name.
+     * @param branchName The branch name.
+     */
+    private void createFederatedCredential(OAuth2AuthorizedClient management, String appName, String tenantId, String objectId, String username, String pathName, String branchName) {
         GraphServiceClient<Request> graphClient = getGraphClient(management, tenantId);
         FederatedIdentityCredential federatedIdentityCredential = new FederatedIdentityCredential();
         federatedIdentityCredential.name = appName;
@@ -254,7 +169,14 @@ public final class ASAGitHubActionService {
         }
     }
 
-    public static GraphServiceClient<Request> getGraphClient(OAuth2AuthorizedClient management, String tenantId) {
+    /**
+     * Get the graph client.
+     *
+     * @param management The OAuth2AuthorizedClient.
+     * @param tenantId The tenant id.
+     * @return The graph client.
+     */
+    private GraphServiceClient<Request> getGraphClient(OAuth2AuthorizedClient management, String tenantId) {
         final List<String> scopes = List.of(GRAPH_SCOPE);
         final ClientSecretCredential clientSecretCredential = new ClientSecretCredentialBuilder()
                 .clientId(management.getClientRegistration().getClientId()).tenantId(tenantId).clientSecret(management.getClientRegistration().getClientSecret()).build();
@@ -263,6 +185,162 @@ public final class ASAGitHubActionService {
         return GraphServiceClient.builder().authenticationProvider(authProvider).buildClient();
     }
 
+    /**
+     * Push secrets to GitHub.
+     *
+     * @param management The OAuth2AuthorizedClient.
+     * @param subscriptionId The subscription id.
+     * @param serviceName The service name.
+     * @param appName The app name.
+     * @param clientId The client id.
+     * @throws SodiumException The SodiumException.
+     */
+    public String pushSecretsToGitHub(OAuth2AuthorizedClient management, String subscriptionId, String serviceName, String appName, String url, String clientId, String code) throws SodiumException {
+        String tenantId = ASADeployUtils.getTenantId(management, subscriptionId);
+
+        Map<String, String> map = new HashMap<>();
+        map.put("AZURE_SPRING_SERVICE_NAME", serviceName);
+        map.put("AZURE_SPRING_APP_NAME", appName);
+        map.put("AZURE_CLIENT_ID", clientId);
+        map.put("AZURE_TENANT_ID", tenantId);
+        map.put("AZURE_SUBSCRIPTION_ID", subscriptionId);
+
+        String username = ASADeployUtils.getUserName(url);
+        String pathName = ASADeployUtils.getPathName(url);
+        String accessToken = getAccessToken(code);
+        GitHubRepositoryPublicKey repositoryPublicKey = getGitHubRepositoryPublicKey(username, pathName, accessToken);
+        Map<String, String> secretMap = new HashMap<>();
+        secretMap.put("key_id", repositoryPublicKey.getKeyId());
+
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            secretMap.put("encrypted_value", encryptSecretValue(entry.getValue(), repositoryPublicKey.getKey()));
+            try {
+                webClient
+                        .put()
+                        .uri(String.format(CREATE_REPO_SECRET_PATH, username, pathName, entry.getKey()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(BodyInserters.fromValue(secretMap))
+                        .header("Authorization", "token " + accessToken)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .retrieve().toBodilessEntity().block();
+            } catch (Exception e) {
+                throw new RuntimeException("Error while pushing secrets to GitHub", e);
+            }
+        }
+        log.info("Secrets pushed to GitHub successfully");
+        return accessToken;
+    }
+
+
+    /**
+     * Get the access token from GitHub.
+     *
+     * @param authorizationCode The authorization code from GitHub.
+     * @return The access token.
+     */
+    private String getAccessToken(String authorizationCode) {
+        GitHubTokenResult result;
+        try {
+            Map<String, String> map = new HashMap<>();
+            map.put("client_id", "7a1c7d3c445546021d63");
+            map.put("client_secret", "0ab4291a3366c7acdacf269153ff83bd92f03d44");
+            map.put("redirect_uri", "https://yonghui-apps-dev-nubesgen.azuremicroservices.io/asa-github-code.html");
+            map.put("code", authorizationCode);
+            result = webClient.post()
+                    .uri(ACCESS_TOKEN_PATH)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(BodyInserters.fromValue(map))
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .bodyToMono(GitHubTokenResult.class)
+                    .block();
+        } catch (RuntimeException ex) {
+            throw new RuntimeException("Error while authenticating", ex);
+        }
+        if (result == null || result.getAccessToken() == null) {
+            throw new RuntimeException("Error while authenticating");
+        }
+        return result.getAccessToken();
+    }
+
+    /**
+     * Get the public key from GitHub.
+     *
+     * @param username The username.
+     * @param pathName The path name.
+     * @param accessToken The access token.
+     * @return The public key.
+     */
+    private GitHubRepositoryPublicKey getGitHubRepositoryPublicKey(String username, String pathName, String accessToken) {
+        return webClient
+                .get()
+                .uri(String.format(CREATE_REPO_SECRET_PATH, username, pathName, "public-key"))
+                .header("Authorization", "token " + accessToken)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(GitHubRepositoryPublicKey.class)
+                .block();
+    }
+
+    /**
+     * Push workflow file.
+     *
+     * @param url repository url
+     * @param branchName branch name
+     * @param accessToken access token
+     */
+    public void generateWorkflowFile(String url, String branchName, String module, String javaVersion, String accessToken) {
+        try {
+            branchName = Objects.equals(branchName, "null") ? "main" : branchName;
+            String pathName = ASADeployUtils.getPathName(url);
+            File path = new File(pathName);
+            Path project = path.toPath();
+            Path output = project.resolve(".github/workflows/" + WORKFLOW_FILE_PATH);
+
+            ClassPathResource resource = new ClassPathResource("workflows/" + WORKFLOW_FILE_PATH);
+            InputStream inputStream= resource.getInputStream();
+            String content = new String(FileCopyUtils.copyToByteArray(inputStream));
+
+            content = content.replace("${push-branches}", branchName).replace("${java-version}", javaVersion);
+            if (!Objects.equals(module, "null")) {
+                content = content.replace("${target-module}", module); // withTargetModule
+            } else {
+                content = content.replace("${target-module}", ""); // withoutTargetModule
+            }
+
+            if (!Files.exists(output)) {
+                Files.createDirectories(output.getParent());
+            } else {
+                Files.delete(output);
+            }
+
+            Files.createFile(output);
+            FileCopyUtils.copy(resource.getInputStream(), Files.newOutputStream(output, StandardOpenOption.APPEND));
+            try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(output))) {
+                writer.write(content);
+            }
+
+            String username = ASADeployUtils.getUserName(url);
+            new GitWrapper()
+                    .gitInit(path, branchName)
+                    .gitAdd()
+                    .gitCommit(username, "SpringIntegSupport@microsoft.com")
+                    .gitPush(url, username, accessToken)
+                    .gitClean();
+        } catch (Exception e) {
+            throw new RuntimeException("Error while pushing workflow file", e);
+        }
+        log.info("Workflow file pushed to GitHub successfully");
+    }
+
+    /**
+     * Get the GitHub action status.
+     *
+     * @param username the username
+     * @param pathName the path name
+     * @param accessToken the access token
+     * @return the GitHub action status
+     */
     public String getGitHubActionStatus(String username, String pathName, String accessToken) {
         WebClient webClient = WebClient.builder().exchangeStrategies(ExchangeStrategies.builder()
                         .codecs(configurer -> configurer
@@ -280,24 +358,6 @@ public final class ASAGitHubActionService {
                 .block();
         assert gitHubActionRunStatus != null;
         return gitHubActionRunStatus.getWorkflowRuns().get(0).getStatus();
-    }
-
-    public void startGitHubAction(String username, String pathName, String accessToken, String branchName) {
-        Map<String, String> map = new HashMap<>();
-        map.put("ref", branchName);
-        try {
-            webClient
-                    .post()
-                    .uri(String.format(WORKFLOW_PATH, username, pathName, WORKFLOW_FILE_PATH, "dispatches"))
-                    .header("Authorization", "token " + accessToken)
-                    .body(BodyInserters.fromValue(map))
-                    .accept(MediaType.APPLICATION_JSON)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .block();
-        } catch (Exception e) {
-            throw new RuntimeException("Error while starting GitHub action", e);
-        }
     }
 
     private String encryptSecretValue(String secretValue, String key) throws SodiumException {

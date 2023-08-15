@@ -13,6 +13,7 @@ import com.azure.resourcemanager.appplatform.models.DeploymentInstance;
 import com.azure.resourcemanager.appplatform.models.SpringAppDeployment;
 import com.azure.resourcemanager.appplatform.models.SpringService;
 import com.azure.resourcemanager.resources.models.Subscription;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -32,6 +33,35 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public final class ASADeployUtils {
+
+    /**
+     * Get the username from the GitHub URL.
+     *
+     * @param url The GitHub URL.
+     * @return The username.
+     */
+    public static String getUserName(String url) {
+        int beginIndex = StringUtils.ordinalIndexOf(url, "/", 3);
+        int endIndex = StringUtils.ordinalIndexOf(url, "/", 4);
+        return url.substring(beginIndex + 1, endIndex);
+    }
+
+    /**
+     * Get the repository name from the GitHub URL.
+     *
+     * @param url The GitHub URL.
+     * @return The repository name.
+     */
+    public static String getPathName(String url){
+        int beginIndex = StringUtils.ordinalIndexOf(url, "/", 4);
+        int endIndex;
+        if(url.contains("&")) {
+            endIndex = StringUtils.ordinalIndexOf(url, "&", 1);
+            return url.substring(beginIndex + 1, endIndex);
+        } else {
+            return url.substring(beginIndex + 1);
+        }
+    }
 
     /**
      * Download the source code from the GitHub repository.

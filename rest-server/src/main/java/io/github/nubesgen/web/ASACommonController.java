@@ -9,6 +9,7 @@ import io.github.nubesgen.model.ResourceGroupInstance;
 import io.github.nubesgen.model.ServiceInstance;
 import io.github.nubesgen.model.SubscriptionInstance;
 import io.github.nubesgen.service.ASACommonService;
+import io.github.nubesgen.service.ASAGitHubActionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -28,9 +29,11 @@ public class ASACommonController {
 
     private static final String DEFAULT_OAUTH2_CLIENT = "management";
     private final ASACommonService  asaCommonService;
+    private final ASAGitHubActionService asaGitHubActionService;
 
-    public ASACommonController(ASACommonService asaCommonService) {
+    public ASACommonController(ASACommonService asaCommonService, ASAGitHubActionService asaGitHubActionService) {
         this.asaCommonService = asaCommonService;
+        this.asaGitHubActionService = asaGitHubActionService;
     }
 
     @GetMapping("/getAppNameAndJavaVersion")
@@ -182,6 +185,46 @@ public class ASACommonController {
     public @ResponseBody ResponseEntity<?> deleteApp(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName){
         try {
             asaCommonService.deleteApp(management, subscriptionId, resourceGroupName, serviceName, appName);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/checkWorkFlowFile")
+    public @ResponseBody ResponseEntity<?> checkWorkFlowFile(@RequestParam String url, @RequestParam String branchName){
+        try {
+            boolean res = asaCommonService.checkWorkFlowFile(url, branchName);
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/createServicePrincipal")
+    public @ResponseBody ResponseEntity<?> credentialCreation(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String appName, @RequestParam String url, @RequestParam String branchName){
+        try {
+            String clientId = asaGitHubActionService.credentialCreation(management, subscriptionId, appName, url, branchName);
+            return new ResponseEntity<>(clientId, HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/pushSecretsToGitHub")
+    public @ResponseBody ResponseEntity<?> pushSecretsToGitHub(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId,@RequestParam String serviceName, @RequestParam String appName, @RequestParam String url, @RequestParam String clientId, @RequestParam String code){
+        try {
+            String accessToken = asaGitHubActionService.pushSecretsToGitHub(management, subscriptionId, serviceName, appName, url, clientId, code);
+            return new ResponseEntity<>(accessToken, HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/generateWorkflowFile")
+    public @ResponseBody ResponseEntity<?> generateWorkflowFile(@RequestParam String url, @RequestParam String branchName, @RequestParam String module, @RequestParam String javaVersion, @RequestParam String accessToken){
+        try {
+            asaGitHubActionService.generateWorkflowFile(url, branchName, module, javaVersion, accessToken);
             return new ResponseEntity<>(HttpStatus.OK);
         }catch (Exception e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

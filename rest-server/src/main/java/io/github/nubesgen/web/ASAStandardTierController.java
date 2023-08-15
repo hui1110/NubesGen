@@ -43,13 +43,13 @@ public class ASAStandardTierController {
     }
 
     @GetMapping("/deploy")
-    public @ResponseBody ResponseEntity<?> deployGithubRepoSourceCodeToASA(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String module, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam String javaVersion, @RequestParam String relativePath, @RequestParam String githubAction, @RequestParam(required = false) String authorizationCode, @RequestParam(required = false) String url, @RequestParam(required = false) String branchName) {
+    public @ResponseBody ResponseEntity<?> deployGithubRepoSourceCodeToASA(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam String module, @RequestParam String javaVersion, @RequestParam String relativePath, @RequestParam String githubAction, @RequestParam(required = false) String url, @RequestParam(required = false) String accessToken) {
         try {
             asaStandardTierService.buildAndDeploySourceCode(management, subscriptionId, resourceGroupName,
-                    serviceName, appName, module, javaVersion, relativePath, githubAction, authorizationCode, url, branchName);
+                    serviceName, appName, module, javaVersion, relativePath, githubAction, url, accessToken);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.ACCEPTED);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

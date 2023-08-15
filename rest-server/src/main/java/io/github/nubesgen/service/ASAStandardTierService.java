@@ -7,7 +7,6 @@ import com.azure.resourcemanager.appplatform.models.SourceUploadedUserSourceInfo
 import com.azure.resourcemanager.appplatform.models.SpringAppDeployment;
 import com.azure.resourcemanager.appplatform.models.SpringService;
 import com.azure.resourcemanager.resources.fluentcore.utils.ResourceManagerUtils;
-import io.github.nubesgen.model.GitHubRepositoryPublicKey;
 import io.github.nubesgen.utils.ASADeployUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,52 +99,12 @@ public class ASAStandardTierService implements ASAService {
                                String module, String javaVersion,
                                String relativePath,
                                String githubAction,
-                               String authorizationCode,
-                               String url,
-                               String branchName){
+                               String url, String accessToken) {
         log.info("Start build and deploy source code in Standard tier service {}.....", serviceName);
         try {
             if(githubAction.equals("true")) {
-                branchName = Objects.equals(branchName, "null") ? "main" : branchName;
-
-                String accessToken = asaGitHubActionService.getAccessToken(authorizationCode);
-                log.info("Get access token: {}", accessToken);
-
-                String username = asaGitHubActionService.getUserName(url);
-                log.info("Get username {}.", username);
-
-                String pathName = ASADeployUtils.downloadSourceCodeFromGitHub(url, branchName);
-                log.info("Cloned repository to {}.", pathName);
-
-                String tenantId = ASADeployUtils.getTenantId(management, subscriptionId);
-                Map<String, String> servicePrincipalIdMap = asaGitHubActionService.createdServicePrincipal(management, tenantId, subscriptionId, appName);
-
-                if (servicePrincipalIdMap.isEmpty()) {
-                    log.info("Service principal exist.");
-                }else {
-                    log.info("Service principal not exist. start to create.");
-                    GitHubRepositoryPublicKey repositoryPublicKey = asaGitHubActionService.getGitHubRepositoryPublicKey(username, pathName, accessToken);
-                    log.info("Get public key {}.", repositoryPublicKey.getKeyId());
-
-                    asaGitHubActionService.pushSecretsToGitHub(management, subscriptionId, serviceName, appName, username, pathName, accessToken, repositoryPublicKey, servicePrincipalIdMap.get("clientId"));
-                    log.info("Push secrets to GitHub repository completed.");
-
-                    asaGitHubActionService.assignedRoleToServicePrincipal(management, subscriptionId, servicePrincipalIdMap.get("principalId"));
-                    log.info("Add role assignment for subscription completed.");
-
-                    asaGitHubActionService.createFederatedCredential(management, appName, tenantId, servicePrincipalIdMap.get("objectId"), username, pathName, branchName);
-                    log.info("Created federated identity credential.");
-                }
-                boolean workflowFileChange = asaGitHubActionService.createWorkflowFile(pathName, branchName, javaVersion, module);
-                log.info("Created workflow file.");
-
-                if(workflowFileChange) {
-                    asaGitHubActionService.pushWorkflowFile(pathName, url, branchName, username, accessToken);
-                    log.info("Push workflow file to GitHub complete.");
-                }else {
-                    asaGitHubActionService.startGitHubAction(username, pathName, accessToken, branchName);
-                    log.info("No change in workflow file, start GitHub action again.");
-                }
+                String username = ASADeployUtils.getUserName(url);
+                String pathName = ASADeployUtils.getPathName(url);
 
 //              Waiting for workflow to start
                 ResourceManagerUtils.sleep(Duration.ofSeconds(10));
