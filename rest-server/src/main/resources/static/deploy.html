@@ -199,6 +199,10 @@ a, a:link, a:visited, a:hover, a:active {
     font-weight: bold;
 }
 
+.form-control.is-invalid{
+    background-image: none;
+}
+
 </style>
 <body style="height: 100vh;">
 <div id="app">
@@ -434,17 +438,35 @@ a, a:link, a:visited, a:hover, a:active {
                             key:
                         </div>
                         <div class="col-sm-4">
-                            <input type="text" class="form-control form-control-sm" title="Key" v-model="variable.key"/>
+                            <input
+                                    type="text"
+                                    class="form-control form-control-sm"
+                                    :class="{'is-invalid': variable.keyInvalid}"
+                                    title="Key"
+                                    v-model="variable.key"
+                                    @input="validateVariable(index, variable)"
+                                />
                         </div>
                         <div class="col-first d-flex align-items-center">
                             value:
                         </div>
                         <div class="col-sm-4">
-                            <input type="text" class="form-control form-control-sm" title="Value"
-                                   v-model="variable.value"/>
+                            <input
+                                    type="text"
+                                    class="form-control form-control-sm"
+                                    :class="{'is-invalid': variable.valueInvalid}"
+                                    title="Value"
+                                    v-model="variable.value"
+                                    @input="validateVariable(index, variable)"/>
                         </div>
                         <div class="col-first d-flex align-items-center">
                             <i class="bi bi-trash3" @click.prevent="deleteItem(index)"></i>
+                        </div>
+                        <div
+                            class="invalid-feedback"
+                            style="display: block !important;"
+                            v-if="variable.keyInvalid || variable.valueInvalid">
+                            {{variable.errorMessage}}
                         </div>
                     </div>
                 </div>
@@ -538,7 +560,7 @@ a, a:link, a:visited, a:hover, a:active {
                 pipeline.disabled = item.checked !== true;
             },
             addItem() {
-                this.variables.push({key: '', value: ''});
+                this.variables.push({key: '', value: '', keyInvalid: false, valueInvalid: false, errorMessage: ''});
             },
             deleteItem(index) {
                 this.variables.splice(index, 1);
@@ -875,6 +897,45 @@ a, a:link, a:visited, a:hover, a:active {
                 });
             },
             stringify: JSON.stringify,
+            validateVariable (index, variable) {
+                const keyErrors = [];
+                const valueErrors = [];
+                const {key, value} = variable;
+
+                if (!key) {
+                    keyErrors.push('Enter a key.');
+                }
+
+                if (key.length > 4000) {
+                    keyErrors.push('The maximum key length is 4,000 characters.');
+                }
+
+                const regExp = new RegExp("^[a-zA-Z_][\\w.-]*$");
+                if (!regExp.test(key)) {
+                    keyErrors.push('Keys must start with a letter or an underscore ( _ ). Keys may only contain letters, numbers, periods ( . ), dash(-) and underscores ( _ ).');
+                }
+
+                const existingKeys = this.variables
+                    .map((variable) => variable.key)
+                    .filter((otherKey, otherIndex) =>
+                        otherIndex !== index && key === otherKey
+                    );
+                if (existingKeys.indexOf(key) > -1) {
+                    keyErrors.push('Duplicated environment variable name, the name should be unique.');
+                }
+
+                if (!value) {
+                    valueErrors.push('Enter a value.');
+                }
+
+                if (value.length > 4000) {
+                    valueErrors.push('The maximum value is 4,000 characters.');
+                }
+
+                variable.keyInvalid = keyErrors.length !== 0;
+                variable.valueInvalid = valueErrors.length !== 0;
+                variable.errorMessage = keyErrors.concat(valueErrors).join(' ');
+            },
         },
         mounted() {
             this.querySubscriptionList();
@@ -901,6 +962,14 @@ a, a:link, a:visited, a:hover, a:active {
         updated: function () {
             $('.selectpicker').selectpicker('refresh');
         },
+        // watch: {
+        //     variables: {
+        //         handler(newValue) {
+        //             console.log(newValue);
+        //         },
+        //         deep: true
+        //     },
+        // }
     })
     app.mount('#app')
 </script>
