@@ -194,7 +194,7 @@ public class ASACommonController {
     @GetMapping("/checkWorkFlowFile")
     public @ResponseBody ResponseEntity<?> checkWorkFlowFile(@RequestParam String url, @RequestParam String branchName){
         try {
-            boolean res = asaCommonService.checkWorkFlowFile(url, branchName);
+            boolean res = asaGitHubActionService.checkWorkFlowFile(url, branchName);
             return new ResponseEntity<>(res, HttpStatus.OK);
         }catch (Exception e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -212,9 +212,9 @@ public class ASACommonController {
     }
 
     @GetMapping("/pushSecretsToGitHub")
-    public @ResponseBody ResponseEntity<?> pushSecretsToGitHub(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId,@RequestParam String serviceName, @RequestParam String appName, @RequestParam String url, @RequestParam String clientId, @RequestParam String code){
+    public @ResponseBody ResponseEntity<?> pushSecretsToGitHub(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RegisteredOAuth2AuthorizedClient("github") OAuth2AuthorizedClient github, @RequestParam String subscriptionId,@RequestParam String serviceName, @RequestParam String appName, @RequestParam String url, @RequestParam String clientId, @RequestParam String code){
         try {
-            String accessToken = asaGitHubActionService.pushSecretsToGitHub(management, subscriptionId, serviceName, appName, url, clientId, code);
+            String accessToken = asaGitHubActionService.pushSecretsToGitHub(management, github, subscriptionId, serviceName, appName, url, clientId, code);
             return new ResponseEntity<>(accessToken, HttpStatus.OK);
         }catch (Exception e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

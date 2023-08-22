@@ -27,7 +27,6 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.File;
@@ -53,8 +52,8 @@ public final class ASAGitHubActionService {
     private static final String API_BASE_URI = "https://api.github.com";
     private static final String ACCESS_TOKEN_PATH = BASE_URI + "/login/oauth/access_token";
     private static final String CREATE_REPO_SECRET_PATH = API_BASE_URI + "/repos/%s/%s/actions/secrets/%s";
-    private static final String WORKFLOW_PATH = API_BASE_URI + "/repos/%s/%s/actions/workflows/%s/%s";
-    private static final String WORKFLOW_FILE_PATH = "deploy-source-code-to-asa.yml";
+    private static final String WORKFLOW_RUNS_PATH = API_BASE_URI + "/repos/%s/%s/actions/workflows/%s/%s?per_page=1";
+    private static final String WORKFLOW_FILE_NAME = "deploy-source-code-to-asa.yml";
     private static final String GRAPH_SCOPE = "https://graph.microsoft.com/.default";
     private static final String FEDERATED_CREDENTIAL_ISSUE = "https://token.actions.githubusercontent.com";
     private final Logger log = LoggerFactory.getLogger(ASAGitHubActionService.class);
@@ -65,6 +64,29 @@ public final class ASAGitHubActionService {
         this.webClient = webClient;
     }
 
+    /**
+     * Check whether the workflow file exists.
+     *
+     * @param url the repository url
+     * @param branchName the branch name
+     * @return true if the workflow file exists, otherwise false
+     */
+    public boolean checkWorkFlowFile(String url, String branchName){
+        String pathName = ASADeployUtils.downloadSourceCodeFromGitHub(url, branchName);
+        File file = new File(pathName+ "/.github/workflows/" + "deploy-source-code-to-asa.yml");
+        return file.exists();
+    }
+
+    /**
+     * Create credential.
+     *
+     * @param management The OAuth2AuthorizedClient.
+     * @param subscriptionId The subscription id.
+     * @param appName The app name.
+     * @param url The repository url.
+     * @param branchName The branch name.
+     * @return The client id.
+     */
     public String credentialCreation(OAuth2AuthorizedClient management, String subscriptionId, String appName, String url, String branchName) {
         branchName = Objects.equals(branchName, "null") ? "main" : branchName;
         Map<String, String> credentialMap = createServicePrincipal(management, subscriptionId, appName);
@@ -195,7 +217,7 @@ public final class ASAGitHubActionService {
      * @param clientId The client id.
      * @throws SodiumException The SodiumException.
      */
-    public String pushSecretsToGitHub(OAuth2AuthorizedClient management, String subscriptionId, String serviceName, String appName, String url, String clientId, String code) throws SodiumException {
+    public String pushSecretsToGitHub(OAuth2AuthorizedClient management, OAuth2AuthorizedClient github, String subscriptionId, String serviceName, String appName, String url, String clientId, String code) throws SodiumException {
         String tenantId = ASADeployUtils.getTenantId(management, subscriptionId);
 
         Map<String, String> map = new HashMap<>();
@@ -207,7 +229,9 @@ public final class ASAGitHubActionService {
 
         String username = ASADeployUtils.getUserName(url);
         String pathName = ASADeployUtils.getPathName(url);
-        String accessToken = getAccessToken(code);
+//        String accessToken = getAccessToken(code);
+        String accessToken = github.getAccessToken().getTokenValue();
+        System.out.println("accessToken: " + accessToken);
         GitHubRepositoryPublicKey repositoryPublicKey = getGitHubRepositoryPublicKey(username, pathName, accessToken);
         Map<String, String> secretMap = new HashMap<>();
         secretMap.put("key_id", repositoryPublicKey.getKeyId());
@@ -242,9 +266,9 @@ public final class ASAGitHubActionService {
         GitHubTokenResult result;
         try {
             Map<String, String> map = new HashMap<>();
-            map.put("client_id", "7a1c7d3c445546021d63");
-            map.put("client_secret", "0ab4291a3366c7acdacf269153ff83bd92f03d44");
-            map.put("redirect_uri", "https://yonghui-apps-dev-nubesgen.azuremicroservices.io/asa-github-code.html");
+            map.put("client_id", "27c83ffc0f8fd2a9859b");
+            map.put("client_secret", "33761dd44924c97ee87a90aa238c12a5f0e20a29");
+            map.put("redirect_uri", "http://localhost:8080/asa-github-code.html");
             map.put("code", authorizationCode);
             result = webClient.post()
                     .uri(ACCESS_TOKEN_PATH)
@@ -295,9 +319,9 @@ public final class ASAGitHubActionService {
             String pathName = ASADeployUtils.getPathName(url);
             File path = new File(pathName);
             Path project = path.toPath();
-            Path output = project.resolve(".github/workflows/" + WORKFLOW_FILE_PATH);
+            Path output = project.resolve(".github/workflows/" + WORKFLOW_FILE_NAME);
 
-            ClassPathResource resource = new ClassPathResource("workflows/" + WORKFLOW_FILE_PATH);
+            ClassPathResource resource = new ClassPathResource("workflows/" + WORKFLOW_FILE_NAME);
             InputStream inputStream= resource.getInputStream();
             String content = new String(FileCopyUtils.copyToByteArray(inputStream));
 
@@ -327,6 +351,7 @@ public final class ASAGitHubActionService {
                     .gitCommit(username, "SpringIntegSupport@microsoft.com")
                     .gitPush(url, username, accessToken)
                     .gitClean();
+            ASADeployUtils.deleteRepositoryDirectory(path);
         } catch (Exception e) {
             throw new RuntimeException("Error while pushing workflow file", e);
         }
@@ -342,15 +367,9 @@ public final class ASAGitHubActionService {
      * @return the GitHub action status
      */
     public String getGitHubActionStatus(String username, String pathName, String accessToken) {
-        WebClient webClient = WebClient.builder().exchangeStrategies(ExchangeStrategies.builder()
-                        .codecs(configurer -> configurer
-                                .defaultCodecs()
-                                .maxInMemorySize(16 * 1024 * 1024))
-                        .build())
-                .build();
         GitHubActionRunStatus gitHubActionRunStatus = webClient
                 .get()
-                .uri(String.format(WORKFLOW_PATH, username, pathName, WORKFLOW_FILE_PATH, "runs"))
+                .uri(String.format(WORKFLOW_RUNS_PATH, username, pathName, WORKFLOW_FILE_NAME, "runs"))
                 .header("Authorization", "token " + accessToken)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()

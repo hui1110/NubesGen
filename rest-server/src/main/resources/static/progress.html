@@ -317,6 +317,50 @@ pre{
                     this.handleError(0, 'Create app ' + this.appName + ' in service ' + this.serviceName + ' failed.', 'Provision resource failed !');
                 })
             },
+            provisionResourceGroup(){
+                this.expandCollapse(this.stages[0].key, this.stages[0].id);
+                this.stages[0].description = 'Provisioning resource' + '...';
+                const log = document.getElementById('pre-' + this.stages[0].id)
+                log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating resource group ' + '<code style="color: blue">' + this.resourceGroupName + '</code>' + '...' + '</p>';
+                axios.get('/provisionResourceGroup',
+                    {
+                        params: {
+                            'subscriptionId': this.subscriptionId,
+                            'resourceGroupName': this.resourceGroupName,
+                            'region': this.region
+                        }
+                    }).then(res => {
+                    if (res.status === 200) {
+                        log.innerHTML = '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create resource group ' + '<code style="color: blue">' + this.resourceGroupName + '</code>' + ' successfully.' + '</p>';
+                        this.provisionSpringService(log);
+                    }
+                }).catch(error => {
+                    log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create resource group ' + '<code style="color: blue">' + this.resourceGroupName + '</code>' + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
+                    this.handleError(0, 'Your resource group ' + this.resourceGroupName + ' is failed to create.', 'Provision resource failed !');
+                })
+            },
+            provisionSpringService(log){
+                const logs = log.innerHTML;
+                log.innerHTML = logs + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating service ' + '<code style="color: blue">' + this.serviceName + '</code>' + '...' + '</p>';
+                axios.get('/provisionSpringService',
+                    {
+                        params: {
+                            'subscriptionId': this.subscriptionId,
+                            'resourceGroupName': this.resourceGroupName,
+                            'serviceName': this.serviceName,
+                            'region': this.region,
+                            'tier': this.tier
+                        }
+                    }).then(res => {
+                    if (res.status === 200) {
+                        log.innerHTML = logs + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create service ' + '<code style="color: blue">' + this.serviceName + '</code>' + ' successfully.' + '</p>';
+                        this.provisionSpringApp();
+                    }
+                }).catch(error => {
+                    log.innerHTML =logs +  '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create service ' + '<code style="color: blue">' + this.serviceName + '</code>' + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
+                    this.handleError(0, 'Your service ' + this.serviceName + ' is failed to create.', 'Provision resource failed !');
+                })
+            },
             provisionSpringApp() {
                 const log = document.getElementById('pre-' + this.stages[0].id)
                 const logs = log.innerHTML;
@@ -503,7 +547,7 @@ pre{
                     }).then(res => {
                     if (res.status === 200) {
                         log.innerHTML = wfLog + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Generate workflow file successfully.' + '</p>';
-                        this.handleProgress(2, 'CI/CD pipeline setup is complete.', 'success');
+                        this.handleProgress(2, 'Setting up the CI/CD pipeline is complete.', 'success');
                         this.deploySourceCode();
                     }
                 }).catch(error => {
@@ -642,21 +686,6 @@ pre{
                 })
                 this.getBuildLogEnterprise();
             },
-            deleteApp() {
-                axios.get('/deleteApp',
-                    {
-                        params: {
-                            'subscriptionId': this.subscriptionId,
-                            'resourceGroupName': this.resourceGroupName,
-                            'serviceName': this.serviceName,
-                            'appName': this.appName
-                        }
-                    })
-                    .then(() => {
-                    }).catch(error => {
-                    console.log(error);
-                })
-            },
             getBuildLogEnterprise() {
                 if (this.enterpriseStagesIndex > this.enterpriseStages.length - 1) {
                     return;
@@ -744,6 +773,21 @@ pre{
                     this.deleteApp();
                 })
             },
+            deleteApp() {
+                axios.get('/deleteApp',
+                    {
+                        params: {
+                            'subscriptionId': this.subscriptionId,
+                            'resourceGroupName': this.resourceGroupName,
+                            'serviceName': this.serviceName,
+                            'appName': this.appName
+                        }
+                    })
+                    .then(() => {
+                    }).catch(error => {
+                    console.log(error);
+                })
+            },
             expandCollapse(itemKey, itemId) {
                 const icon = document.getElementById(itemKey);
                 if (!icon.classList.contains('bi-chevron-down')) {
@@ -803,50 +847,6 @@ pre{
             viewOnPortal() {
                 const portalUrl = 'https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/' + this.subscriptionId + '/resourceGroups/' + this.resourceGroupName + '/providers/Microsoft.AppPlatform/Spring/' + this.serviceName + '/application_dashboard';
                 open(portalUrl);
-            },
-            provisionResourceGroup(){
-                this.expandCollapse(this.stages[0].key, this.stages[0].id);
-                this.stages[0].description = 'Provisioning resource' + '...';
-                const log = document.getElementById('pre-' + this.stages[0].id)
-                log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating resource group ' + '<code style="color: blue">' + this.resourceGroupName + '</code>' + '...' + '</p>';
-                axios.get('/provisionResourceGroup',
-                    {
-                        params: {
-                            'subscriptionId': this.subscriptionId,
-                            'resourceGroupName': this.resourceGroupName,
-                            'region': this.region
-                        }
-                    }).then(res => {
-                    if (res.status === 200) {
-                        log.innerHTML = '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create resource group ' + '<code style="color: blue">' + this.resourceGroupName + '</code>' + ' successfully.' + '</p>';
-                        this.provisionSpringService(log);
-                    }
-                }).catch(error => {
-                    log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create resource group ' + '<code style="color: blue">' + this.resourceGroupName + '</code>' + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
-                    this.handleError(0, 'Your resource group ' + this.resourceGroupName + ' is failed to create.', 'Provision resource failed !');
-                })
-            },
-            provisionSpringService(log){
-                const logs = log.innerHTML;
-                log.innerHTML = logs + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating service ' + '<code style="color: blue">' + this.serviceName + '</code>' + '...' + '</p>';
-                axios.get('/provisionSpringService',
-                    {
-                        params: {
-                            'subscriptionId': this.subscriptionId,
-                            'resourceGroupName': this.resourceGroupName,
-                            'serviceName': this.serviceName,
-                            'region': this.region,
-                            'tier': this.tier
-                        }
-                    }).then(res => {
-                    if (res.status === 200) {
-                        log.innerHTML = logs + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create service ' + '<code style="color: blue">' + this.serviceName + '</code>' + ' successfully.' + '</p>';
-                        this.provisionSpringApp();
-                    }
-                }).catch(error => {
-                    log.innerHTML =logs +  '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create service ' + '<code style="color: blue">' + this.serviceName + '</code>' + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
-                    this.handleError(0, 'Your service ' + this.serviceName + ' is failed to create.', 'Provision resource failed !');
-                })
             },
             stringify: JSON.stringify,
         },

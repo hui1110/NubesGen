@@ -46,27 +46,8 @@ a, a:link, a:visited, a:hover, a:active {
     color: inherit;
 }
 
-.popover {
-    max-width: 550px;
-}
-
 .form-control {
     font-size: 14px;
-}
-
-.form-control[readonly] {
-    background-color: #F0F0F0;
-    border: 1px solid #D1D1D1;
-    box-shadow: none;
-}
-
-.filter-option-inner-inner {
-    font-size: 14px;
-}
-
-.bs-placeholder {
-    background-color: #fff;
-    border: 1px solid #ced4da;
 }
 
 .col-sm-4 {
@@ -77,10 +58,6 @@ a, a:link, a:visited, a:hover, a:active {
 .row {
     padding-bottom: 1%;
     padding-left: 3%;
-}
-
-.dropdown-menu {
-    font-size: 14px;
 }
 
 .btn-link {
@@ -197,6 +174,26 @@ a, a:link, a:visited, a:hover, a:active {
 .bi-check2::before {
     vertical-align: -0.35em;
     font-weight: bold;
+}
+
+/*Placeholder backgroud and font*/
+.filter-option-inner-inner {
+    font-size: 14px;
+}
+
+.bs-placeholder {
+    background-color: #fff;
+    border: 1px solid #ced4da;
+}
+
+/*Create new resource group tab*/
+.popover {
+    max-width: 550px;
+}
+
+/*Font size*/
+.dropdown-menu {
+    font-size: 14px;
 }
 
 </style>
@@ -329,8 +326,7 @@ a, a:link, a:visited, a:hover, a:active {
             </div>
 
             <div class="mb-3 row">
-                <label class="col-sm-4 col-form-label">Region<span
-                        class="required"> * </span>
+                <label class="col-sm-4 col-form-label">Region<span class="required"> * </span>
                 </label>
                 <div class="col-sm-7">
                     <label for="region" id="regionSelect">
@@ -346,8 +342,7 @@ a, a:link, a:visited, a:hover, a:active {
             </div>
 
             <div class="mb-3 row" style="font-size: 14px;">
-                <label class="col-sm-4 col-form-label">Hosting options and plans<span
-                        class="required"> * </span>
+                <label class="col-sm-4 col-form-label">Hosting options and plans<span class="required"> * </span>
                 </label>
                 <div class="col-sm-7">
                     <div class="form-check">
@@ -366,8 +361,7 @@ a, a:link, a:visited, a:hover, a:active {
                         <input class="form-check-input" type="radio" name="plan" id="Enterprise"
                                @change="getPlanValue('Enterprise')" :disabled="flag === 'select'">
                         <label class="form-check-label" for="Enterprise">
-                            <a style="font-weight: 500;">Enterprise - Mission-critical workloads with VMware Tanzu
-                                components</a>
+                            <a style="font-weight: 500;">Enterprise - Mission-critical workloads with VMware Tanzu components</a>
                             <ul style="padding-inline-start:10px;">
                                 <li>Gain access to VMware Tanzu components and address enterprise requirements around
                                     configuration management, integration, portability, flexibility, all backed by
@@ -384,7 +378,7 @@ a, a:link, a:visited, a:hover, a:active {
                         class="required"> * </span></label>
                 <div class="col-sm-7">
                     <label>
-                        <input type="text" class="form-control readonly" v-model="url" readonly/>
+                        <input type="text" class="form-control" style="background-color: #F0F0F0;" v-model="url" disabled/>
                     </label>
                 </div>
             </div>
@@ -403,7 +397,7 @@ a, a:link, a:visited, a:hover, a:active {
                 </label>
                 <div class="col-sm-7">
                     <label for="appName">
-                        <input type="text" class="form-control" :disabled="init"
+                        <input type="text" class="form-control" :disabled="initAppName"
                                v-model="appInstance.name" id="appName" name="appName"/>
                     </label>
                     <span id="appName_error" style="color: red"></span>
@@ -453,8 +447,7 @@ a, a:link, a:visited, a:hover, a:active {
         </form>
         <hr/>
         <div class="form-group" style="padding-top: 2%;">
-            <button class="btn btn-primary btn-sm btn-block" :disabled="init" @click="deployCode()"
-                    style="background-color: rgb(0,121, 212)">Deploy</button>
+            <button class="btn btn-primary btn-sm btn-block" :disabled="initDeploy" @click="deployCode()" style="background-color: rgb(0,121, 212)">Deploy</button>
         </div>
     </div>
 </div>
@@ -481,7 +474,8 @@ a, a:link, a:visited, a:hover, a:active {
                 branch: new URLSearchParams(location.search).get('branch'),
                 module: new URLSearchParams(location.search).get('module'),
                 username: '',
-                init: true,
+                initAppName: true,
+                initDeploy: true,
                 githubAuth: false,
                 flag: 'select',
                 newServiceInstanceName: '',
@@ -508,21 +502,25 @@ a, a:link, a:visited, a:hover, a:active {
             }
         },
         methods: {
+            setupPipeline() {
+                const item = document.getElementById("flexSwitchCheckDefault");
+                let pipeline = document.getElementById("connectGitHub");
+                pipeline.disabled = item.checked !== true;
+            },
             authGithub() {
-                const currentTimestamp = this.username + '_' + Date.parse(new Date());
-                window.addEventListener('storage', () => {
-                    const code = localStorage.getItem(currentTimestamp + "_githubCode");
-                    if (code) {
-                        this.githubCode = code;
-                        window.removeEventListener('storage', () => {
-                        });
-                        localStorage.removeItem(currentTimestamp + "_githubCode");
-                        this.githubAuth = true;
-                    }
-                });
-                const htmlContent = '<!DOCTYPE html><html lang="en"><head><title>Authorize application</title></head ><body onload = "auth()"></body>' + "<script>" + "function auth() {location.assign(" + "'https://github.com/login/oauth/authorize?prompt=consent&client_id=7a1c7d3c445546021d63&scope=repo%20workflow&redirect_uri=https://yonghui-apps-dev-nubesgen.azuremicroservices.io/asa-github-code.html?timestamp=" + currentTimestamp + "'" + ")}" + "<" + "/script></html>"
-
-                 const winUrl = URL.createObjectURL(
+                // const currentTimestamp = this.username + '_' + Date.parse(new Date());
+                // window.addEventListener('storage', () => {
+                //     const code = localStorage.getItem(currentTimestamp + "_githubCode");
+                //     if (code) {
+                //         this.githubCode = code;
+                //         window.removeEventListener('storage', () => {
+                //         });
+                //         localStorage.removeItem(currentTimestamp + "_githubCode");
+                //         this.githubAuth = true;
+                //     }
+                // });
+                const htmlContent = '<!DOCTYPE html><html lang="en"><head><title>Authorize application</title></head ><body onload = "auth()"></body>' + "<script>" + "function auth() {location.assign(" + "'http://localhost:8080/asa-github-code.html" + "'" + ")}" + "<" + "/script></html>";
+                const winUrl = URL.createObjectURL(
                     new Blob([htmlContent], {type: "text/html"})
                 );
                 var newWin = window.open(winUrl, 'Authorize application', 'height=700,width=700');
@@ -531,11 +529,6 @@ a, a:link, a:visited, a:hover, a:active {
                     window.removeEventListener('storage', () => {
                     });
                 }, 20000);
-            },
-            setupPipeline() {
-                const item = document.getElementById("flexSwitchCheckDefault");
-                let pipeline = document.getElementById("connectGitHub");
-                pipeline.disabled = item.checked !== true;
             },
             addItem() {
                 this.variables.push({key: '', value: ''});
@@ -648,7 +641,8 @@ a, a:link, a:visited, a:hover, a:active {
                 }).then(res => {
                     this.appInstance.runtimePlatform = res.data.version;
                     this.appInstance.name = res.data.name;
-                    this.init = false;
+                    this.initAppName = false;
+                    this.initDeploy = false;
                 }).catch(error => {
                     toast.error(error.response.data, {
                         position: toast.POSITION.TOP_CENTER,
@@ -700,6 +694,7 @@ a, a:link, a:visited, a:hover, a:active {
                 })
             },
             getResourceGroupListBySubscriptionId(subscriptionId) {
+                this.initDeploy = true;
                 this.resourceGroupList = [];
                 axios.get('/getResourceGroupList',
                     {
@@ -715,6 +710,7 @@ a, a:link, a:visited, a:hover, a:active {
                             hideProgressBar: true
                         });
                     }
+                    this.initDeploy = false;
                 }).catch(error => {
                     toast.error(error.response.data, {
                         position: toast.POSITION.TOP_CENTER,
@@ -733,6 +729,7 @@ a, a:link, a:visited, a:hover, a:active {
                     return;
                 }
                 this.serviceInstanceList = [];
+                this.initDeploy = true;
                 axios.get('/getServiceInstanceList',
                     {
                         params: {
@@ -748,6 +745,7 @@ a, a:link, a:visited, a:hover, a:active {
                             hideProgressBar: true
                         });
                     }
+                    this.initDeploy = false;
                 }).catch(error => {
                     toast.error(error.response.data, {
                         position: toast.POSITION.TOP_CENTER,
@@ -804,14 +802,14 @@ a, a:link, a:visited, a:hover, a:active {
                 const url = 'url=' + this.url + '&subscriptionId=' + this.subscriptionId + '&resourceGroupName=' + this.resourceGroupName + '&serviceName=' + this.serviceInstanceName + '&javaVersion=' + this.appInstance.runtimePlatform + '&appName=' + this.appInstance.name + '&branchName=' + this.branch + '&module=' + this.module + '&flag=' + this.flag + "&code=" + this.githubCode;
 
                 const checkGithubAction = document.getElementById('flexSwitchCheckDefault');
-                if(checkGithubAction.checked === true && this.githubCode === ''){
-                    toast.info("Please connect GitHub !.", {
-                        position: toast.POSITION.TOP_CENTER,
-                        autoClose: 5000,
-                        hideProgressBar: true
-                    });
-                    return;
-                }
+                // if(checkGithubAction.checked === true && this.githubCode === ''){
+                //     toast.info("Please connect GitHub !.", {
+                //         position: toast.POSITION.TOP_CENTER,
+                //         autoClose: 5000,
+                //         hideProgressBar: true
+                //     });
+                //     return;
+                // }
                 location.assign('/progress.html?' + url + appDetails + '&githubAction=' + checkGithubAction.checked);
             },
             validatorForm() {

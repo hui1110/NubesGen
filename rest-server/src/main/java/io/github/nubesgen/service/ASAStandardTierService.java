@@ -110,6 +110,7 @@ public class ASAStandardTierService implements ASAService {
                 ResourceManagerUtils.sleep(Duration.ofSeconds(10));
                 String status = asaGitHubActionService.getGitHubActionStatus(username, pathName, accessToken);
                 while (!status.equals("completed")) {
+                    log.info("Wait for the GitHub action to complete");
                     ResourceManagerUtils.sleep(Duration.ofSeconds(10));
                     status = asaGitHubActionService.getGitHubActionStatus(username, pathName, accessToken);
                 }

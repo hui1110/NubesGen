@@ -237,7 +237,6 @@ public class ASACommonService {
             SpringService springService = appPlatformManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
             springService.apps().getByName(appName);
         } catch (Exception e) {
-            log.error(e.getMessage());
             return false;
         }
         return true;
@@ -408,19 +407,6 @@ public class ASACommonService {
         AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
         SpringService springService = appPlatformManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
         springService.apps().deleteByName(appName);
-    }
-
-    /**
-     * Check whether the workflow file exists.
-     *
-     * @param url the repository url
-     * @param branchName the branch name
-     * @return true if the workflow file exists, otherwise false
-     */
-    public boolean checkWorkFlowFile(String url, String branchName){
-        String pathName = ASADeployUtils.downloadSourceCodeFromGitHub(url, branchName);
-        File file = new File(pathName+ "/.github/workflows/" + "deploy-source-code-to-asa.yml");
-        return file.exists();
     }
 
     /**

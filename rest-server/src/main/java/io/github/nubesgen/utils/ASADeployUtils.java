@@ -4,7 +4,6 @@ import com.azure.core.credential.AccessToken;
 import com.azure.core.credential.TokenCredential;
 import com.azure.core.management.AzureEnvironment;
 import com.azure.core.management.profile.AzureProfile;
-import com.azure.identity.ClientSecretCredentialBuilder;
 import com.azure.resourcemanager.AzureResourceManager;
 import com.azure.resourcemanager.appplatform.AppPlatformManager;
 import com.azure.resourcemanager.appplatform.fluent.models.AppResourceInner;
@@ -71,7 +70,7 @@ public final class ASADeployUtils {
      * @return The path of the source code.
      */
     public static synchronized String downloadSourceCodeFromGitHub(String url, String branchName) {
-        String repositoryPath = url.substring(url.lastIndexOf("/") + 1);
+        String repositoryPath = getPathName(url);
         deleteRepositoryDirectory(new File(repositoryPath));
         branchName = Objects.equals(branchName, "null") ? null : branchName;
         Git git = null;
@@ -209,28 +208,6 @@ public final class ASADeployUtils {
         final AzureProfile profile = new AzureProfile(subscription.innerModel().tenantId(), subscriptionId, AzureEnvironment.AZURE);
         final TokenCredential credential = getAzureCredential(management);
         return AppPlatformManager.authenticate(credential, profile);
-    }
-
-    /**
-     * Get Service Principal operation AzureResourceManager.
-     *
-     * @param management OAuth2AuthorizedClient
-     * @param subscriptionId subscription id
-     * @return AzureResourceManager
-     */
-    public static AzureResourceManager getServicePrincipalOperationARM(OAuth2AuthorizedClient management, String subscriptionId) {
-        final AzureResourceManager azureResourceManager = getAzureResourceManager(management, subscriptionId);
-        Subscription subscription = azureResourceManager.subscriptions().list().stream().filter(s -> s.subscriptionId().equals(subscriptionId)).toList().get(0);
-        final AzureProfile servicePrincipalProfile = new AzureProfile(subscription.innerModel().tenantId(), subscriptionId, AzureEnvironment.AZURE);
-        final TokenCredential servicePrincipalCredential = new ClientSecretCredentialBuilder()
-                .clientId(management.getClientRegistration().getClientId())
-                .clientSecret(management.getClientRegistration().getClientSecret())
-                .authorityHost(servicePrincipalProfile.getEnvironment().getActiveDirectoryEndpoint())
-                .tenantId(subscription.innerModel().tenantId())
-                .build();
-        return AzureResourceManager
-                .authenticate(servicePrincipalCredential, servicePrincipalProfile)
-                .withSubscription(subscriptionId);
     }
 
     /**

@@ -47,7 +47,6 @@ public class ASAEnterpriseTierService implements ASAService {
                                 )
                 );
         log.info("Initialize build service agent pool for enterprise tier.");
-
         AppResourceInner appResourceInner = ASADeployUtils.getAppResourceInner();
         appPlatformManager.serviceClient().getApps().createOrUpdate(resourceGroupName, serviceName, appName, appResourceInner);
         log.info("Provision spring app {} completed.", appName);
@@ -101,7 +100,7 @@ public class ASAEnterpriseTierService implements ASAService {
                 ResourceManagerUtils.sleep(Duration.ofSeconds(2));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+           log.error("Get build logs failed.", e);
         }
         return buildLogs;
     }
