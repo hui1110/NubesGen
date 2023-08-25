@@ -1,0 +1,48 @@
+name: Deploy Jar to Azure Spring Apps
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches:
+      [ ${push-branches} ]
+    paths:
+      - '**'
+      - '.github/workflows/deploy-jar-to-asa.yml'
+  workflow_dispatch:
+
+env:
+  ASC_PACKAGE_PATH: ${{ github.workspace }}
+  AZURE_SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy_to_production:
+    runs-on: ubuntu-latest
+    name: Deploy to production with Jar
+
+    steps:
+      - name: Checkout Github Action
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${build-version}
+
+      - name: Build with Maven
+        run: |
+          mvn --batch-mode -Dmaven.test.skip=true --no-transfer-progress package
+
+      - name: Login via Azure CLI
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to production step with Jar
+        run: |
+          az spring app deploy --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --service ${{ secrets.AZURE_SPRING_SERVICE_NAME }} --name ${{ secrets.AZURE_SPRING_APP_NAME }} --artifact-path ${jar-path} --runtime-version ${java-version}
