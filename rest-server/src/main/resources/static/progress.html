@@ -180,7 +180,7 @@ pre{
                 </ul>
             </div>
             <div class="form-group point" v-show="showView === true">
-                <button class="btn btn-primary btn-sm" style="width: 45%;margin-right: 3%;" @click="viewEndpoint()">View the app (Public URL)<i class="bi bi-box-arrow-up-right" style="margin-left: 2%;"></i></button>
+                <button class="btn btn-primary btn-sm" style="width: 45%;margin-right: 3%;" @click="viewEndpoint()">{{viewEndpointDescription}}<i class="bi bi-box-arrow-up-right" style="margin-left: 2%;"></i></button>
                 <button class="btn btn-secondary btn-sm"  style="width: 45%" @click="viewOnPortal()">Manage your app on Azure Spring Apps  <i class="bi bi-box-arrow-up-right" style="margin-left: 2%;"></i></button>
             </div>
         </div>
@@ -221,6 +221,7 @@ pre{
                 githubAction: new URLSearchParams(location.search).get('githubAction'),
                 deploymentProgress: 'Your deployment is in progress...',
                 deploymentResult: 'This operation may take a while.',
+                viewEndpointDescription: 'View the app (Public URL)',
                 showView: false,
                 result: '',
                 relativePath: '',
@@ -307,7 +308,12 @@ pre{
                         const log = document.getElementById('pre-' + this.stages[0].id)
                         log.innerHTML = '<p>' + '<i class="bi bi-caret-right" style="margin-right: 2%"></i>' + 'Skipped creating app ' + '<code style="color: blue">' + this.appName + '</code>' + '.' + '</p>' + '<p>' + '<i class="bi bi-caret-right" style="margin-right: 2%"></i>' + 'Skipped creating default deployment for app ' + '<code style="color: blue">' + this.appName + '</code>' + '.' + '</p>';
                         this.handleProgress(1, 'Uploading source code...', 'loading');
-                        this.getUploadUrl();
+                        if(this.tier !== 'StandardGen2') {
+                            this.handleProgress(1, 'Uploading source code...', 'loading');
+                            this.getUploadUrl();
+                        }else {
+                            this.checkWorkFlowFile();
+                        }
                     } else {
                         this.stages[0].description = 'App ' + this.appName + ' not exist, start creating';
                         this.provisionSpringApp();
@@ -342,7 +348,8 @@ pre{
             provisionSpringService(log){
                 const logs = log.innerHTML;
                 log.innerHTML = logs + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating service ' + '<code style="color: blue">' + this.serviceName + '</code>' + '...' + '</p>';
-                axios.get('/provisionSpringService',
+                const path = this.tier === 'Enterprise' ? 'Enterprise' : 'Standard';
+                axios.get('/' + path.toLowerCase() + '/provisionSpringService',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -365,7 +372,7 @@ pre{
                 const log = document.getElementById('pre-' + this.stages[0].id)
                 const logs = log.innerHTML;
                 log.innerHTML = logs + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating app ' + '<code style="color: blue">' + this.appName + '</code>' + '...' + '</p>';
-                axios.get('/' + this.tier.toLowerCase() + '/provisionSpringApp', {
+                axios.get('/provisionSpringApp', {
                     params: {
                         'subscriptionId': this.subscriptionId,
                         'resourceGroupName': this.resourceGroupName,
@@ -398,9 +405,13 @@ pre{
                 }).then(res => {
                     if (res.status === 200) {
                         this.handleProgress(0, this.flag === 'select' ? 'Created app ' + this.appName + ' in service ' + this.serviceName + '.': 'Provision resource is complete.', 'success');
-                        this.handleProgress(1, 'Uploading source code...', 'loading');
                         log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create default deployment for app ' + '<code style="color: blue">' + this.appName + '</code>' + ' successfully.' + '</p>';
-                        this.getUploadUrl();
+                        if(this.tier !== 'StandardGen2') {
+                            this.handleProgress(1, 'Uploading source code...', 'loading');
+                            this.getUploadUrl();
+                        }else {
+                            this.checkWorkFlowFile();
+                        }
                     }
                 }).catch(error => {
                     log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create default deployment for app ' + '<code style="color: blue">' + this.appName + '</code>' + ' failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
@@ -447,14 +458,18 @@ pre{
                         if (res.status === 200) {
                             log.innerHTML = uploadUrlLog + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Upload file successfully.' + '</p>';
                             this.handleProgress(1, 'Upload source code is complete.', 'success');
-                            if (this.tier === 'Standard') {
+                            if (this.tier !== 'Enterprise') {
                                 if (this.githubAction === 'true') {
                                     this.checkWorkFlowFile();
                                 }else {
                                     this.deploySourceCode();
                                 }
                             } else {
-                                this.enqueueBuildForEnterpriseTier();
+                                if (this.githubAction === 'true') {
+                                    this.checkWorkFlowFile();
+                                }else {
+                                    this.enqueueBuildForEnterpriseTier();
+                                }
                             }
                         }
                     }).catch(error => {
@@ -464,30 +479,32 @@ pre{
                 })
             },
             checkWorkFlowFile(){
-                this.handleProgress(2, 'Check the workflow file...', 'loading');
-                this.expandCollapse(this.stages[2].key, this.stages[2].id);
+                const index = this.tier === 'StandardGen2' ? 1 : 2;
+                this.handleProgress(index, 'Check the workflow file...', 'loading');
+                this.expandCollapse(this.stages[index].key, this.stages[index].id);
                 axios.get('/checkWorkFlowFile',
                     {
                         params: {
                             'url': this.gitUrl,
                             'branchName': this.branch,
+                            'tier': this.tier
                         }
                     }).then(res => {
                     if (res.data === true) {
-                        this.logScrollButtom(this.stages[2].id, 'The workflow file already exists in the repository.');
-                        this.handleError(2, 'Set up CI/CD pipeline failed.', 'Set up CI/CD pipeline failed !');
+                        this.logScrollButtom(this.stages[index].id, 'The workflow file already exists in the repository.');
+                        this.handleError(index, 'Set up CI/CD pipeline failed.', 'Set up CI/CD pipeline failed !');
                     }else {
-                        this.stages[2].description = 'Workflow file does not exist, start creating';
-                        this.createdServicePrincipal();
+                        this.stages[index].description = 'Workflow file does not exist, start creating';
+                        this.createCredentials(index);
                     }
                 }).catch(error => {
                     console.log(error);
                 })
             },
-            createdServicePrincipal(){
-                const log = document.getElementById('pre-' + this.stages[2].id)
+            createCredentials(index){
+                const log = document.getElementById('pre-' + this.stages[index].id)
                 log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating service principal...' + '</p>';
-                axios.get('/createServicePrincipal',
+                axios.get('/createCredentials',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -499,15 +516,15 @@ pre{
                     if (res.status === 200) {
                         log.innerHTML = '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Create service principal successfully.' + '</p>';
                         this.clientId = res.data;
-                        this.pushSecretsToGitHub(log);
+                        this.pushSecretsToGitHub(log, index);
                     }
                 }).catch(error => {
                     console.log(error);
                     log.innerHTML = '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Create service principal failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
-                    this.handleError(2, 'Set up CI/CD pipeline failed.', 'Set up CI/CD pipeline failed !');
+                    this.handleError(index, 'Set up CI/CD pipeline failed.', 'Set up CI/CD pipeline failed !');
                 })
             },
-            pushSecretsToGitHub(log){
+            pushSecretsToGitHub(log, index){
                 const spLog = log.innerHTML;
                 log.innerHTML = spLog + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Push secrets...' + '</p>';
                 axios.get('/pushSecretsToGitHub',
@@ -515,24 +532,26 @@ pre{
                         params: {
                             'subscriptionId': this.subscriptionId,
                             'serviceName': this.serviceName,
+                            'resourceGroupName': this.resourceGroupName,
                             'appName': this.appName,
                             'url': this.gitUrl,
                             'clientId': this.clientId,
                             'code': this.code,
+                            'tier': this.tier
                         }
                     }).then(res => {
                     if (res.status === 200) {
                         log.innerHTML = spLog + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Push secrets successfully.' + '</p>';
                         this.accessToken = res.data;
-                        this.generateWorkflowFile(log);
+                        this.generateWorkflowFile(log, index);
                     }
                 }).catch(error => {
                     console.log(error);
                     log.innerHTML =spLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Push secrets failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
-                    this.handleError(2, 'Set up CI/CD pipeline failed.', 'Set up CI/CD pipeline failed !');
+                    this.handleError(index, 'Set up CI/CD pipeline failed.', 'Set up CI/CD pipeline failed !');
                 })
             },
-            generateWorkflowFile(log){
+            generateWorkflowFile(log, index){
                 const wfLog = log.innerHTML;
                 log.innerHTML = wfLog + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Generate workflow file...' + '</p>';
                 axios.get('/generateWorkflowFile',
@@ -543,17 +562,32 @@ pre{
                             'module': this.module,
                             'javaVersion': this.javaVersion,
                             'accessToken': this.accessToken,
+                            'tier': this.tier
                         }
                     }).then(res => {
                     if (res.status === 200) {
                         log.innerHTML = wfLog + '<p>' + '<i class="bi bi-check-lg" style="margin-right: 2%"></i>' + 'Generate workflow file successfully.' + '</p>';
-                        this.handleProgress(2, 'Setting up the CI/CD pipeline is complete.', 'success');
-                        this.deploySourceCode();
+                        this.handleProgress(index, 'Setting up the CI/CD pipeline is complete.', 'success');
+                        if(this.tier === 'Standard'){
+                            this.deploySourceCode();
+                        }else if(this.tier === 'Enterprise') {
+                            this.enqueueBuildForEnterpriseTier();
+                        } else {
+                            this.deploymentResult = '';
+                            this.viewEndpointDescription = 'View Actions running status on GitHub';
+                            this.showView = true;
+                            this.deploymentProgress = 'Your deployment is complete';
+                            toast.success('Deployment succeeded !', {
+                                position: toast.POSITION.TOP_CENTER,
+                                autoClose: 5000,
+                                hideProgressBar: true
+                            });
+                        }
                     }
                 }).catch(error => {
                     console.log(error);
                     log.innerHTML =wfLog + '<p>' + '<i class="bi bi-x-lg" style="margin-right: 2%"></i>' + 'Generate workflow file failed.' + '</p>' + '<code style="color: red">' + error.response.data + '</code>';
-                    this.handleError(2, 'Set up CI/CD pipeline failed.', 'Set up CI/CD pipeline failed !');
+                    this.handleError(index, 'Set up CI/CD pipeline failed.', 'Set up CI/CD pipeline failed !');
                 })
             },
             deploySourceCode() {
@@ -569,10 +603,7 @@ pre{
                             'appName': this.appName,
                             'relativePath': this.relativePath,
                             'javaVersion': this.javaVersion,
-                            'module': this.module,
-                            'githubAction': this.githubAction,
-                            'url': this.gitUrl,
-                            'accessToken': this.accessToken
+                            'module': this.module
                         }
                     }).then(res => {
                     if (res.status === 200) {
@@ -642,8 +673,9 @@ pre{
                 this.getDeployResultAndApplicationLogs(order);
             },
             enqueueBuildForEnterpriseTier() {
-                this.handleProgress(2, 'Building source in app ' + this.appName + '...', 'loading');
-                this.expandCollapse(this.stages[2].key, this.stages[2].id);
+                let order = this.githubAction === 'true' ? 3 : 2;
+                this.handleProgress(order, 'Building source in app ' + this.appName + '...', 'loading');
+                this.expandCollapse(this.stages[order].key, this.stages[order].id);
                 const javaVersion = this.javaVersion.substring(this.javaVersion.indexOf("_") + 1);
                 axios.get('/enterprise/enqueueBuild',
                     {
@@ -659,15 +691,15 @@ pre{
                         }
                     }).then(res => {
                     if (res.status === 200) {
-                        this.buildSourceCodeForEnterpriseTier(res.data);
+                        this.buildSourceCodeForEnterpriseTier(res.data, order);
                     }
                 }).catch(error => {
-                    this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
+                    this.handleError(order, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
                     this.logScrollButtom(this.stages[2].id, error.response.data);
                     this.deleteApp();
                 })
             },
-            buildSourceCodeForEnterpriseTier(buildId) {
+            buildSourceCodeForEnterpriseTier(buildId, order) {
                 axios.get('/enterprise/buildSourceCode',
                     {
                         params: {
@@ -678,15 +710,15 @@ pre{
                             'buildId': buildId
                         }
                     }).then(res => {
-                    this.awaitGetBuildLogComplete(res.data, buildId);
+                    this.awaitGetBuildLogComplete(res.data, buildId, order);
                 }).catch(error => {
-                    this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
-                    this.logScrollButtom(this.stages[2].id, this.buildSourceLogEnterprise + '\n' + error.response.data);
+                    this.handleError(order, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
+                    this.logScrollButtom(this.stages[order].id, this.buildSourceLogEnterprise + '\n' + error.response.data);
                     this.deleteApp();
                 })
-                this.getBuildLogEnterprise();
+                this.getBuildLogEnterprise(order);
             },
-            getBuildLogEnterprise() {
+            getBuildLogEnterprise(order) {
                 if (this.enterpriseStagesIndex > this.enterpriseStages.length - 1) {
                     return;
                 }
@@ -702,29 +734,29 @@ pre{
                     }).then(res => {
                     this.buildSourceLogEnterprise += res.data;
                     this.enterpriseStagesIndex++;
-                    this.logScrollButtom(this.stages[2].id, this.buildSourceLogEnterprise);
-                    this.getBuildLogEnterprise();
+                    this.logScrollButtom(this.stages[order].id, this.buildSourceLogEnterprise);
+                    this.getBuildLogEnterprise(order);
                 }).catch(error => {
-                    this.logScrollButtom(this.stages[2].id, this.buildSourceLogEnterprise + '\n' + error.response.data);
+                    this.logScrollButtom(this.stages[order].id, this.buildSourceLogEnterprise + '\n' + error.response.data);
                 })
             },
-            awaitGetBuildLogComplete(result, buildId){
+            awaitGetBuildLogComplete(result, buildId, order){
                 if (this.enterpriseStagesIndex <= this.enterpriseStages.length - 1) {
-                    setTimeout(() => this.awaitGetBuildLogComplete(result,buildId), 3000)
+                    setTimeout(() => this.awaitGetBuildLogComplete(result,buildId, order), 3000)
                     return;
                 }
                 if (result === 'Succeeded') {
-                    this.handleProgress(2, 'Build source in app ' + this.appName + ' succeed.', 'success');
-                    this.handleProgress(3, 'Deploying in app ' + this.appName + '...', 'loading');
-                    this.deploySourceCodeForEnterprise(buildId);
+                    this.handleProgress(order, 'Build source in app ' + this.appName + ' succeed.', 'success');
+                    this.handleProgress(order + 1, 'Deploying in app ' + this.appName + '...', 'loading');
+                    this.deploySourceCodeForEnterprise(buildId, order + 1);
                 } else {
-                    this.handleError(2, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
-                    this.logScrollButtom(this.stages[2].id, null);
+                    this.handleError(order, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
+                    this.logScrollButtom(this.stages[order].id, '');
                     this.deleteApp();
                 }
             },
-            deploySourceCodeForEnterprise(buildId) {
-                this.expandCollapse(this.stages[3].key, this.stages[3].id);
+            deploySourceCodeForEnterprise(buildId, order) {
+                this.expandCollapse(this.stages[order].key, this.stages[order].id);
                 axios.get('/enterprise/deploy',
                     {
                         params: {
@@ -738,7 +770,7 @@ pre{
                 }).catch(error => {
                     console.log(error);
                 }).finally(() => {
-                    this.getDeployResultAndApplicationLogs(3);
+                    this.getDeployResultAndApplicationLogs(order);
                 })
             },
             getDeployResultAndApplicationLogs(order) {
@@ -841,7 +873,12 @@ pre{
                 log.innerHTML = text;
             },
             viewEndpoint() {
-                const endpoint = 'https://' + this.serviceName + "-" + this.appName + '.azuremicroservices.io/';
+                let endpoint;
+                if(this.tier === 'StandardGen2'){
+                    endpoint = this.gitUrl + '/actions/workflows/deploy-jar-to-asa.yml';
+                }else {
+                    endpoint = 'https://' + this.serviceName + "-" + this.appName + '.azuremicroservices.io/';
+                }
                 open(endpoint);
             },
             viewOnPortal() {
@@ -863,6 +900,9 @@ pre{
                 }
                 this.stages.push(pipeline)
                 this.stages.sort((x, y) => x.order - y.order);
+            }
+            if(this.tier === 'StandardGen2'){
+                this.stages = this.stages.filter(item => item.key !== 'upload' && item.key !== 'deploy' && item.key !== 'build');
             }
             if(this.flag === 'select'){
                 this.checkAppExist();

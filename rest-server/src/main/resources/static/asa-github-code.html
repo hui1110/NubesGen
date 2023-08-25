@@ -9,12 +9,9 @@
 </body>
 <script>
     window.onload = function () {
-        // const timestamp = new URLSearchParams(location.search).get('timestamp')
-        // localStorage.setItem(timestamp + '_githubCode', new URLSearchParams(location.search).get('code'));
-        // window.close();
-        setTimeout(function () {
-            window.close();
-        }, 2000);
+        const timestamp = new URLSearchParams(location.search).get('timestamp')
+        localStorage.setItem(timestamp + '_githubCode', new URLSearchParams(location.search).get('code'));
+        window.close();
     }
 </script>
 </html>
