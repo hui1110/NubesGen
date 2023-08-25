@@ -110,10 +110,10 @@ public class ASACommonController {
         }
     }
 
-    @GetMapping("/provisionSpringService")
-    public @ResponseBody ResponseEntity<?> provisionSpringService(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String region, @RequestParam String tier){
+    @GetMapping("/provisionSpringApp")
+    public @ResponseBody ResponseEntity<?> provisionSpringService(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName){
         try {
-            asaCommonService.provisionSpringService(management, subscriptionId, resourceGroupName, serviceName, region, tier);
+            asaCommonService.provisionSpringApp(management, subscriptionId, resourceGroupName, serviceName, appName);
             return new ResponseEntity<>(HttpStatus.OK);
         }catch (Exception e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -164,7 +164,45 @@ public class ASACommonController {
         }
     }
 
+    @GetMapping("/checkWorkFlowFile")
+    public @ResponseBody ResponseEntity<?> checkWorkFlowFile(@RequestParam String url, @RequestParam String branchName, @RequestParam String tier){
+        try {
+            boolean res = asaGitHubActionService.checkWorkFlowFile(url, branchName, tier);
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
+    @GetMapping("/createCredentials")
+    public @ResponseBody ResponseEntity<?> createCredentials(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String appName, @RequestParam String url, @RequestParam String branchName){
+        try {
+//            String clientId = asaGitHubActionService.createCredentials(management, subscriptionId, appName, url, branchName);
+            return new ResponseEntity<>("clientId", HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/pushSecretsToGitHub")
+    public @ResponseBody ResponseEntity<?> pushSecretsToGitHub(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam String url, @RequestParam String clientId, @RequestParam String code, @RequestParam String tier){
+        try {
+            String accessToken = asaGitHubActionService.pushSecretsToGitHub(management, subscriptionId, resourceGroupName, serviceName, appName, url, clientId, code, tier);
+            return new ResponseEntity<>(accessToken, HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/generateWorkflowFile")
+    public @ResponseBody ResponseEntity<?> generateWorkflowFile(@RequestParam String url, @RequestParam String branchName, @RequestParam String module, @RequestParam String javaVersion, @RequestParam String accessToken, @RequestParam String tier){
+        try {
+            asaGitHubActionService.generateWorkflowFile(url, branchName, module, javaVersion, accessToken, tier);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
     @GetMapping("/getDeployResultAndApplicationLogs")
     public @ResponseBody ResponseEntity<?> getApplicationLogs(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName){
@@ -185,46 +223,6 @@ public class ASACommonController {
     public @ResponseBody ResponseEntity<?> deleteApp(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName){
         try {
             asaCommonService.deleteApp(management, subscriptionId, resourceGroupName, serviceName, appName);
-            return new ResponseEntity<>(HttpStatus.OK);
-        }catch (Exception e){
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/checkWorkFlowFile")
-    public @ResponseBody ResponseEntity<?> checkWorkFlowFile(@RequestParam String url, @RequestParam String branchName){
-        try {
-            boolean res = asaGitHubActionService.checkWorkFlowFile(url, branchName);
-            return new ResponseEntity<>(res, HttpStatus.OK);
-        }catch (Exception e){
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/createServicePrincipal")
-    public @ResponseBody ResponseEntity<?> credentialCreation(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String appName, @RequestParam String url, @RequestParam String branchName){
-        try {
-            String clientId = asaGitHubActionService.credentialCreation(management, subscriptionId, appName, url, branchName);
-            return new ResponseEntity<>(clientId, HttpStatus.OK);
-        }catch (Exception e){
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/pushSecretsToGitHub")
-    public @ResponseBody ResponseEntity<?> pushSecretsToGitHub(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RegisteredOAuth2AuthorizedClient("github") OAuth2AuthorizedClient github, @RequestParam String subscriptionId,@RequestParam String serviceName, @RequestParam String appName, @RequestParam String url, @RequestParam String clientId, @RequestParam String code){
-        try {
-            String accessToken = asaGitHubActionService.pushSecretsToGitHub(management, github, subscriptionId, serviceName, appName, url, clientId, code);
-            return new ResponseEntity<>(accessToken, HttpStatus.OK);
-        }catch (Exception e){
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/generateWorkflowFile")
-    public @ResponseBody ResponseEntity<?> generateWorkflowFile(@RequestParam String url, @RequestParam String branchName, @RequestParam String module, @RequestParam String javaVersion, @RequestParam String accessToken){
-        try {
-            asaGitHubActionService.generateWorkflowFile(url, branchName, module, javaVersion, accessToken);
             return new ResponseEntity<>(HttpStatus.OK);
         }catch (Exception e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

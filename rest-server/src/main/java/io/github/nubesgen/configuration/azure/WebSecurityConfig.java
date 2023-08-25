@@ -2,7 +2,6 @@ package io.github.nubesgen.configuration.azure;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,29 +13,14 @@ import org.springframework.security.web.SecurityFilterChain;
 public class WebSecurityConfig {
 
     @Bean
-//    @Order(0)
-    SecurityFilterChain deployFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf().disable();
         http.authorizeHttpRequests()
-            .requestMatchers("/deploy.html")
-            .authenticated()
-            .and()
-            .oauth2Login()
-            .loginPage("/oauth2/authorization/management");
-        http.authorizeHttpRequests()
-            .anyRequest().permitAll();
-        return http.build();
-    }
-
-    @Bean
-    SecurityFilterChain githubAuthFilterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable();
-        http.authorizeHttpRequests()
-                .requestMatchers("/asa-github-code.html")
+                .requestMatchers("/deploy.html")
                 .authenticated()
                 .and()
                 .oauth2Login()
-                .loginPage("/oauth2/authorization/github");
+                .loginPage("/oauth2/authorization/management");
         http.authorizeHttpRequests()
                 .anyRequest().permitAll();
         return http.build();

@@ -2,8 +2,8 @@ package io.github.nubesgen.service;
 
 import com.azure.core.management.Region;
 import com.azure.resourcemanager.appplatform.AppPlatformManager;
+import com.azure.resourcemanager.appplatform.fluent.models.AppResourceInner;
 import com.azure.resourcemanager.appplatform.fluent.models.DeploymentResourceInner;
-import com.azure.resourcemanager.appplatform.fluent.models.ServiceResourceInner;
 import com.azure.resourcemanager.appplatform.models.BuildResultUserSourceInfo;
 import com.azure.resourcemanager.appplatform.models.DeploymentInstance;
 import com.azure.resourcemanager.appplatform.models.DeploymentResourceProperties;
@@ -60,53 +60,6 @@ public class ASACommonService {
 
     private final Logger log = LoggerFactory.getLogger(ASACommonService.class);
     private static final String DEFAULT_DEPLOYMENT_NAME = "default";
-
-    /**
-     * Provision resource group.
-     *
-     * @param management OAuth2 authorization client after login
-     * @param subscriptionId subscriptionId
-     * @param resourceGroupName resourceGroupName
-     * @param region region
-     */
-    public void provisionResourceGroup(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName, String region) {
-        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
-        try {
-            appPlatformManager.resourceManager().resourceGroups().getByName(resourceGroupName);
-            log.info("Resource group {} already exists.", resourceGroupName);
-        } catch (Exception e) {
-            // provision resource group
-            appPlatformManager.resourceManager().resourceGroups().define(resourceGroupName).withRegion(region).create();
-            log.info("Resource group {} created.", resourceGroupName);
-        }
-
-    }
-
-    /**
-     * Provision spring service.
-     *
-     * @param management OAuth2 authorization client after login
-     * @param subscriptionId subscriptionId
-     * @param resourceGroupName resourceGroupName
-     * @param serviceName serviceName
-     * @param region region
-     * @param tier tier
-     */
-    public void provisionSpringService(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName, String serviceName, String region, String tier) {
-        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
-        try {
-            appPlatformManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
-            log.info("Spring service {} already exists.", serviceName);
-        } catch (Exception e) {
-            // provision spring service
-            ServiceResourceInner serviceResourceInner = new ServiceResourceInner()
-                    .withLocation(region)
-                    .withSku(new Sku().withName(Objects.equals(tier, "Standard") ? "S0" : "E0"));
-            appPlatformManager.serviceClient().getServices().createOrUpdate(resourceGroupName, serviceName, serviceResourceInner);
-            log.info("Spring service {} created.", serviceName);
-        }
-
-    }
 
     /**
      * Get subscription list.
@@ -219,6 +172,44 @@ public class ASACommonService {
         return projectInstance;
     }
 
+
+    /**
+     * Provision resource group.
+     *
+     * @param management OAuth2 authorization client after login
+     * @param subscriptionId subscriptionId
+     * @param resourceGroupName resourceGroupName
+     * @param region region
+     */
+    public void provisionResourceGroup(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName, String region) {
+        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
+        try {
+            appPlatformManager.resourceManager().resourceGroups().getByName(resourceGroupName);
+            log.info("Resource group {} already exists.", resourceGroupName);
+        } catch (Exception e) {
+            // provision resource group
+            appPlatformManager.resourceManager().resourceGroups().define(resourceGroupName).withRegion(region).create();
+            log.info("Resource group {} created.", resourceGroupName);
+        }
+        }
+
+    /**
+     * Provision spring app.
+     *
+     * @param management OAuth2 authorization client after login
+     * @param subscriptionId the subscription id
+     * @param resourceGroupName the resource group name
+     * @param serviceName the service name
+     * @param appName the app name
+     */
+    public void provisionSpringApp(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName,
+                                   String serviceName,
+                                   String appName) {
+        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
+        AppResourceInner appResourceInner = ASADeployUtils.getAppResourceInner();
+        appPlatformManager.serviceClient().getApps().createOrUpdate(resourceGroupName, serviceName, appName, appResourceInner);
+        log.info("Provision spring app {} completed.", appName);
+    }
     /**
      * Check app exist.
      *
@@ -274,10 +265,10 @@ public class ASACommonService {
         DeploymentResourceProperties deploymentResourceProperties = new DeploymentResourceProperties();
         deploymentResourceProperties.withActive(true);
         deploymentResourceProperties.withDeploymentSettings(deploymentSettings);
-        if (springService.sku().tier().equals("Standard")) {
-            deploymentResourceProperties.withSource(new JarUploadedUserSourceInfo().withRelativePath("<default>"));
-        } else if (springService.sku().tier().equals("Enterprise")) {
+        if (springService.sku().tier().equals("Enterprise")) {
             deploymentResourceProperties.withSource(new BuildResultUserSourceInfo().withBuildResultId("<default>"));
+        } else {
+            deploymentResourceProperties.withSource(new JarUploadedUserSourceInfo().withRelativePath("<default>"));
         }
 
         DeploymentResourceInner resourceInner = new DeploymentResourceInner()
@@ -450,7 +441,7 @@ public class ASACommonService {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         ASADeployUtils.deleteRepositoryDirectory(sourceFolder);
         return compressFile;

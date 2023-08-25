@@ -22,10 +22,10 @@ public class ASAStandardTierController {
         this.asaStandardTierService = asaStandardTierService;
     }
 
-    @GetMapping("/provisionSpringApp")
-    public @ResponseBody ResponseEntity<?> provisionSpringApp(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName) {
+    @GetMapping("/provisionSpringService")
+    public @ResponseBody ResponseEntity<?> provisionSpringApp(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String region, @RequestParam String tier) {
         try {
-            asaStandardTierService.provisionSpringApp(management, subscriptionId, resourceGroupName, serviceName, appName);
+            asaStandardTierService.provisionSpringService(management, subscriptionId, resourceGroupName, serviceName, region, tier);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -43,10 +43,10 @@ public class ASAStandardTierController {
     }
 
     @GetMapping("/deploy")
-    public @ResponseBody ResponseEntity<?> deployGithubRepoSourceCodeToASA(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam String module, @RequestParam String javaVersion, @RequestParam String relativePath, @RequestParam String githubAction, @RequestParam(required = false) String url, @RequestParam(required = false) String accessToken) {
+    public @ResponseBody ResponseEntity<?> deployGithubRepoSourceCodeToASA(@RegisteredOAuth2AuthorizedClient(DEFAULT_OAUTH2_CLIENT) OAuth2AuthorizedClient management, @RequestParam String subscriptionId, @RequestParam String resourceGroupName, @RequestParam String serviceName, @RequestParam String appName, @RequestParam String module, @RequestParam String javaVersion, @RequestParam String relativePath) {
         try {
             asaStandardTierService.buildAndDeploySourceCode(management, subscriptionId, resourceGroupName,
-                    serviceName, appName, module, javaVersion, relativePath, githubAction, url, accessToken);
+                    serviceName, appName, module, javaVersion, relativePath);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

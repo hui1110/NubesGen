@@ -1,4 +1,4 @@
-name: Deploy to Azure Spring Apps
+name: Deploy source code to Azure Spring Apps
 on:
   # Automatically trigger it when detected changes in repo
   push:
@@ -42,5 +42,3 @@ jobs:
           app-name: ${{ secrets.AZURE_SPRING_APP_NAME }}
           use-staging-deployment: false
           package: ${{ env.ASC_PACKAGE_PATH }}
-          runtime-version: ${java-version}
-          target-module: ${target-module}

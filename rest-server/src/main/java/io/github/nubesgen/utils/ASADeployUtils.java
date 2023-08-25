@@ -2,19 +2,25 @@ package io.github.nubesgen.utils;
 
 import com.azure.core.credential.AccessToken;
 import com.azure.core.credential.TokenCredential;
+import com.azure.core.credential.TokenRequestContext;
 import com.azure.core.management.AzureEnvironment;
 import com.azure.core.management.profile.AzureProfile;
+import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.resourcemanager.AzureResourceManager;
+import com.azure.resourcemanager.appcontainers.ContainerAppsApiManager;
 import com.azure.resourcemanager.appplatform.AppPlatformManager;
 import com.azure.resourcemanager.appplatform.fluent.models.AppResourceInner;
 import com.azure.resourcemanager.appplatform.models.AppResourceProperties;
 import com.azure.resourcemanager.appplatform.models.DeploymentInstance;
+import com.azure.resourcemanager.appplatform.models.Sku;
 import com.azure.resourcemanager.appplatform.models.SpringAppDeployment;
 import com.azure.resourcemanager.appplatform.models.SpringService;
 import com.azure.resourcemanager.resources.models.Subscription;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.eclipse.jgit.api.Git;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import reactor.core.publisher.Mono;
 
@@ -33,6 +39,7 @@ import java.util.stream.Collectors;
 
 public final class ASADeployUtils {
 
+    private static final Logger log = LoggerFactory.getLogger(ASADeployUtils.class);
     /**
      * Get the username from the GitHub URL.
      *
@@ -144,7 +151,6 @@ public final class ASADeployUtils {
             byte[] getData = connection.getInputStream().readAllBytes();
             return new String(getData);
         } catch (Exception e) {
-            e.printStackTrace();
             return null;
         } finally {
             try {
@@ -152,7 +158,7 @@ public final class ASADeployUtils {
                     connection.disconnect();
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Failed to close connection.", e);
             }
         }
     }
@@ -168,6 +174,21 @@ public final class ASADeployUtils {
         final String password = springService.apps().getByName(appName).parent().listTestKeys().primaryKey();
         final String userPass = "primary:" + password;
         return "Basic " + new String(Base64.getEncoder().encode(userPass.getBytes()));
+    }
+
+    /**
+     * Get sku.
+     *
+     * @param tier tier
+     */
+    public static Sku getSku(String tier) {
+        if(Objects.equals(tier, "Standard")){
+            return new Sku().withName("S0").withTier(tier);
+        }else if(Objects.equals(tier, "Enterprise")){
+            return new Sku().withName("E0").withTier(tier);
+        }else {
+            return new Sku().withName("S0").withTier(tier);
+        }
     }
 
     /**
@@ -205,7 +226,7 @@ public final class ASADeployUtils {
     public static AppPlatformManager getAppPlatformManager(OAuth2AuthorizedClient management, String subscriptionId) {
         AzureResourceManager.Authenticated authenticated = getARMAuthenticated(management);
         Subscription subscription = getSubscription(authenticated, subscriptionId);
-        final AzureProfile profile = new AzureProfile(subscription.innerModel().tenantId(), subscriptionId, AzureEnvironment.AZURE);
+        final AzureProfile profile = new AzureProfile(subscription.innerModel().tenantId(), subscription.subscriptionId(), AzureEnvironment.AZURE);
         final TokenCredential credential = getAzureCredential(management);
         return AppPlatformManager.authenticate(credential, profile);
     }
@@ -222,6 +243,21 @@ public final class ASADeployUtils {
     }
 
     /**
+     * Get ContainerAppsApiManager.
+     *
+     * @param management OAuth2AuthorizedClient
+     * @param subscriptionId subscription id
+     * @return ContainerAppsApiManager
+     */
+    public static ContainerAppsApiManager getContainerAppsApiManager(OAuth2AuthorizedClient management, String subscriptionId) {
+        AzureResourceManager.Authenticated authenticated = getARMAuthenticated(management);
+        Subscription subscription = getSubscription(authenticated, subscriptionId);
+        final AzureProfile profile = new AzureProfile(subscription.innerModel().tenantId(), subscriptionId, AzureEnvironment.AZURE);
+        final TokenCredential credential = getAzureCredential(management);
+        return ContainerAppsApiManager.authenticate(credential, profile);
+    }
+
+    /**
      * Get tenant id.
      *
      * @param management OAuth2AuthorizedClient
@@ -234,6 +270,14 @@ public final class ASADeployUtils {
         return subscription.innerModel().tenantId();
     }
 
+    private static Subscription getSubscription(AzureResourceManager.Authenticated authenticated, String subscriptionId) {
+        if (subscriptionId == null) {
+            subscriptionId = authenticated.subscriptions().list().iterator().next().subscriptionId();
+        }
+        final String currentSubscriptionId = subscriptionId;
+        return authenticated.subscriptions().list().stream().filter(s -> s.subscriptionId().equals(currentSubscriptionId)).toList().get(0);
+    }
+
     private static AzureResourceManager.Authenticated getARMAuthenticated(OAuth2AuthorizedClient management) {
         final TokenCredential credential = getAzureCredential(management);
         final AzureProfile azureProfile = new AzureProfile(AzureEnvironment.AZURE);
@@ -244,19 +288,17 @@ public final class ASADeployUtils {
         return authenticated;
     }
 
-    private static Subscription getSubscription(AzureResourceManager.Authenticated authenticated, String subscriptionId) {
-        if (subscriptionId == null) {
-            subscriptionId = authenticated.subscriptions().list().iterator().next().subscriptionId();
-        }
-        final String currentSubscriptionId = subscriptionId;
-        return authenticated.subscriptions().list().stream().filter(s -> s.subscriptionId().equals(currentSubscriptionId)).toList().get(0);
-    }
-
     private static TokenCredential getAzureCredential(OAuth2AuthorizedClient management) {
-        return toTokenCredential(management.getAccessToken().getTokenValue());
+        TokenCredential tokenCredential = new DefaultAzureCredentialBuilder().build();
+        TokenRequestContext request = new TokenRequestContext().addScopes("https://management.azure.com/.default");
+        AccessToken token =
+                tokenCredential.getToken(request).retry(3L).blockOptional().orElseThrow(() -> new RuntimeException(
+                        "Couldn't retrieve JWT"));
+//        toTokenCredential(management.getAccessToken().getTokenValue());
+        return toTokenCredential(token.getToken());
     }
 
-    private static TokenCredential toTokenCredential(String accessToken) {
+    public static TokenCredential toTokenCredential(String accessToken) {
         return request -> Mono.just(new AccessToken(accessToken, OffsetDateTime.MAX));
     }
 

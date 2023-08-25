@@ -1,10 +1,10 @@
 package io.github.nubesgen.service;
 
 import com.azure.resourcemanager.appplatform.AppPlatformManager;
-import com.azure.resourcemanager.appplatform.fluent.models.AppResourceInner;
 import com.azure.resourcemanager.appplatform.fluent.models.BuildInner;
 import com.azure.resourcemanager.appplatform.fluent.models.BuildResultInner;
 import com.azure.resourcemanager.appplatform.fluent.models.BuildServiceAgentPoolResourceInner;
+import com.azure.resourcemanager.appplatform.fluent.models.BuildServiceInner;
 import com.azure.resourcemanager.appplatform.fluent.models.DeploymentResourceInner;
 import com.azure.resourcemanager.appplatform.fluent.models.ServiceResourceInner;
 import com.azure.resourcemanager.appplatform.models.BuildProperties;
@@ -12,6 +12,9 @@ import com.azure.resourcemanager.appplatform.models.BuildResultProvisioningState
 import com.azure.resourcemanager.appplatform.models.BuildResultUserSourceInfo;
 import com.azure.resourcemanager.appplatform.models.BuildServiceAgentPoolProperties;
 import com.azure.resourcemanager.appplatform.models.BuildServiceAgentPoolSizeProperties;
+import com.azure.resourcemanager.appplatform.models.BuildServiceProperties;
+import com.azure.resourcemanager.appplatform.models.BuildServicePropertiesResourceRequests;
+import com.azure.resourcemanager.appplatform.models.BuilderProvisioningState;
 import com.azure.resourcemanager.appplatform.models.SpringService;
 import com.azure.resourcemanager.resources.fluentcore.arm.ResourceUtils;
 import com.azure.resourcemanager.resources.fluentcore.utils.ResourceManagerUtils;
@@ -26,30 +29,56 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.azure.core.util.polling.implementation.PollingConstants.STATUS_FAILED;
+import static com.azure.core.util.polling.implementation.PollingConstants.STATUS_SUCCEEDED;
+
 @Service
 public class ASAEnterpriseTierService implements ASAService {
 
     private final Logger log = LoggerFactory.getLogger(ASAEnterpriseTierService.class);
     private static final String DEFAULT_DEPLOYMENT_NAME = "default";
 
-    public void provisionSpringApp(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName, String serviceName, String appName) {
+    /**
+     * Provision spring service.
+     *
+     * @param management OAuth2 authorization client after login
+     * @param subscriptionId subscriptionId
+     * @param resourceGroupName resourceGroupName
+     * @param serviceName serviceName
+     * @param region region
+     * @param tier tier
+     */
+    public void provisionSpringService(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName, String serviceName, String region, String tier) {
         AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
-        appPlatformManager.serviceClient().getBuildServiceAgentPools()
-                .updatePut(
-                        resourceGroupName,
-                        serviceName,
-                        DEFAULT_DEPLOYMENT_NAME,
-                        DEFAULT_DEPLOYMENT_NAME,
-                        new BuildServiceAgentPoolResourceInner()
-                                .withProperties(
-                                        new BuildServiceAgentPoolProperties()
-                                                .withPoolSize(new BuildServiceAgentPoolSizeProperties().withName("S1")) // S1, S2, S3, S4, S5
-                                )
-                );
-        log.info("Initialize build service agent pool for enterprise tier.");
-        AppResourceInner appResourceInner = ASADeployUtils.getAppResourceInner();
-        appPlatformManager.serviceClient().getApps().createOrUpdate(resourceGroupName, serviceName, appName, appResourceInner);
-        log.info("Provision spring app {} completed.", appName);
+        try {
+            appPlatformManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
+            log.info("Spring service {} already exists.", serviceName);
+        } catch (Exception e) {
+            ServiceResourceInner serviceResourceInner = new ServiceResourceInner()
+                    .withLocation(region)
+                    .withSku(ASADeployUtils.getSku(tier));
+            appPlatformManager.serviceClient().getServices().createOrUpdate(resourceGroupName, serviceName, serviceResourceInner);
+            log.info("Spring service {} created, tier: {}", serviceName, tier);
+
+            BuildServiceProperties buildServiceProperties = new BuildServiceProperties();
+            buildServiceProperties.withResourceRequests(new BuildServicePropertiesResourceRequests());
+            appPlatformManager.serviceClient().getBuildServices().createOrUpdate(resourceGroupName, serviceName, DEFAULT_DEPLOYMENT_NAME, new BuildServiceInner().withProperties(buildServiceProperties));
+            log.info("Initialize build service for enterprise tier.");
+
+            appPlatformManager.serviceClient().getBuildServiceAgentPools()
+                    .updatePut(
+                            resourceGroupName,
+                            serviceName,
+                            DEFAULT_DEPLOYMENT_NAME,
+                            DEFAULT_DEPLOYMENT_NAME,
+                            new BuildServiceAgentPoolResourceInner()
+                                    .withProperties(
+                                            new BuildServiceAgentPoolProperties()
+                                                    .withPoolSize(new BuildServiceAgentPoolSizeProperties().withName("S1")) // S1, S2, S3, S4, S5
+                                    )
+                    );
+            log.info("Initialize build service agent pool for enterprise tier.");
+        }
     }
 
     /**
@@ -121,6 +150,18 @@ public class ASAEnterpriseTierService implements ASAService {
      */
     public String enqueueBuild(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName, String serviceName, String appName, String relativePath, String region, String javaVersion, String module) {
         AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
+
+        BuilderProvisioningState buildServiceProvisioningState = appPlatformManager.serviceClient().getBuildServiceBuilders().get(resourceGroupName, serviceName, DEFAULT_DEPLOYMENT_NAME, DEFAULT_DEPLOYMENT_NAME).properties().provisioningState();
+        String provisioningState = buildServiceProvisioningState.toString();
+        while (!provisioningState.equals(STATUS_SUCCEEDED)) {
+            log.info("Builders is not ready, status: {}, wait for 10 seconds.", provisioningState);
+            buildServiceProvisioningState = appPlatformManager.serviceClient().getBuildServiceBuilders().get(resourceGroupName, serviceName, DEFAULT_DEPLOYMENT_NAME, DEFAULT_DEPLOYMENT_NAME).properties().provisioningState();
+            provisioningState = buildServiceProvisioningState.toString();
+            if(provisioningState.equals(STATUS_FAILED)){
+                throw new RuntimeException("Create Builders failed.");
+            }
+            ResourceManagerUtils.sleep(Duration.ofSeconds(10));
+        }
         SpringService springService = appPlatformManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
 
         ServiceResourceInner serviceResourceInner = new ServiceResourceInner()

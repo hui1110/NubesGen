@@ -48,9 +48,15 @@ public class GitWrapper {
      * @return A wrapper for Git
      * @throws GitAPIException Git commit failed
      */
-    public GitWrapper gitCommit(String userName, String email) throws GitAPIException {
+    public GitWrapper gitCommit(String userName, String email, String tier) throws GitAPIException {
+        String commitMessage;
+        if(tier.equals("StandardGen2")){
+            commitMessage = "ci: add Azure Spring Apps workflow file\n" + "on-behalf-of: @Azure opensource@microsoft.com";
+        }else {
+            commitMessage = "ci: add Azure Spring Apps workflow file [skip ci] \n" + "on-behalf-of: @Azure opensource@microsoft.com";
+        }
         git.commit()
-                .setMessage("Initial commit from Azure Spring Apps button")
+                .setMessage(commitMessage)
                 .setAuthor(userName, email)
                 .setCommitter(userName, email)
                 .setSign(false)

@@ -4,9 +4,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 
 public interface ASAService {
 
-    void provisionSpringApp(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName,
-                           String serviceName,
-                           String appName);
+    void provisionSpringService(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName, String serviceName, String region, String tier);
 
     String getBuildLogs(OAuth2AuthorizedClient management, String subscriptionId,
                         String resourceGroupName,
