@@ -1,11 +1,11 @@
-package io.github.nubesgen.model;
+package io.github.nubesgen.model.azure;
 
-public class RegionInstance {
+public class Region {
     
     private String name;
     private String label;
 
-    public RegionInstance(String name, String label) {
+    public Region(String name, String label) {
         this.name = name;
         this.label = label;
     }

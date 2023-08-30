@@ -1,4 +1,4 @@
-package io.github.nubesgen.model;
+package io.github.nubesgen.model.github;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PushCommand;
@@ -9,6 +9,8 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.File;
 import java.net.URISyntaxException;
+
+import static io.github.nubesgen.service.azure.springapps.Constants.Tier.StandardGen2;
 
 public class GitWrapper {
 
@@ -50,7 +52,7 @@ public class GitWrapper {
      */
     public GitWrapper gitCommit(String userName, String email, String tier) throws GitAPIException {
         String commitMessage;
-        if(tier.equals("StandardGen2")){
+        if(tier.equals(StandardGen2)){
             commitMessage = "ci: add Azure Spring Apps workflow file\n" + "on-behalf-of: @Azure opensource@microsoft.com";
         }else {
             commitMessage = "ci: add Azure Spring Apps workflow file [skip ci] \n" + "on-behalf-of: @Azure opensource@microsoft.com";

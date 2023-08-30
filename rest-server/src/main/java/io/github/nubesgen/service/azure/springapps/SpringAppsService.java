@@ -1,9 +1,9 @@
-package io.github.nubesgen.service;
+package io.github.nubesgen.service.azure.springapps;
 
-import com.azure.core.management.Region;
 import com.azure.resourcemanager.appplatform.AppPlatformManager;
 import com.azure.resourcemanager.appplatform.fluent.models.AppResourceInner;
 import com.azure.resourcemanager.appplatform.fluent.models.DeploymentResourceInner;
+import com.azure.resourcemanager.appplatform.models.AppResourceProperties;
 import com.azure.resourcemanager.appplatform.models.BuildResultUserSourceInfo;
 import com.azure.resourcemanager.appplatform.models.DeploymentInstance;
 import com.azure.resourcemanager.appplatform.models.DeploymentResourceProperties;
@@ -13,17 +13,17 @@ import com.azure.resourcemanager.appplatform.models.ResourceRequests;
 import com.azure.resourcemanager.appplatform.models.ResourceUploadDefinition;
 import com.azure.resourcemanager.appplatform.models.Sku;
 import com.azure.resourcemanager.appplatform.models.SpringApp;
+import com.azure.resourcemanager.appplatform.models.SpringAppDeployment;
 import com.azure.resourcemanager.appplatform.models.SpringService;
-import com.azure.resourcemanager.resources.models.ResourceGroup;
-import com.azure.resourcemanager.resources.models.Subscription;
 import com.azure.storage.file.share.ShareFileAsyncClient;
 import com.azure.storage.file.share.ShareFileClientBuilder;
-import io.github.nubesgen.model.ProjectInstance;
-import io.github.nubesgen.model.RegionInstance;
-import io.github.nubesgen.model.ResourceGroupInstance;
-import io.github.nubesgen.model.ServiceInstance;
-import io.github.nubesgen.model.SubscriptionInstance;
-import io.github.nubesgen.utils.ASADeployUtils;
+import io.github.nubesgen.model.azure.springapps.JavaMavenProject;
+import io.github.nubesgen.model.azure.Region;
+import io.github.nubesgen.model.azure.ResourceGroup;
+import io.github.nubesgen.model.azure.springapps.ServiceInstance;
+import io.github.nubesgen.model.azure.Subscription;
+import io.github.nubesgen.utils.AzureResourceManagerUtils;
+import io.github.nubesgen.utils.GithubUtils;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -34,15 +34,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.stereotype.Service;
 
+import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -54,11 +57,18 @@ import java.util.zip.GZIPOutputStream;
 
 import static com.azure.core.util.polling.implementation.PollingConstants.STATUS_RUNNING;
 import static com.azure.core.util.polling.implementation.PollingConstants.STATUS_SUCCEEDED;
+import static io.github.nubesgen.service.azure.springapps.Constants.Enterprise;
+import static io.github.nubesgen.service.azure.springapps.Constants.Enterprise_Alias;
+import static io.github.nubesgen.service.azure.springapps.Constants.Standard;
+import static io.github.nubesgen.service.azure.springapps.Constants.Standard_Alias;
 
+/**
+ * Basic operations for Azure Spring Apps
+ */
 @Service
-public class ASACommonService {
+public class SpringAppsService {
 
-    private final Logger log = LoggerFactory.getLogger(ASACommonService.class);
+    private final Logger log = LoggerFactory.getLogger(SpringAppsService.class);
     private static final String DEFAULT_DEPLOYMENT_NAME = "default";
 
     /**
@@ -67,10 +77,10 @@ public class ASACommonService {
      * @param management OAuth2 authorization client after login
      * @return the subscription instance list
      */
-    public List<SubscriptionInstance> getSubscriptionList(OAuth2AuthorizedClient management) {
-        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, null);
-        return appPlatformManager.resourceManager().subscriptions().list().stream().sorted(Comparator.comparing(Subscription::displayName))
-                .map(subscription -> new SubscriptionInstance(subscription.subscriptionId(),
+    public List<Subscription> getSubscriptionList(OAuth2AuthorizedClient management) {
+        AppPlatformManager appPlatformManager = AzureResourceManagerUtils.getAppPlatformManager(management, null);
+        return appPlatformManager.resourceManager().subscriptions().list().stream().sorted(Comparator.comparing(com.azure.resourcemanager.resources.models.Subscription::displayName))
+                .map(subscription -> new Subscription(subscription.subscriptionId(),
                         subscription.displayName()))
                 .collect(Collectors.toList());
     }
@@ -82,10 +92,10 @@ public class ASACommonService {
      * @param subscriptionId the subscription id
      * @return the resource group instance list
      */
-    public List<ResourceGroupInstance> getResourceGroupList(OAuth2AuthorizedClient management, String subscriptionId) {
-        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
-        return appPlatformManager.resourceManager().resourceGroups().list().stream().sorted(Comparator.comparing(ResourceGroup::name))
-                .map(resourceGroup -> new ResourceGroupInstance(resourceGroup.name()))
+    public List<ResourceGroup> getResourceGroupList(OAuth2AuthorizedClient management, String subscriptionId) {
+        AppPlatformManager appPlatformManager = AzureResourceManagerUtils.getAppPlatformManager(management, subscriptionId);
+        return appPlatformManager.resourceManager().resourceGroups().list().stream().sorted(Comparator.comparing(com.azure.resourcemanager.resources.models.ResourceGroup::name))
+                .map(resourceGroup -> new ResourceGroup(resourceGroup.name()))
                 .collect(Collectors.toList());
     }
 
@@ -99,7 +109,7 @@ public class ASACommonService {
      */
     public List<ServiceInstance> getServiceinstanceList(OAuth2AuthorizedClient management, String subscriptionId,
                                                         String resourceGroupName) {
-        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
+        AppPlatformManager appPlatformManager = AzureResourceManagerUtils.getAppPlatformManager(management, subscriptionId);
         return appPlatformManager.springServices().list().stream().filter(springService -> Objects.equals(springService.resourceGroupName(), resourceGroupName)).sorted(Comparator.comparing(SpringService::name))
                 .map(springService -> new ServiceInstance(springService.region(),
                         springService.resourceGroupName(), springService.id(), springService.name(),
@@ -112,15 +122,15 @@ public class ASACommonService {
      *
      * @return the region list
      */
-    public List<RegionInstance> getRegionList() {
-        List<Region> regionArrayList = new ArrayList<>(Region.values());
-        List<RegionInstance> resList = new ArrayList<>();
+    public List<Region> getRegionList() {
+        List<com.azure.core.management.Region> regionArrayList = new ArrayList<>(com.azure.core.management.Region.values());
+        List<Region> resList = new ArrayList<>();
         if (!regionArrayList.isEmpty()) {
-            for (Region region : regionArrayList) {
-                resList.add(new RegionInstance(region.name(), region.label()));
+            for (com.azure.core.management.Region region : regionArrayList) {
+                resList.add(new Region(region.name(), region.label()));
             }
         }
-        return resList.stream().sorted(Comparator.comparing(RegionInstance::getName)).collect(Collectors.toList());
+        return resList.stream().sorted(Comparator.comparing(Region::getName)).collect(Collectors.toList());
     }
 
     /**
@@ -131,9 +141,9 @@ public class ASACommonService {
      * @param module module name
      * @return project name and java version
      */
-    public synchronized ProjectInstance getNameAndJavaVersion(String url, String branchName, String module) {
+    public synchronized JavaMavenProject getNameAndJavaVersion(String url, String branchName, String module) {
         module = Objects.equals(module, "null") ? null : module;
-        String pathName = ASADeployUtils.downloadSourceCodeFromGitHub(url, branchName);
+        String pathName = GithubUtils.downloadSourceCodeFromGitHub(url, branchName);
         assert pathName != null;
         Model model;
         if (module == null) {
@@ -141,7 +151,7 @@ public class ASACommonService {
                 MavenXpp3Reader reader = new MavenXpp3Reader();
                 model = reader.read(fis);
             } catch (Exception e) {
-                ASADeployUtils.deleteRepositoryDirectory(new File(pathName));
+                GithubUtils.deleteRepositoryDirectory(new File(pathName));
                 throw new RuntimeException(e.getMessage());
             }
         } else {
@@ -158,18 +168,18 @@ public class ASACommonService {
                     }
                 }
             } catch (Exception e) {
-                ASADeployUtils.deleteRepositoryDirectory(new File(pathName));
+                GithubUtils.deleteRepositoryDirectory(new File(pathName));
                 throw new RuntimeException(e.getMessage());
             }
         }
-        ASADeployUtils.deleteRepositoryDirectory(new File(pathName));
-        ProjectInstance projectInstance = new ProjectInstance();
+        GithubUtils.deleteRepositoryDirectory(new File(pathName));
+        JavaMavenProject javaMavenProject = new JavaMavenProject();
         if (model.getName() != null) {
-            projectInstance.setName(model.getName().replaceAll(" ", "").toLowerCase());
+            javaMavenProject.setName(model.getName().replaceAll(" ", "").toLowerCase());
         }
         model.getProperties().put("java.version", model.getProperties().getOrDefault("java.version", "11"));
-        projectInstance.setVersion("Java_".concat(String.valueOf(model.getProperties().get("java.version"))));
-        return projectInstance;
+        javaMavenProject.setVersion("Java_".concat(String.valueOf(model.getProperties().get("java.version"))));
+        return javaMavenProject;
     }
 
 
@@ -182,7 +192,7 @@ public class ASACommonService {
      * @param region region
      */
     public void provisionResourceGroup(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName, String region) {
-        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
+        AppPlatformManager appPlatformManager = AzureResourceManagerUtils.getAppPlatformManager(management, subscriptionId);
         try {
             appPlatformManager.resourceManager().resourceGroups().getByName(resourceGroupName);
             log.info("Resource group {} already exists.", resourceGroupName);
@@ -205,11 +215,75 @@ public class ASACommonService {
     public void provisionSpringApp(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName,
                                    String serviceName,
                                    String appName) {
-        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
-        AppResourceInner appResourceInner = ASADeployUtils.getAppResourceInner();
+        AppPlatformManager appPlatformManager = AzureResourceManagerUtils.getAppPlatformManager(management, subscriptionId);
+        AppResourceInner appResourceInner = getAppResourceInner();
         appPlatformManager.serviceClient().getApps().createOrUpdate(resourceGroupName, serviceName, appName, appResourceInner);
         log.info("Provision spring app {} completed.", appName);
     }
+
+    /**
+     * Get sku.
+     *
+     * @param tier tier
+     */
+    public Sku getSku(String tier) {
+        if(Objects.equals(tier, Standard)){
+            return new Sku().withName(Standard_Alias).withTier(tier);
+        }else if(Objects.equals(tier, Enterprise)){
+            return new Sku().withName(Enterprise_Alias).withTier(tier);
+        }else {
+            return new Sku().withName(Standard_Alias).withTier(tier);
+        }
+    }
+
+    /**
+     * Get log by url string.
+     *
+     * @param strUrl url
+     * @param basicAuth basicAuth
+     * @return log string
+     */
+    public String getLogByUrl(String strUrl, String basicAuth) {
+        HttpsURLConnection connection = null;
+        try {
+            URL url = new URL(strUrl);
+            connection = (HttpsURLConnection) url.openConnection();
+            if (basicAuth != null) {
+                connection.setRequestProperty("Authorization", basicAuth);
+            }
+            connection.setRequestMethod("GET");
+            connection.setUseCaches(false);
+            connection.setDoOutput(true);
+            byte[] getData = connection.getInputStream().readAllBytes();
+            return new String(getData);
+        } catch (Exception e) {
+            return null;
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            } catch (Exception e) {
+                log.error("Failed to close connection.", e);
+            }
+        }
+    }
+
+    /**
+     * Get app resource inner.
+     *
+     * @return app resource inner
+     */
+    public static AppResourceInner getAppResourceInner() {
+        AppResourceProperties properties = new AppResourceProperties();
+        properties.withHttpsOnly(true);
+        properties.withPublicProperty(true);
+
+        AppResourceInner appResourceInner = new AppResourceInner();
+        appResourceInner.withProperties(properties);
+        return appResourceInner;
+    }
+
     /**
      * Check app exist.
      *
@@ -224,7 +298,7 @@ public class ASACommonService {
                                  String serviceName,
                                  String appName) {
         try {
-            AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
+            AppPlatformManager appPlatformManager = AzureResourceManagerUtils.getAppPlatformManager(management, subscriptionId);
             SpringService springService = appPlatformManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
             springService.apps().getByName(appName);
         } catch (Exception e) {
@@ -253,7 +327,7 @@ public class ASACommonService {
                                        String memory,
                                        String instanceCount,
                                        Map<String, String> variables) {
-        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
+        AppPlatformManager appPlatformManager = AzureResourceManagerUtils.getAppPlatformManager(management, subscriptionId);
         SpringService springService = appPlatformManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
 
         DeploymentSettings deploymentSettings = new DeploymentSettings()
@@ -297,7 +371,7 @@ public class ASACommonService {
                                                  String resourceGroupName,
                                                  String serviceName,
                                                  String appName) {
-        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
+        AppPlatformManager appPlatformManager = AzureResourceManagerUtils.getAppPlatformManager(management, subscriptionId);
         return appPlatformManager.serviceClient().getApps().getResourceUploadUrlAsync(
                 resourceGroupName, serviceName, appName).block();
     }
@@ -314,13 +388,13 @@ public class ASACommonService {
     public void uploadFile(OAuth2AuthorizedClient management, String subscriptionId, String uploadUrl,
                            String url,
                            String branchName) {
-        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
+        AppPlatformManager appPlatformManager = AzureResourceManagerUtils.getAppPlatformManager(management, subscriptionId);
         ShareFileAsyncClient fileClient = new ShareFileClientBuilder()
                 .endpoint(uploadUrl)
                 .httpClient(appPlatformManager.httpPipeline().getHttpClient())
                 .buildFileAsyncClient();
         try {
-            String pathName = ASADeployUtils.downloadSourceCodeFromGitHub(url, branchName);
+            String pathName = GithubUtils.downloadSourceCodeFromGitHub(url, branchName);
             File gzFile = createTarGzFile(new File(pathName));
             fileClient.create(gzFile.length())
                     .flatMap(fileInfo -> fileClient.uploadFromFile(gzFile.getAbsolutePath())).retry(2)
@@ -343,7 +417,7 @@ public class ASACommonService {
     public String getApplicationLogs(OAuth2AuthorizedClient management, String subscriptionId,
                                      String resourceGroupName,
                                      String serviceName, String appName, String status) {
-        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
+        AppPlatformManager appPlatformManager = AzureResourceManagerUtils.getAppPlatformManager(management, subscriptionId);
         SpringService springService = appPlatformManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
         String endpoint = getLogStreamingEndpoint(springService, appName);
         String url;
@@ -353,8 +427,8 @@ public class ASACommonService {
             } else {
                 url = String.format("%s?tailLines=%s", endpoint, 1000);
             }
-            final String basicAuth = ASADeployUtils.getAuthorizationCode(springService, appName);
-            return ASADeployUtils.getLogByUrl(url, basicAuth);
+            final String basicAuth = AzureResourceManagerUtils.getAuthorizationCode(springService, appName);
+            return getLogByUrl(url, basicAuth);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -373,8 +447,8 @@ public class ASACommonService {
     public String checkDeployStatus(OAuth2AuthorizedClient management, String subscriptionId,
                                     String resourceGroupName,
                                     String serviceName, String appName) {
-        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
-        Map<String, String> appStatusMap = ASADeployUtils.getAppAndInstanceStatus(appPlatformManager, resourceGroupName, serviceName, appName);
+        AppPlatformManager appPlatformManager = AzureResourceManagerUtils.getAppPlatformManager(management, subscriptionId);
+        Map<String, String> appStatusMap = getAppAndInstanceStatus(appPlatformManager, resourceGroupName, serviceName, appName);
         String appStatus = appStatusMap.get("appStatus");
         String instanceStatus = appStatusMap.get("instanceStatus");
         //            build succeed, and deploy succeed
@@ -395,7 +469,7 @@ public class ASACommonService {
     public void deleteApp(OAuth2AuthorizedClient management, String subscriptionId,
                           String resourceGroupName,
                           String serviceName, String appName) {
-        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
+        AppPlatformManager appPlatformManager = AzureResourceManagerUtils.getAppPlatformManager(management, subscriptionId);
         SpringService springService = appPlatformManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
         springService.apps().deleteByName(appName);
     }
@@ -443,8 +517,33 @@ public class ASACommonService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        ASADeployUtils.deleteRepositoryDirectory(sourceFolder);
+        GithubUtils.deleteRepositoryDirectory(sourceFolder);
         return compressFile;
+    }
+
+    /**
+     * Get app status and instance status.
+     *
+     * @param appPlatformManager appPlatformManager
+     * @param resourceGroupName resourceGroupName
+     * @param serviceName serviceName
+     * @param appName appName
+     * @return app status and instance status
+     */
+    public Map<String, String> getAppAndInstanceStatus(AppPlatformManager appPlatformManager, String resourceGroupName,
+                                                              String serviceName, String appName) {
+        SpringService springService = appPlatformManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
+        SpringAppDeployment springAppDeployment = springService.apps().getByName(appName).getActiveDeployment();
+        String appStatus = springAppDeployment.innerModel().properties().provisioningState().toString();
+
+        List<DeploymentInstance> deploymentInstances = springAppDeployment.instances();
+        deploymentInstances = deploymentInstances.stream().sorted(Comparator.comparing(DeploymentInstance::startTime)).collect(Collectors.toList());
+        String instanceStatus = deploymentInstances.get(deploymentInstances.size() - 1).status();
+
+        Map<String, String> appAndInstanceStatus = new HashMap<>();
+        appAndInstanceStatus.put("appStatus", appStatus);
+        appAndInstanceStatus.put("instanceStatus", instanceStatus);
+        return appAndInstanceStatus;
     }
 
 }

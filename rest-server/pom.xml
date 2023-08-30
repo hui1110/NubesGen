@@ -63,55 +63,65 @@
             <version>2.1.0</version>
         </dependency>
 
+        <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-oauth2-client</artifactId>
+        </dependency>
 
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-oauth2-client</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-webflux</artifactId>
-      </dependency>
+        <!--
+          for WebClient usage
+        -->
+        <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
 
-      <dependency>
-        <groupId>org.apache.tuweni</groupId>
-        <artifactId>tuweni-crypto</artifactId>
-        <version>2.3.1</version>
-      </dependency>
+        <dependency>
+          <groupId>org.apache.tuweni</groupId>
+          <artifactId>tuweni-crypto</artifactId>
+          <version>2.3.1</version>
+        </dependency>
 
-      <dependency>
-        <groupId>org.eclipse.jgit</groupId>
-        <artifactId>org.eclipse.jgit</artifactId>
-        <version>6.6.0.202305301015-r</version>
-      </dependency>
+        <dependency>
+          <groupId>org.eclipse.jgit</groupId>
+          <artifactId>org.eclipse.jgit</artifactId>
+          <version>6.6.0.202305301015-r</version>
+        </dependency>
 
-      <dependency>
-        <groupId>org.apache.maven</groupId>
-        <artifactId>maven-model</artifactId>
-        <version>3.9.0</version>
-      </dependency>
+        <dependency>
+          <groupId>org.apache.maven</groupId>
+          <artifactId>maven-model</artifactId>
+          <version>3.9.0</version>
+        </dependency>
 
-      <dependency>
-        <groupId>com.azure.resourcemanager</groupId>
-        <artifactId>azure-resourcemanager</artifactId>
-        <version>2.28.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.azure.resourcemanager</groupId>
-        <artifactId>azure-resourcemanager-appplatform</artifactId>
-        <version>2.29.0-beta.1</version>
-      </dependency>
-      <dependency>
-        <groupId>com.azure</groupId>
-        <artifactId>azure-identity</artifactId>
-        <version>1.8.3</version>
-      </dependency>
+        <dependency>
+          <groupId>com.azure.resourcemanager</groupId>
+          <artifactId>azure-resourcemanager</artifactId>
+          <version>2.28.0</version>
+        </dependency>
 
+        <!--
+          for accessing ASA resource
+        -->
+        <dependency>
+          <groupId>com.azure.resourcemanager</groupId>
+          <artifactId>azure-resourcemanager-appplatform</artifactId>
+          <version>2.29.0-beta.1</version>
+        </dependency>
+        <!--
+          for accessing ASA consumption plan resource
+        -->
         <dependency>
             <groupId>com.azure.resourcemanager</groupId>
             <artifactId>azure-resourcemanager-appcontainers</artifactId>
             <version>1.0.0-beta.6</version>
         </dependency>
+
+      <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-identity</artifactId>
+        <version>1.8.3</version>
+      </dependency>
 
         <dependency>
             <groupId>com.goterl</groupId>

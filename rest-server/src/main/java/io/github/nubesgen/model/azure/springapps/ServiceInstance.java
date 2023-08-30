@@ -1,4 +1,4 @@
-package io.github.nubesgen.model;
+package io.github.nubesgen.model.azure.springapps;
 
 import com.azure.core.management.Region;
 

@@ -1,4 +1,4 @@
-package io.github.nubesgen.configuration.azure;
+package io.github.nubesgen.configuration.security;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;

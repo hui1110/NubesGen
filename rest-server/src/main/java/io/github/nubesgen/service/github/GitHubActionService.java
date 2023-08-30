@@ -1,4 +1,4 @@
-package io.github.nubesgen.service;
+package io.github.nubesgen.service.github;
 
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
@@ -13,10 +13,11 @@ import com.microsoft.graph.models.Application;
 import com.microsoft.graph.models.FederatedIdentityCredential;
 import com.microsoft.graph.models.ServicePrincipal;
 import com.microsoft.graph.requests.GraphServiceClient;
-import io.github.nubesgen.model.GitHubRepositoryPublicKey;
-import io.github.nubesgen.model.GitHubTokenResult;
-import io.github.nubesgen.model.GitWrapper;
-import io.github.nubesgen.utils.ASADeployUtils;
+import io.github.nubesgen.model.github.GitHubRepositoryPublicKey;
+import io.github.nubesgen.model.github.GitHubTokenResult;
+import io.github.nubesgen.model.github.GitWrapper;
+import io.github.nubesgen.utils.AzureResourceManagerUtils;
+import io.github.nubesgen.utils.GithubUtils;
 import okhttp3.Request;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -47,8 +48,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+import static io.github.nubesgen.service.azure.springapps.Constants.Tier.StandardGen2;
+
 @Service
-public final class ASAGitHubActionService {
+public final class GitHubActionService {
 
     private static final String BASE_URI = "https://github.com";
     private static final String API_BASE_URI = "https://api.github.com";
@@ -58,10 +61,10 @@ public final class ASAGitHubActionService {
     private static final String WORKFLOW_jar_FILE_NAME = "deploy-jar-to-asa.yml";
     private static final String GRAPH_SCOPE = "https://graph.microsoft.com/.default";
     private static final String FEDERATED_CREDENTIAL_ISSUE = "https://token.actions.githubusercontent.com";
-    private final Logger log = LoggerFactory.getLogger(ASAGitHubActionService.class);
+    private final Logger log = LoggerFactory.getLogger(GitHubActionService.class);
     private final WebClient webClient;
 
-    public ASAGitHubActionService(WebClient webClient) {
+    public GitHubActionService(WebClient webClient) {
         this.webClient = webClient;
     }
 
@@ -73,11 +76,11 @@ public final class ASAGitHubActionService {
      * @return true if the workflow file exists, otherwise false
      */
     public boolean checkWorkFlowFile(String url, String branchName, String tier){
-        String pathName = ASADeployUtils.downloadSourceCodeFromGitHub(url, branchName);
-        String workflowFileName = tier.equals("StandardGen2") ? WORKFLOW_jar_FILE_NAME : WORKFLOW_SOURCE_CODE_FILE_NAME;
+        String pathName = GithubUtils.downloadSourceCodeFromGitHub(url, branchName);
+        String workflowFileName = tier.equals(StandardGen2) ? WORKFLOW_jar_FILE_NAME : WORKFLOW_SOURCE_CODE_FILE_NAME;
         File file = new File(String.format("%s/.github/workflows/%s", pathName, workflowFileName));
         boolean exists = file.exists();
-        ASADeployUtils.deleteRepositoryDirectory(new File(pathName));
+        GithubUtils.deleteRepositoryDirectory(new File(pathName));
         return exists;
     }
 
@@ -99,9 +102,9 @@ public final class ASAGitHubActionService {
         assignedRoleToServicePrincipal(management, subscriptionId, credentialMap.get("principalId"));
         log.info("Role assigned to service principal successfully");
 
-        String tenantId = ASADeployUtils.getTenantId(management, subscriptionId);
-        String username = ASADeployUtils.getUserName(url);
-        String pathName = ASADeployUtils.getPathName(url);
+        String tenantId = AzureResourceManagerUtils.getTenantId(management, subscriptionId);
+        String username = GithubUtils.getUserName(url);
+        String pathName = GithubUtils.getPathName(url);
         createFederatedCredential(management, appName, tenantId, credentialMap.get("objectId"), username, pathName, branchName);
         log.info("Federated credential created successfully");
         return credentialMap.get("clientId");
@@ -116,7 +119,7 @@ public final class ASAGitHubActionService {
      * @return The map of service principal credential.
      */
     private Map<String, String> createServicePrincipal(OAuth2AuthorizedClient management, String subscriptionId, String appName) {
-        String tenantId = ASADeployUtils.getTenantId(management, subscriptionId);
+        String tenantId = AzureResourceManagerUtils.getTenantId(management, subscriptionId);
         appName = "asa-button-".concat(appName);
         Map<String, String> map = new HashMap<>();
         GraphServiceClient<Request> graphClient = getGraphClient(management, tenantId);
@@ -150,7 +153,7 @@ public final class ASAGitHubActionService {
      * @param principalId The principal id.
      */
     private void assignedRoleToServicePrincipal(OAuth2AuthorizedClient management, String subscriptionId, String principalId) {
-        final AzureResourceManager azureResourceManager = ASADeployUtils.getAzureResourceManager(management, subscriptionId);
+        final AzureResourceManager azureResourceManager = AzureResourceManagerUtils.getAzureResourceManager(management, subscriptionId);
         try {
             azureResourceManager
                     .accessManagement()
@@ -222,7 +225,7 @@ public final class ASAGitHubActionService {
      * @throws SodiumException The SodiumException.
      */
     public String pushSecretsToGitHub(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName, String serviceName, String appName, String url, String clientId, String code, String tier) throws SodiumException {
-        String tenantId = ASADeployUtils.getTenantId(management, subscriptionId);
+        String tenantId = AzureResourceManagerUtils.getTenantId(management, subscriptionId);
 
         Map<String, String> map = new HashMap<>();
         map.put("AZURE_SPRING_SERVICE_NAME", serviceName);
@@ -230,12 +233,12 @@ public final class ASAGitHubActionService {
         map.put("AZURE_CLIENT_ID", clientId);
         map.put("AZURE_TENANT_ID", tenantId);
         map.put("AZURE_SUBSCRIPTION_ID", subscriptionId);
-        if(tier.equals("StandardGen2")){
+        if(tier.equals(StandardGen2)){
             map.put("AZURE_RESOURCE_GROUP", resourceGroupName);
         }
 
-        String username = ASADeployUtils.getUserName(url);
-        String pathName = ASADeployUtils.getPathName(url);
+        String username = GithubUtils.getUserName(url);
+        String pathName = GithubUtils.getPathName(url);
         String accessToken = getAccessToken(code);
         GitHubRepositoryPublicKey repositoryPublicKey = getGitHubRepositoryPublicKey(username, pathName, accessToken);
         Map<String, String> secretMap = new HashMap<>();
@@ -319,17 +322,17 @@ public final class ASAGitHubActionService {
      */
     public void generateWorkflowFile(String url, String branchName, String module, String javaVersion, String accessToken, String tier) {
         try {
-            String pathName = ASADeployUtils.downloadSourceCodeFromGitHub(url, branchName);
+            String pathName = GithubUtils.downloadSourceCodeFromGitHub(url, branchName);
             branchName = Objects.equals(branchName, "null") ? "main" : branchName;
             File path = new File(pathName);
             Path project = path.toPath();
-            String workflowFileName = tier.equals("StandardGen2") ? WORKFLOW_jar_FILE_NAME : WORKFLOW_SOURCE_CODE_FILE_NAME;
+            String workflowFileName = tier.equals(StandardGen2) ? WORKFLOW_jar_FILE_NAME : WORKFLOW_SOURCE_CODE_FILE_NAME;
             Path output = project.resolve(String.format(".github/workflows/%s", workflowFileName));
 
             ClassPathResource resource = new ClassPathResource(String.format("workflows/%s", workflowFileName));
             InputStream inputStream = resource.getInputStream();
             String yaml;
-            if (Objects.equals(tier, "StandardGen2")) {
+            if (Objects.equals(tier, StandardGen2)) {
                 String content = new String(FileCopyUtils.copyToByteArray(inputStream));
                 String jarPath = getJarPath(url, branchName, module);
                 yaml = content.replace("${build-version}", javaVersion.substring(javaVersion.lastIndexOf("_") + 1));
@@ -364,14 +367,14 @@ public final class ASAGitHubActionService {
                 writer.write(yaml);
             }
 
-            String username = ASADeployUtils.getUserName(url);
+            String username = GithubUtils.getUserName(url);
             new GitWrapper()
                     .gitInit(path, branchName)
                     .gitAdd()
                     .gitCommit(username, "SpringIntegSupport@microsoft.com", tier)
                     .gitPush(url, username, accessToken)
                     .gitClean();
-            ASADeployUtils.deleteRepositoryDirectory(path);
+            GithubUtils.deleteRepositoryDirectory(path);
         } catch (Exception e) {
             throw new RuntimeException("Error while pushing workflow file", e);
         }
@@ -387,7 +390,7 @@ public final class ASAGitHubActionService {
      * @return project name and java version
      */
     private synchronized String getJarPath(String url, String branchName, String module) {
-        String pathName = ASADeployUtils.downloadSourceCodeFromGitHub(url, branchName);
+        String pathName = GithubUtils.downloadSourceCodeFromGitHub(url, branchName);
         assert pathName != null;
         Model model;
         if (module.equals("null")) {
@@ -395,7 +398,7 @@ public final class ASAGitHubActionService {
                 MavenXpp3Reader reader = new MavenXpp3Reader();
                 model = reader.read(fis);
             } catch (Exception e) {
-                ASADeployUtils.deleteRepositoryDirectory(new File(pathName));
+                GithubUtils.deleteRepositoryDirectory(new File(pathName));
                 throw new RuntimeException(e.getMessage());
             }
         } else {
@@ -403,7 +406,7 @@ public final class ASAGitHubActionService {
                 MavenXpp3Reader reader = new MavenXpp3Reader();
                 model = reader.read(fis);
             } catch (Exception e) {
-                ASADeployUtils.deleteRepositoryDirectory(new File(pathName));
+                GithubUtils.deleteRepositoryDirectory(new File(pathName));
                 throw new RuntimeException(e.getMessage());
             }
         }

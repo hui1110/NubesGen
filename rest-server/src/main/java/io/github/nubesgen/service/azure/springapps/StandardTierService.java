@@ -1,4 +1,4 @@
-package io.github.nubesgen.service;
+package io.github.nubesgen.service.azure.springapps;
 
 import com.azure.resourcemanager.appcontainers.ContainerAppsApiManager;
 import com.azure.resourcemanager.appcontainers.models.AppLogsConfiguration;
@@ -11,49 +11,52 @@ import com.azure.resourcemanager.appplatform.models.ClusterResourceProperties;
 import com.azure.resourcemanager.appplatform.models.SourceUploadedUserSourceInfo;
 import com.azure.resourcemanager.appplatform.models.SpringAppDeployment;
 import com.azure.resourcemanager.appplatform.models.SpringService;
-import io.github.nubesgen.utils.ASADeployUtils;
+import io.github.nubesgen.model.azure.springapps.DeploymentParameter;
+import io.github.nubesgen.utils.AzureResourceManagerUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import static com.azure.core.util.polling.implementation.PollingConstants.STATUS_FAILED;
-import static com.azure.core.util.polling.implementation.PollingConstants.STATUS_RUNNING;
+import static io.github.nubesgen.service.azure.springapps.Constants.Tier.StandardGen2;
 
 @Service
-public class ASAStandardTierService implements ASAService {
+public class StandardTierService implements ASAService {
 
-    private final Logger log = LoggerFactory.getLogger(ASAStandardTierService.class);
+    private final Logger log = LoggerFactory.getLogger(StandardTierService.class);
+
+    private final SpringAppsService springAppsService;
+
+    public StandardTierService(SpringAppsService springAppsService) {
+        this.springAppsService = springAppsService;
+    }
 
     /**
      * Provision spring service.
      *
-     * @param management OAuth2 authorization client after login
+     * @param deploymentManager ARM client
      * @param subscriptionId subscriptionId
      * @param resourceGroupName resourceGroupName
      * @param serviceName serviceName
      * @param region region
      * @param tier tier
      */
-    public void provisionSpringService(OAuth2AuthorizedClient management, String subscriptionId, String resourceGroupName, String serviceName, String region, String tier) {
-        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
+    public void provision(DeploymentManager deploymentManager, String subscriptionId, String resourceGroupName, String serviceName, String region, String tier) {
         try {
-            appPlatformManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
+            deploymentManager.getAppPlatformManager().springServices().getByResourceGroup(resourceGroupName, serviceName);
             log.info("Spring service {} already exists.", serviceName);
         } catch (Exception e) {
             ServiceResourceInner serviceResourceInner = new ServiceResourceInner()
                     .withLocation(region)
-                    .withSku(ASADeployUtils.getSku(tier));
+                    .withSku(springAppsService.getSku(tier));
 
-            if (Objects.equals(tier, "StandardGen2")) {
+            if (Objects.equals(tier, StandardGen2)) {
                 log.info("Creating container environment");
                 String customerId = UUID.randomUUID().toString();
                 String sharedKey = UUID.randomUUID().toString().replace("-", "");
-                ContainerAppsApiManager containerAppsApiManager = ASADeployUtils.getContainerAppsApiManager(management, subscriptionId);
+                ContainerAppsApiManager containerAppsApiManager = deploymentManager.getContainerAppsApiManager();
                 ManagedEnvironment managedEnvironment = containerAppsApiManager.managedEnvironments().define("cae-" + serviceName)
                         .withRegion(region)
                         .withExistingResourceGroup(resourceGroupName)
@@ -68,7 +71,7 @@ public class ASAStandardTierService implements ASAService {
                 clusterResourceProperties.withManagedEnvironmentId(managedEnvironment.id());
                 serviceResourceInner.withProperties(clusterResourceProperties);
             }
-            appPlatformManager.serviceClient().getServices().createOrUpdate(resourceGroupName, serviceName, serviceResourceInner);
+            deploymentManager.getAppPlatformManager().serviceClient().getServices().createOrUpdate(resourceGroupName, serviceName, serviceResourceInner);
         }
         log.info("Spring service {} created, tier: {}", serviceName, tier);
     }
@@ -76,29 +79,28 @@ public class ASAStandardTierService implements ASAService {
     /**
      * Get build source log.
      *
-     * @param management OAuth2 authorization client after login
+     * @param deploymentManager ARM client
      * @param subscriptionId the subscription id
      * @param resourceGroupName the resource group name
      * @param serviceName the service name
      * @param appName the app name
      * @return null: no log generated, otherwise the build log
      */
-    public String getBuildLogs(OAuth2AuthorizedClient management, String subscriptionId,
+    public String getBuildLogs(DeploymentManager deploymentManager, String subscriptionId,
                                String resourceGroupName,
                                String serviceName, String appName, String stage, String githubAction) {
         String buildLogs = null;
         try {
-            AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
-            SpringService springService = appPlatformManager.springServices().getByResourceGroup(resourceGroupName, serviceName);
+            SpringService springService = deploymentManager.getAppPlatformManager().springServices().getByResourceGroup(resourceGroupName, serviceName);
             SpringAppDeployment springAppDeployment = springService.apps().getByName(appName).getActiveDeployment();
             if (Objects.isNull(springAppDeployment) || Objects.isNull(springAppDeployment.getLogFileUrl())) {
-                return null;
+                throw new IllegalStateException("Spring app deployment or deployment log file not exist - " + springAppDeployment);
             }
             String appStatus = springAppDeployment.innerModel().properties().provisioningState().toString();
             if(githubAction.equals("true") && !appStatus.equals("Updating")) {
-                return null;
+                throw new IllegalStateException("App status is not updating");
             }
-            buildLogs = ASADeployUtils.getLogByUrl(springAppDeployment.getLogFileUrl(), null);
+            buildLogs = springAppsService.getLogByUrl(springAppDeployment.getLogFileUrl(), null);
         } catch (Exception e) {
             log.error("Get build log failed, error: " + e.getMessage());
         }
@@ -108,63 +110,36 @@ public class ASAStandardTierService implements ASAService {
     /**
      * Deploy source code to Azure Spring App instance.
      *
-     * @param management OAuth2 authorization client after login
+     * @param deploymentManager ARM client
      * @param subscriptionId the subscription id
      * @param resourceGroupName the resource group name
      * @param serviceName the service name
      * @param appName the app name
-     * @param javaVersion the java version
-     * @param relativePath the relative path
+     * @param deploymentParameter deployment parameter for different deployment type
      */
-    public void buildAndDeploySourceCode(OAuth2AuthorizedClient management, String subscriptionId,
+    public void deploy(DeploymentManager deploymentManager, String subscriptionId,
                                String resourceGroupName,
                                String serviceName,
                                String appName,
-                               String module, String javaVersion,
-                               String relativePath) {
+                               DeploymentParameter deploymentParameter) {
         log.info("Start build and deploy source code in Standard tier service {}.....", serviceName);
         try {
             SourceUploadedUserSourceInfo sourceInfo = new SourceUploadedUserSourceInfo();
-            sourceInfo.withRuntimeVersion(javaVersion);
-            sourceInfo.withRelativePath(relativePath);
-            if (!Objects.equals(module, "null")) {
-                sourceInfo.withArtifactSelector(module); // withTargetModule
+            sourceInfo.withRuntimeVersion(deploymentParameter.getJavaVersion());
+            sourceInfo.withRelativePath(deploymentParameter.getRelativePath());
+            if (!Objects.equals(deploymentParameter.getModule(), "null")) {
+                sourceInfo.withArtifactSelector(deploymentParameter.getModule()); // withTargetModule
             }
-            AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
             String DEFAULT_DEPLOYMENT_NAME = "default";
-            DeploymentResourceInner resourceInner = appPlatformManager.serviceClient().getDeployments().get(resourceGroupName, serviceName, appName,
+            DeploymentResourceInner resourceInner = deploymentManager.getAppPlatformManager().serviceClient().getDeployments().get(resourceGroupName, serviceName, appName,
                     DEFAULT_DEPLOYMENT_NAME);
             resourceInner.properties().withSource(sourceInfo);
-            appPlatformManager.serviceClient().getDeployments().update(resourceGroupName, serviceName, appName,
+            deploymentManager.getAppPlatformManager().serviceClient().getDeployments().update(resourceGroupName, serviceName, appName,
                     DEFAULT_DEPLOYMENT_NAME, resourceInner);
              log.info("Deploy source code to app {} completed.", appName);
         } catch (Exception e) {
             throw new RuntimeException("Deploy source code to app " + appName + " failed, error: " + e.getMessage());
         }
-    }
-
-    /**
-     * Check build source status.
-     *
-     * @param management OAuth2 authorization client after login
-     * @param subscriptionId the subscription id
-     * @param resourceGroupName the resource group name
-     * @param serviceName the service name
-     * @param appName the app name
-     * @return failed: Failed, null:  build source done
-     */
-    public String checkBuildSourceStatus(OAuth2AuthorizedClient management, String subscriptionId,
-                                         String resourceGroupName,
-                                         String serviceName, String appName) {
-        AppPlatformManager appPlatformManager = ASADeployUtils.getAppPlatformManager(management, subscriptionId);
-        Map<String, String> appStatusMap = ASADeployUtils.getAppAndInstanceStatus(appPlatformManager, resourceGroupName, serviceName, appName);
-        String appStatus = appStatusMap.get("appStatus");
-        String instanceStatus = appStatusMap.get("instanceStatus");
-        //        build source failed
-        if (STATUS_FAILED.equals(appStatus) && STATUS_RUNNING.equals(instanceStatus)) {
-            return STATUS_FAILED;
-        }
-        return null;
     }
 
 }

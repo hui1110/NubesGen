@@ -1,4 +1,4 @@
-package io.github.nubesgen.model;
+package io.github.nubesgen.model.github;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 
