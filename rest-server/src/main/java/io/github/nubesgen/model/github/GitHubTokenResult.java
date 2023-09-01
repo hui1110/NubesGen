@@ -1,4 +1,4 @@
-package io.github.nubesgen.model;
+package io.github.nubesgen.model.github;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 
@@ -13,4 +13,5 @@ public class GitHubTokenResult {
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
     }
+
 }

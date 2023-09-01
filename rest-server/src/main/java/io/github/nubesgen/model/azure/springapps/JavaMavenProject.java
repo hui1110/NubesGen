@@ -1,11 +1,11 @@
-package io.github.nubesgen.model;
+package io.github.nubesgen.model.azure.springapps;
 
-public class ProjectInstance {
+public class JavaMavenProject {
 
     private String name;
     private String version;
 
-    public ProjectInstance() {
+    public JavaMavenProject() {
     }
 
     public String getName() {

@@ -1,11 +1,11 @@
-package io.github.nubesgen.model;
+package io.github.nubesgen.model.azure;
 
-public class SubscriptionInstance {
+public class Subscription {
 
     private String id;
     private String name;
 
-    public SubscriptionInstance(String id, String name) {
+    public Subscription(String id, String name) {
         this.id = id;
         this.name = name;
     }

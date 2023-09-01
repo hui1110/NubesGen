@@ -223,6 +223,8 @@ pre{
                 deploymentResult: 'This operation may take a while.',
                 viewEndpointDescription: 'View the app (Public URL)',
                 showView: false,
+                api: '/springapps',
+                pathName: '',
                 result: '',
                 relativePath: '',
                 uploadUrl: '',
@@ -294,7 +296,7 @@ pre{
             checkAppExist() {
                 this.expandCollapse(this.stages[0].key, this.stages[0].id);
                 this.stages[0].description = 'Check whether app ' + this.appName + ' exists in ' + this.serviceName + '...';
-                axios.get('/checkAppExist',
+                axios.get(this.api + '/checkAppExist',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -303,7 +305,7 @@ pre{
                             'appName': this.appName
                         }
                     }).then(res => {
-                    if (res.data) {
+                    if (!res.data) {
                         this.handleProgress(0, 'App ' + this.appName + ' already exists in service ' + this.serviceName + '.', 'success');
                         const log = document.getElementById('pre-' + this.stages[0].id)
                         log.innerHTML = '<p>' + '<i class="bi bi-caret-right" style="margin-right: 2%"></i>' + 'Skipped creating app ' + '<code style="color: blue">' + this.appName + '</code>' + '.' + '</p>' + '<p>' + '<i class="bi bi-caret-right" style="margin-right: 2%"></i>' + 'Skipped creating default deployment for app ' + '<code style="color: blue">' + this.appName + '</code>' + '.' + '</p>';
@@ -328,7 +330,7 @@ pre{
                 this.stages[0].description = 'Provisioning resource' + '...';
                 const log = document.getElementById('pre-' + this.stages[0].id)
                 log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating resource group ' + '<code style="color: blue">' + this.resourceGroupName + '</code>' + '...' + '</p>';
-                axios.get('/provisionResourceGroup',
+                axios.get(this.api + '/provisionResourceGroup',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -348,8 +350,7 @@ pre{
             provisionSpringService(log){
                 const logs = log.innerHTML;
                 log.innerHTML = logs + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating service ' + '<code style="color: blue">' + this.serviceName + '</code>' + '...' + '</p>';
-                const path = this.tier === 'Enterprise' ? 'Enterprise' : 'Standard';
-                axios.get('/' + path.toLowerCase() + '/provisionSpringService',
+                axios.get(this.api + '/' + this.tier.toLowerCase() + '/provisionSpringService',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -372,7 +373,7 @@ pre{
                 const log = document.getElementById('pre-' + this.stages[0].id)
                 const logs = log.innerHTML;
                 log.innerHTML = logs + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating app ' + '<code style="color: blue">' + this.appName + '</code>' + '...' + '</p>';
-                axios.get('/provisionSpringApp', {
+                axios.get(this.api + '/provisionSpringApp', {
                     params: {
                         'subscriptionId': this.subscriptionId,
                         'resourceGroupName': this.resourceGroupName,
@@ -393,7 +394,7 @@ pre{
             createDeploymentForApp(log) {
                 const provisionSourceLog = log.innerHTML;
                 log.innerHTML = provisionSourceLog + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating default deployment for app ' + '<code style="color: blue">' + this.appName + '</code>' + '...' + '</p>';
-                axios.post('/createDeploymentForApp', {
+                axios.post(this.api + '/createDeploymentForApp', {
                     'subscriptionId': this.subscriptionId,
                     'resourceGroupName': this.resourceGroupName,
                     'serviceName': this.serviceName,
@@ -423,7 +424,7 @@ pre{
                 this.expandCollapse(this.stages[1].key, this.stages[1].id);
                 const log = document.getElementById('pre-' + this.stages[1].id)
                 log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Getting upload url...' + '</p>';
-                axios.get('/getUploadUrl',
+                axios.get(this.api + '/getUploadUrl',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -447,7 +448,7 @@ pre{
             uploadFile(log) {
                 const uploadUrlLog = log.innerHTML;
                 log.innerHTML = uploadUrlLog + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Uploading file...' + '</p>';
-                axios.post('/uploadFile',
+                axios.post(this.api + '/uploadFile',
                     {
                         'subscriptionId': this.subscriptionId,
                         'uploadUrl': this.uploadUrl,
@@ -482,7 +483,7 @@ pre{
                 const index = this.tier === 'StandardGen2' ? 1 : 2;
                 this.handleProgress(index, 'Check the workflow file...', 'loading');
                 this.expandCollapse(this.stages[index].key, this.stages[index].id);
-                axios.get('/checkWorkFlowFile',
+                axios.get(this.api + '/checkWorkFlowFile',
                     {
                         params: {
                             'url': this.gitUrl,
@@ -490,21 +491,22 @@ pre{
                             'tier': this.tier
                         }
                     }).then(res => {
-                    if (res.data === true) {
-                        this.logScrollButtom(this.stages[index].id, 'The workflow file already exists in the repository.');
-                        this.handleError(index, 'Set up CI/CD pipeline failed.', 'Set up CI/CD pipeline failed !');
-                    }else {
+                    if (res.status === 200 ) {
+                        this.branch = res.data.branchName;
+                        this.pathName = res.data.pathName;
                         this.stages[index].description = 'Workflow file does not exist, start creating';
                         this.createCredentials(index);
                     }
                 }).catch(error => {
                     console.log(error);
+                    this.logScrollButtom(this.stages[index].id, 'The workflow file already exists in the repository.');
+                    this.handleError(index, 'Set up CI/CD pipeline failed.', 'Set up CI/CD pipeline failed !');
                 })
             },
             createCredentials(index){
                 const log = document.getElementById('pre-' + this.stages[index].id)
                 log.innerHTML = '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Creating service principal...' + '</p>';
-                axios.get('/createCredentials',
+                axios.get(this.api + '/createCredentials',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -527,7 +529,7 @@ pre{
             pushSecretsToGitHub(log, index){
                 const spLog = log.innerHTML;
                 log.innerHTML = spLog + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Push secrets...' + '</p>';
-                axios.get('/pushSecretsToGitHub',
+                axios.get(this.api + '/pushSecretsToGitHub',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -554,7 +556,7 @@ pre{
             generateWorkflowFile(log, index){
                 const wfLog = log.innerHTML;
                 log.innerHTML = wfLog + '<p>' + '<i class="bi bi-slash-lg" style="margin-right: 2%"></i>' + 'Generate workflow file...' + '</p>';
-                axios.get('/generateWorkflowFile',
+                axios.get(this.api + '/generateWorkflowFile',
                     {
                         params: {
                             'url': this.gitUrl,
@@ -562,7 +564,8 @@ pre{
                             'module': this.module,
                             'javaVersion': this.javaVersion,
                             'accessToken': this.accessToken,
-                            'tier': this.tier
+                            'tier': this.tier,
+                            'pathName': this.pathName
                         }
                     }).then(res => {
                     if (res.status === 200) {
@@ -594,7 +597,8 @@ pre{
                 let order = this.githubAction === 'true' ? 3 : 2;
                 this.handleProgress(order, 'Building source in app ' + this.appName + '...', 'loading');
                 this.expandCollapse(this.stages[order].key, this.stages[order].id);
-                axios.get('/standard/deploy',
+                let deployResultData;
+                axios.get(this.api + '/standard/deploy',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -612,14 +616,14 @@ pre{
                 }).catch(error => {
                     console.log(error);
                     this.result = 'failed';
-                    this.logScrollButtom(this.stages[order].id, error.response.data);
+                    deployResultData = error.response.data;
                 }).finally(() => {
-                    this.getBuildSourceResult(order);
+                    this.getBuildSourceResult(order, deployResultData);
                 })
                 this.getBuildLogStandard(order);
             },
             getBuildLogStandard(order) {
-                axios.get('/standard/getBuildLogs',
+                axios.get(this.api + '/standard/getBuildLogs',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -640,11 +644,14 @@ pre{
                     this.logScrollButtom(this.stages[order].id, this.buildSourceLogStandard);
                 })
             },
-            getBuildSourceResult(order) {
-                if (this.stages[order].status === 'error') {
+            getBuildSourceResult(order, deployResultData) {
+                if (this.result === 'failed' && this.buildSourceLogStandard.length === 0) {
+                    this.handleError(order, 'Build source in app ' + this.appName + ' failed.', 'Build source failed !');
+                    this.logScrollButtom(this.stages[order].id, deployResultData);
+                    this.deleteApp();
                     return;
                 }
-                axios.get('/standard/getBuildSourceResult',
+                axios.get(this.api + '/standard/getBuildSourceResult',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -677,7 +684,7 @@ pre{
                 this.handleProgress(order, 'Building source in app ' + this.appName + '...', 'loading');
                 this.expandCollapse(this.stages[order].key, this.stages[order].id);
                 const javaVersion = this.javaVersion.substring(this.javaVersion.indexOf("_") + 1);
-                axios.get('/enterprise/enqueueBuild',
+                axios.get(this.api + '/enterprise/enqueueBuild',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -700,7 +707,7 @@ pre{
                 })
             },
             buildSourceCodeForEnterpriseTier(buildId, order) {
-                axios.get('/enterprise/buildSourceCode',
+                axios.get(this.api + '/enterprise/buildSourceCode',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -722,7 +729,7 @@ pre{
                 if (this.enterpriseStagesIndex > this.enterpriseStages.length - 1) {
                     return;
                 }
-                axios.get('/enterprise/getBuildLogs',
+                axios.get(this.api + '/enterprise/getBuildLogs',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -757,7 +764,7 @@ pre{
             },
             deploySourceCodeForEnterprise(buildId, order) {
                 this.expandCollapse(this.stages[order].key, this.stages[order].id);
-                axios.get('/enterprise/deploy',
+                axios.get(this.api + '/enterprise/deploy',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -774,7 +781,7 @@ pre{
                 })
             },
             getDeployResultAndApplicationLogs(order) {
-                axios.get('/getDeployResultAndApplicationLogs',
+                axios.get(this.api + '/getDeployResultAndApplicationLogs',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
@@ -806,7 +813,7 @@ pre{
                 })
             },
             deleteApp() {
-                axios.get('/deleteApp',
+                axios.get(this.api + '/deleteApp',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,

@@ -1,4 +1,4 @@
-package io.github.nubesgen.model;
+package io.github.nubesgen.model.github;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PushCommand;
@@ -10,14 +10,16 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import java.io.File;
 import java.net.URISyntaxException;
 
+import static io.github.nubesgen.service.azure.springapps.Constants.StandardGen2;
+
 public class GitWrapper {
 
     private Git git;
 
     /**
      * Git init.
-     * @param directory Git directory
-     * @param initialBranch Initial branch
+     * @param directory the Git directory
+     * @param initialBranch the initial branch
      * @return A wrapper for Git
      * @throws GitAPIException Git init failed
      */
@@ -43,17 +45,17 @@ public class GitWrapper {
     /**
      * Git commit.
      *
-     * @param userName GitHub username
-     * @param email GitHub email
+     * @param userName thenGitHub username
+     * @param email the GitHub email
      * @return A wrapper for Git
      * @throws GitAPIException Git commit failed
      */
     public GitWrapper gitCommit(String userName, String email, String tier) throws GitAPIException {
         String commitMessage;
-        if(tier.equals("StandardGen2")){
+        if(tier.equals(StandardGen2)){
             commitMessage = "ci: add Azure Spring Apps workflow file\n" + "on-behalf-of: @Azure opensource@microsoft.com";
         }else {
-            commitMessage = "ci: add Azure Spring Apps workflow file [skip ci] \n" + "on-behalf-of: @Azure opensource@microsoft.com";
+            commitMessage = "ci: add Azure Spring Apps workflow file [skip ci]\n" + "on-behalf-of: @Azure opensource@microsoft.com";
         }
         git.commit()
                 .setMessage(commitMessage)

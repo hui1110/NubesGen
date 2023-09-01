@@ -1,10 +1,10 @@
-package io.github.nubesgen.model;
+package io.github.nubesgen.model.azure;
 
-public class ResourceGroupInstance {
+public class ResourceGroup {
 
     private String name;
 
-    public ResourceGroupInstance(String name) {
+    public ResourceGroup(String name) {
         this.name = name;
     }
 

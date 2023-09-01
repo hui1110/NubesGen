@@ -490,6 +490,7 @@ a, a:link, a:visited, a:hover, a:active {
                 initDeploy: true,
                 githubAuth: false,
                 flag: 'select',
+                api: '/springapps',
                 newServiceInstanceName: '',
                 plan: '',
                 tier: '',
@@ -644,7 +645,7 @@ a, a:link, a:visited, a:hover, a:active {
                 document.getElementById(this.tier).checked = true;
             },
             getAppNameAndJavaVersion() {
-                axios.get('/getAppNameAndJavaVersion', {
+                axios.get(this.api + '/getAppNameAndJavaVersion', {
                     params: {
                         'url': this.url,
                         'branchName': this.branch,
@@ -664,7 +665,7 @@ a, a:link, a:visited, a:hover, a:active {
                 })
             },
             queryRegionList() {
-                axios.get('/getRegionList')
+                axios.get(this.api + '/getRegionList')
                     .then(res => {
                         this.regionList = res.data;
                         if (this.regionList.length === 0) {
@@ -685,7 +686,7 @@ a, a:link, a:visited, a:hover, a:active {
                 })
             },
             querySubscriptionList() {
-                axios.get('/getSubscriptionList')
+                axios.get(this.api + '/getSubscriptionList')
                     .then(res => {
                         this.subscriptionList = res.data;
                         if (this.subscriptionList.length === 0) {
@@ -708,7 +709,7 @@ a, a:link, a:visited, a:hover, a:active {
             getResourceGroupListBySubscriptionId(subscriptionId) {
                 this.initDeploy = true;
                 this.resourceGroupList = [];
-                axios.get('/getResourceGroupList',
+                axios.get(this.api + '/getResourceGroupList',
                     {
                         params: {
                             'subscriptionId': subscriptionId
@@ -742,7 +743,7 @@ a, a:link, a:visited, a:hover, a:active {
                 }
                 this.serviceInstanceList = [];
                 this.initDeploy = true;
-                axios.get('/getServiceInstanceList',
+                axios.get(this.api + '/getServiceInstanceList',
                     {
                         params: {
                             'subscriptionId': this.subscriptionId,
