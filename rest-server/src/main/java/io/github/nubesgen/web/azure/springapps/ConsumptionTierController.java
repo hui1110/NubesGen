@@ -1,5 +1,6 @@
 package io.github.nubesgen.web.azure.springapps;
 
+import com.azure.resourcemanager.loganalytics.LogAnalyticsManager;
 import io.github.nubesgen.service.azure.springapps.DeploymentManager;
 import io.github.nubesgen.service.azure.springapps.ConsumptionTierService;
 import io.github.nubesgen.utils.AzureResourceManagerUtils;
@@ -17,11 +18,11 @@ import static io.github.nubesgen.service.azure.springapps.Constants.DEFAULT_OAUT
 
 @RestController
 @RequestMapping("/springapps/standardgen2")
-public class StandardGen2Controller {
+public class ConsumptionTierController {
 
     private final ConsumptionTierService asaStandardGen2Service;
 
-    public StandardGen2Controller(ConsumptionTierService asaStandardGen2Service) {
+    public ConsumptionTierController(ConsumptionTierService asaStandardGen2Service) {
         this.asaStandardGen2Service = asaStandardGen2Service;
     }
 
@@ -38,11 +39,13 @@ public class StandardGen2Controller {
             asaStandardGen2Service.provisionSpringService(
                     new DeploymentManager(
                             AzureResourceManagerUtils.getAppPlatformManager(management, subscriptionId),
-                            AzureResourceManagerUtils.getContainerAppsApiManager(management, subscriptionId)
+                            AzureResourceManagerUtils.getContainerAppsApiManager(management, subscriptionId),
+                            AzureResourceManagerUtils.getLogAnalyticsManager(management, subscriptionId)
                     ),
                     subscriptionId, resourceGroupName, serviceName, region, tier);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

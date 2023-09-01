@@ -10,6 +10,7 @@ import com.azure.resourcemanager.AzureResourceManager;
 import com.azure.resourcemanager.appcontainers.ContainerAppsApiManager;
 import com.azure.resourcemanager.appplatform.AppPlatformManager;
 import com.azure.resourcemanager.appplatform.models.SpringService;
+import com.azure.resourcemanager.loganalytics.LogAnalyticsManager;
 import com.azure.resourcemanager.resources.models.Subscription;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import reactor.core.publisher.Mono;
@@ -108,18 +109,26 @@ public final class AzureResourceManagerUtils {
     }
 
     private static TokenCredential getAzureCredential(OAuth2AuthorizedClient management) {
-        TokenCredential tokenCredential = new DefaultAzureCredentialBuilder().build();
-        TokenRequestContext request = new TokenRequestContext().addScopes("https://management.azure.com/.default");
-        AccessToken token =
-                tokenCredential.getToken(request).retry(3L).blockOptional().orElseThrow(() -> new RuntimeException(
-                        "Couldn't retrieve JWT"));
+//        TokenCredential tokenCredential = new DefaultAzureCredentialBuilder().build();
+//        TokenRequestContext request = new TokenRequestContext().addScopes("https://management.azure.com/.default");
+//        AccessToken token =
+//                tokenCredential.getToken(request).retry(3L).blockOptional().orElseThrow(() -> new RuntimeException(
+//                        "Couldn't retrieve JWT"));
 //        Admin Account get TokenCredential
 //        toTokenCredential(management.getAccessToken().getTokenValue());
-        return toTokenCredential(token.getToken());
+        return toTokenCredential(management.getAccessToken().getTokenValue());
     }
 
     private static TokenCredential toTokenCredential(String accessToken) {
         return request -> Mono.just(new AccessToken(accessToken, OffsetDateTime.MAX));
+    }
+
+    public static LogAnalyticsManager getLogAnalyticsManager(OAuth2AuthorizedClient management, String subscriptionId) {
+        final TokenCredential credential = getAzureCredential(management);
+        AzureResourceManager.Authenticated authenticated = getARMAuthenticated(management);
+        Subscription subscription = getSubscription(authenticated, subscriptionId);
+        final AzureProfile profile = new AzureProfile(subscription.innerModel().tenantId(), subscriptionId, AzureEnvironment.AZURE);
+        return LogAnalyticsManager.authenticate(credential, profile);
     }
 
 }

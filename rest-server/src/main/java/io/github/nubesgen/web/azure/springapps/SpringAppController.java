@@ -258,9 +258,8 @@ public class SpringAppController {
             String tenantId = AzureResourceManagerUtils.getTenantId(management, subscriptionId);
             String oAuth2ClientId = management.getClientRegistration().getClientId();
             String oAuth2ClientSecret = management.getClientRegistration().getClientSecret();
-            AzureResourceManager azureResourceManager =
-                    AzureResourceManagerUtils.getAzureResourceManager(management, subscriptionId);
-            String clientId = asaGitHubActionService.createCredentials(azureResourceManager, appName,
+            String clientId = asaGitHubActionService.createCredentials(new DeploymentManager(
+                    AzureResourceManagerUtils.getAzureResourceManager(management, subscriptionId)), appName,
                     url, branchName, tenantId, oAuth2ClientId, oAuth2ClientSecret, subscriptionId);
             return new ResponseEntity<>(clientId, HttpStatus.OK);
         }catch (Exception e){

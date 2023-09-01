@@ -16,6 +16,7 @@ import com.microsoft.graph.requests.GraphServiceClient;
 import io.github.nubesgen.model.github.GitHubRepositoryPublicKey;
 import io.github.nubesgen.model.github.GitHubTokenResult;
 import io.github.nubesgen.model.github.GitWrapper;
+import io.github.nubesgen.service.azure.springapps.DeploymentManager;
 import io.github.nubesgen.utils.GithubUtils;
 import okhttp3.Request;
 import org.apache.maven.model.Model;
@@ -101,7 +102,7 @@ public final class GitHubActionService {
     /**
      * Create credential.
      *
-     * @param azureResourceManager the AzureResourceManager.
+     * @param deploymentManager the deployment manager.
      * @param appName the app name.
      * @param url the GitHub repository url.
      * @param branchName the branch name.
@@ -111,11 +112,11 @@ public final class GitHubActionService {
      * @param subscriptionId the subscription id.
      * @return the client id of the created Service Principal.
      */
-    public String createCredentials(AzureResourceManager azureResourceManager, String appName, String url, String branchName, String tenantId, String clientId, String clientSecret, String subscriptionId) {
+    public String createCredentials(DeploymentManager deploymentManager, String appName, String url, String branchName, String tenantId, String clientId, String clientSecret, String subscriptionId) {
         Map<String, String> credentialMap = createServicePrincipal(appName, tenantId, clientId, clientSecret);
         log.info("Service principal created successfully");
 
-        assignedRoleToServicePrincipal(azureResourceManager, subscriptionId,credentialMap.get("principalId"));
+        assignedRoleToServicePrincipal(deploymentManager.getAzureResourceManager(), subscriptionId,credentialMap.get("principalId"));
         log.info("Role assigned to service principal successfully");
 
         String username = GithubUtils.getGitHubUserName(url);
